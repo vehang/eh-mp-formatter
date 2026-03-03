@@ -151,7 +151,8 @@
         "text": "执行工作区自动备份：cd /home/node/.openclaw/workspace && git add -A && git commit -m 'Auto backup' && git push origin master"
       },
       "state": {
-        "nextRunAtMs": 1772503377993
+        "nextRunAtMs": 1772503377993,
+        "runningAtMs": 1772503378002
       }
     }
   ]
