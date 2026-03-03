@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
 import { parseMarkdown } from './utils/markdown'
+import { themes, applyTheme, type Theme } from './themes'
 import 'highlight.js/styles/atom-one-dark.css'
 import './styles/preview.css'
 import './App.css'
@@ -21,6 +22,10 @@ function hello() {
 }
 \`\`\`
 
+## 引用示例
+
+> 这是一段引用文字，用于展示引用块的样式效果。
+
 ## 表格示例
 
 | 功能 | 状态 |
@@ -28,11 +33,24 @@ function hello() {
 | Markdown 解析 | ✅ |
 | 主题切换 | ✅ |
 | 代码高亮 | ✅ |
+
+## 链接和图片
+
+这是一个 [链接示例](https://github.com)。
 `
 
 function App() {
   const [markdown, setMarkdown] = useState(defaultMarkdown)
+  const [currentTheme, setCurrentTheme] = useState<Theme>(themes[0])
   const html = useMemo(() => parseMarkdown(markdown), [markdown])
+
+  const handleThemeChange = (themeId: string) => {
+    const theme = themes.find(t => t.id === themeId)
+    if (theme) {
+      setCurrentTheme(theme)
+      applyTheme(theme, document.body)
+    }
+  }
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -42,10 +60,14 @@ function App() {
           <h1 className="text-lg font-semibold text-gray-900 dark:text-white">公众号排版工具</h1>
         </div>
         <div className="flex items-center gap-2">
-          <select className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-            <option>紫色经典</option>
-            <option>橙心暖色</option>
-            <option>GitHub风格</option>
+          <select 
+            value={currentTheme.id}
+            onChange={(e) => handleThemeChange(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            {themes.map(theme => (
+              <option key={theme.id} value={theme.id}>{theme.name}</option>
+            ))}
           </select>
           <select className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
             <option>OneDark</option>
@@ -83,7 +105,7 @@ function App() {
         {/* 右侧预览 */}
         <div className="w-1/2 flex flex-col bg-white dark:bg-gray-800">
           <div className="p-2 border-b border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 shrink-0">
-            预览区域
+            预览区域 - {currentTheme.name}
           </div>
           <div className="flex-1 p-4 overflow-auto min-h-0">
             <div 
@@ -112,7 +134,7 @@ function App() {
           复制纯文本
         </button>
         <div className="flex-1" />
-        <span className="text-xs text-gray-400 dark:text-gray-500">自动保存: 已开启</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">当前主题: {currentTheme.name}</span>
       </footer>
     </div>
   )
