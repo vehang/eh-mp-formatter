@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
 import { parseMarkdown } from './utils/markdown'
-import { themes, applyTheme, type Theme } from './themes'
+import { themes, applyTheme } from './themes'
+import type { Theme } from './themes/types'
 import 'highlight.js/styles/atom-one-dark.css'
 import './styles/preview.css'
 import './App.css'
@@ -48,7 +49,7 @@ function App() {
     const theme = themes.find(t => t.id === themeId)
     if (theme) {
       setCurrentTheme(theme)
-      applyTheme(theme, document.body)
+      applyTheme(theme)
     }
   }
 
