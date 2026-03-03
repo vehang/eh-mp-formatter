@@ -40,10 +40,58 @@
 - 不可访问：Hacker News、Bing 等国际站点
 
 ## 已安装的 Skills
+
+### ClawHub Skills
+- multi-search-engine：17 个搜索引擎（8 国内 + 9 国际）
+- x-reader：国内链接解析（微信/小红书/B站/X）
+- find-skills：搜索发现更多 skill
+
+### cafe3310 Skills（16个）
+- remove-model-cliche：去 AI 腔
+- content-research-writer：深度文章写作
+- weekly-report-writer：周报撰写
+- project-learner：项目学习
+- im-local-kb：IM 知识库整理
+- long-audio-transcript-processor：长语音转写
+- git-snapshot-rollback：Git 安全回退
+- doc-todo-log-loop：轻量开发循环
+- project-management：项目管理范式
+- pmp-dev-process：PMP 式迭代
+- project-design-concept-organizer：设计理念整理
+- tdd-dev-cycle：TDD 工作流
+- browser-testing：浏览器测试
+- code-naming-auditor：代码术语审计
+- media-organizer：媒体库整理
+- im-contact-sorter：IM 联系人整理
+
+### 自定义 Skills
 - wechat-ai-publisher：微信公众号自动发布
 - github-tools-publisher：程序员宝盒公众号
 - multi-agent-dev：多 Agent 协作开发
 
 ## 待办事项
+- [ ] 测试 Feishu 图片发送（升级到 2026.3.2 后）
 - [ ] 等待用户提供微信公众号 AppID/AppSecret
 - [ ] 用户考虑是否安装 Claude Code
+
+## 技术发现
+
+### Docker 部署升级
+- **升级方式**：以 root 用户执行 `npm install -g openclaw@latest @openclaw/feishu@latest`
+- **PATH 问题**：`node` 和 `root` 用户 PATH 不同，升级后需更新符号链接
+- **解决方案**：
+  ```bash
+  ln -sf /home/node/.npm-global/lib/node_modules/openclaw /usr/local/lib/node_modules/openclaw
+  ln -sf /home/node/.npm-global/bin/openclaw /usr/local/bin/openclaw
+  ```
+
+### Agent 超时配置
+- 配置文件：`/home/node/.openclaw/openclaw.json`
+- 添加 `agents.defaults.timeoutSeconds: 120`
+- 解决 "Request timed out before a response was generated" 错误
+
+### x-reader 使用
+- **命令**：`x-reader <URL>`
+- **支持**：微信公众号、小红书、B站、X/Twitter
+- **原理**：Jina AI 抓取 → Playwright 浏览器回退
+- **存储**：`unified_inbox.json`（当前目录）
