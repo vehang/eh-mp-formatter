@@ -4,6 +4,10 @@
     "find-skills": {
       "version": "0.1.0",
       "installedAt": 1772504647743
+    },
+    "multi-search-engine": {
+      "version": "2.0.1",
+      "installedAt": 1772504941565
     }
   }
 }
