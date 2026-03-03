@@ -2,10 +2,50 @@
 
 ## 技术发现
 
-### Feishu 消息发送
-- **图片发送**：不能使用 `media` 参数发送本地文件路径，必须使用 `buffer` 参数发送 base64 编码的数据
-- **必需参数**：`buffer`（base64 数据）、`mimeType`（如 image/png）、`message`（文本消息）
-- **日期**：2026-03-02
+### Feishu 图片发送（重要！）
+
+**⚠️ 务必按以下方式发送图片，否则无法成功！**
+
+#### 正确方式
+```
+message 工具参数:
+- action: "send"
+- channel: "feishu"
+- media: "/完整/本地/路径/xxx.png"   ← 关键！必须是完整绝对路径
+- message: "图片说明文字"
+- target: "user:ou_xxx" 或 "chat:oc_xxx"
+```
+
+#### 支持格式
+jpg, jpeg, png, gif, webp, bmp, ico, tiff
+
+#### 示例
+```json
+{
+  "action": "send",
+  "channel": "feishu",
+  "media": "/home/node/.openclaw/workspace/webpage-screenshot.png",
+  "message": "网页截图",
+  "target": "user:ou_c181a94df7dab9d310523c96dd6f473a"
+}
+```
+
+#### 常用路径
+- 截图目录：`/home/node/.openclaw/workspace/screenshots/`
+- 工作区根目录：`/home/node/.openclaw/workspace/`
+
+#### 错误方式（不要用！）
+- ❌ `buffer` 参数 + base64 数据 → 不支持，mediaUrl 会是 null
+- ❌ 相对路径 → 必须用绝对路径
+- ❌ 不存在的路径 → 发送前务必确认文件存在
+
+#### 发送前检查
+```bash
+# 确认文件存在
+ls -la /path/to/image.png
+```
+
+- **验证日期**：2026-03-03（测试通过）
 
 ## 重要配置
 
