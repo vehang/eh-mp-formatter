@@ -133,10 +133,10 @@ ls -la /path/to/image.png
 - **配置文件**：
   - `settings.json` - 环境变量配置
   - `~/.claude.json` - 完成引导标记
-- **模型映射**：
+- **模型映射**：全部使用 GLM-5
   - Opus → GLM-5
-  - Sonnet → GLM-4.7
-  - Haiku → GLM-4.5-Air
+  - Sonnet → GLM-5
+  - Haiku → GLM-5
 - **API Base URL**：`https://open.bigmodel.cn/api/anthropic`
 - **自动修复**：升级后运行 `scripts/ensure-npm-path.sh` 自动恢复
 - **日期**：2026-03-03
