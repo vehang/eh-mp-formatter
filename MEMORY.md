@@ -111,8 +111,22 @@ ls -la /path/to/image.png
 
 ## 待办事项
 - [ ] 等待用户提供微信公众号 AppID/AppSecret
-- [ ] 用户考虑是否安装 Claude Code
 - [ ] 重启 Docker 容器让 compaction 配置生效
+
+### npm 全局安装目录（重要！）
+- **路径**：`/home/node/.openclaw/npm-global/`
+- **配置**：`npm config set prefix '/home/node/.openclaw/npm-global'`
+- **原因**：此目录在宿主机挂载，Docker 升级后不丢失
+- **已安装工具**：
+  - `claude` (Claude Code 2.1.63)
+- **使用方式**：
+  ```bash
+  export PATH="/home/node/.openclaw/npm-global/bin:$PATH"
+  claude --version
+  ```
+- **自动修复脚本**：`/home/node/.openclaw/workspace/scripts/ensure-npm-path.sh`
+- **触发条件**：如果发现 claude 命令不可用，自动执行修复脚本
+- **日期**：2026-03-03
 
 ## 技术发现
 
