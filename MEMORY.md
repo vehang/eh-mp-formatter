@@ -17,7 +17,7 @@
 ### Git 自动备份
 - 仓库：https://github.com/vehang/openclaw_backup
 - 分支：master
-- 备份频率：每 4 小时（00:00, 04:00, 08:00, 12:00, 16:00, 20:00）
+- 备份频率：每小时（有更新才备份）
 - 脚本：`/home/node/.openclaw/workspace/scripts/git-backup.sh`
 - 日志：`/home/node/.openclaw/workspace/memory/git-backup.log`
 - Cron ID：`3b73210c-7ecf-4523-a1b7-a780c5a925cd`
