@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
 import { parseMarkdown } from './utils/markdown'
 import { themes, applyTheme } from './themes'
@@ -7,43 +7,121 @@ import 'highlight.js/styles/atom-one-dark.css'
 import './styles/preview.css'
 import './App.css'
 
-const defaultMarkdown = `# 欢迎使用公众号排版工具
+const defaultMarkdown = `# 一级标题示例
 
-这是一个 **Markdown** 排版工具，支持：
+这是一段普通文字，用于测试**加粗**、*斜体*、~~删除线~~和\`行内代码\`的效果。
 
-- 多种主题样式
-- 代码高亮
-- 手机/电脑预览
+## 二级标题：文本样式
 
-## 代码示例
+### 强调与修饰
+
+- **这是加粗文字**
+- *这是斜体文字*
+- ***加粗且斜体***
+- ~~这是删除线~~
+- \`这是行内代码\`
+
+### 列表示例
+
+无序列表：
+- 第一项
+- 第二项
+  - 嵌套项 A
+  - 嵌套项 B
+- 第三项
+
+有序列表：
+1. 第一步
+2. 第二步
+3. 第三步
+
+## 代码块示例
 
 \`\`\`javascript
-function hello() {
-  console.log('Hello, World!')
+// JavaScript 代码示例
+function greet(name) {
+  console.log(\`Hello, \${name}!\`)
+  return {
+    message: 'Welcome',
+    timestamp: Date.now()
+  }
 }
+
+greet('World')
 \`\`\`
 
-## 引用示例
+\`\`\`python
+# Python 代码示例
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
 
-> 这是一段引用文字，用于展示引用块的样式效果。
+print([fibonacci(i) for i in range(10)])
+\`\`\`
+
+## 引用块
+
+> 这是一段引用文字。
+>
+> 引用块可以包含多行内容，用于展示重要信息或引述他人观点。
+>
+> — 作者名
 
 ## 表格示例
 
-| 功能 | 状态 |
-|------|------|
-| Markdown 解析 | ✅ |
-| 主题切换 | ✅ |
-| 代码高亮 | ✅ |
+| 功能 | 状态 | 说明 |
+|------|:----:|------|
+| Markdown 解析 | ✅ | 支持完整语法 |
+| 主题切换 | ✅ | 10+ 套主题 |
+| 代码高亮 | ✅ | 多语言支持 |
+| 实时预览 | ✅ | 即时渲染 |
 
-## 链接和图片
+## 链接与分隔
 
-这是一个 [链接示例](https://github.com)。
+这是一段包含[链接](https://github.com)的文字。
+
+---
+
+这是分隔线下方的文字。
+
+## 任务列表
+
+- [x] 完成需求分析
+- [x] 完成任务拆分
+- [ ] 进行开发
+- [ ] 测试验证
+
+## 组合示例
+
+> **温馨提示**：这是一条重要提示信息，请注意查看！
+
+在开发过程中，我们遵循 \`SOLID\` 原则：
+1. **S**ingle Responsibility
+2. **O**pen/Closed
+3. **L**iskov Substitution
+4. **I**nterface Segregation
+5. **D**ependency Inversion
+
+---
+
+*感谢使用公众号排版工具！* 🎉
 `
 
 function App() {
   const [markdown, setMarkdown] = useState(defaultMarkdown)
-  const [currentTheme, setCurrentTheme] = useState<Theme>(themes[0])
+  const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
+    // 从 URL 参数读取主题
+    const params = new URLSearchParams(window.location.search)
+    const themeId = params.get('theme')
+    return themes.find(t => t.id === themeId) || themes[0]
+  })
   const html = useMemo(() => parseMarkdown(markdown), [markdown])
+  
+  // 初始化时应用主题
+  useEffect(() => {
+    applyTheme(currentTheme)
+  }, [currentTheme])
 
   const handleThemeChange = (themeId: string) => {
     const theme = themes.find(t => t.id === themeId)
