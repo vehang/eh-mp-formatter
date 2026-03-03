@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
+import { parseMarkdown } from './utils/markdown'
+import 'highlight.js/styles/atom-one-dark.css'
+import './styles/preview.css'
 import './App.css'
 
 const defaultMarkdown = `# 欢迎使用公众号排版工具
@@ -29,6 +32,7 @@ function hello() {
 
 function App() {
   const [markdown, setMarkdown] = useState(defaultMarkdown)
+  const html = useMemo(() => parseMarkdown(markdown), [markdown])
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -82,9 +86,10 @@ function App() {
             预览区域
           </div>
           <div className="flex-1 p-4 overflow-auto min-h-0">
-            <div className="prose dark:prose-invert max-w-none">
-              <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">{markdown}</pre>
-            </div>
+            <div 
+              className="prose prose-sm max-w-none dark:prose-invert mp-preview"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
           </div>
         </div>
       </main>
