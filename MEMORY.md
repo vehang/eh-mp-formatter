@@ -22,6 +22,14 @@
 - 日志：`/home/node/.openclaw/workspace/memory/git-backup.log`
 - Cron ID：`3b73210c-7ecf-4523-a1b7-a780c5a925cd`
 
+**备份内容：**
+1. 工作区配置（AGENTS.md, SOUL.md, USER.md, MEMORY.md 等）
+2. Skills 配置（github-tools-publisher, multi-agent-dev, wechat-ai-publisher）
+3. Cron 任务配置（cron-jobs.json）
+4. OpenClaw 主配置模板（openclaw.json.template，敏感信息已脱敏）
+
+**恢复指南：** `backup-configs/README.md`
+
 ### 模型配置
 - 只有 GLM-5（智谱）可用
 - default/glm-5：通用任务
