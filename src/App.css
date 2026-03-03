@@ -1,22 +1,88 @@
 @import "tailwindcss";
 
-/* 全局样式 */
+/* ═══════════════════════════════════════════════════════════
+   设计系统变量
+   ═══════════════════════════════════════════════════════════ */
+
 :root {
-  --primary-color: #3B5998;
-  --bg-color: #F5F7FA;
-  --text-color: #2C3E50;
-  --border-color: #E1E8ED;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --radius-sm: 4px;
+  /* 间距系统 (8px 基础) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+
+  /* 圆角系统 */
+  --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
-  --transition-fast: 150ms ease;
-  --transition-normal: 200ms ease;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* 阴影系统 */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.06), 0 16px 48px rgba(0, 0, 0, 0.1);
+
+  /* 功能阴影 */
+  --shadow-button: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-button-hover: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-primary: 0 1px 3px rgba(59, 130, 246, 0.15), 0 4px 12px rgba(59, 130, 246, 0.1);
+
+  /* 动画时长 */
+  --duration-fast: 100ms;
+  --duration-normal: 180ms;
+  --duration-slow: 280ms;
+
+  /* 缓动函数 */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* 中性色 */
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+
+  /* 功能色 */
+  --blue-50: #EFF6FF;
+  --blue-100: #DBEAFE;
+  --blue-500: #3B82F6;
+  --blue-600: #2563EB;
+  --blue-700: #1D4ED8;
+  --green-500: #22C55E;
+  --green-600: #16A34A;
+  --red-500: #EF4444;
+  --amber-500: #F59E0B;
+
+  /* 界面色 */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9FAFB;
+  --bg-tertiary: #F3F4F6;
+  --border-primary: #E5E7EB;
+  --border-secondary: #D1D5DB;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-tertiary: #6B7280;
+  --text-placeholder: #9CA3AF;
 }
 
-/* 滚动条美化 */
+/* ═══════════════════════════════════════════════════════════
+   滚动条
+   ═══════════════════════════════════════════════════════════ */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -27,179 +93,245 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C1C7CD;
+  background: var(--gray-300);
   border-radius: 3px;
-  transition: background var(--transition-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #A0A6AB;
+  background: var(--gray-400);
 }
 
-/* 按钮基础样式 */
-button {
-  transition: all var(--transition-normal);
+/* ═══════════════════════════════════════════════════════════
+   按钮系统
+   ═══════════════════════════════════════════════════════════ */
+
+/* 基础按钮 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: 
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out),
+    background-color var(--duration-fast),
+    border-color var(--duration-fast);
+  user-select: none;
 }
 
-/* 选择器样式 */
-select {
-  transition: all var(--transition-normal);
+.btn:hover {
+  transform: translateY(-1px);
 }
 
-/* 卡片阴影效果 */
-.card-shadow {
-  box-shadow: var(--shadow-md);
+.btn:active {
+  transform: translateY(0);
+  transition-duration: var(--duration-fast);
 }
 
-.card-shadow-lg {
-  box-shadow: var(--shadow-lg);
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
-/* 圆角统一 */
-.rounded-sm {
-  border-radius: var(--radius-sm);
+/* 次要按钮 */
+.btn-secondary {
+  background: var(--bg-primary);
+  border-color: var(--border-primary);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-button);
 }
 
-.rounded-md {
+.btn-secondary:hover {
+  background: var(--gray-50);
+  border-color: var(--border-secondary);
+  box-shadow: var(--shadow-button-hover);
+}
+
+.btn-secondary:active {
+  background: var(--gray-100);
+}
+
+/* 主要按钮 */
+.btn-primary {
+  background: var(--blue-500);
+  color: white;
+  box-shadow: var(--shadow-primary);
+}
+
+.btn-primary:hover {
+  background: var(--blue-600);
+  box-shadow: 
+    0 2px 4px rgba(59, 130, 246, 0.2),
+    0 6px 16px rgba(59, 130, 246, 0.15);
+}
+
+.btn-primary:active {
+  background: var(--blue-700);
+}
+
+/* 成功按钮 */
+.btn-success {
+  background: var(--green-500);
+  color: white;
+  box-shadow: 0 1px 3px rgba(34, 197, 94, 0.15), 0 4px 12px rgba(34, 197, 94, 0.1);
+}
+
+.btn-success:hover {
+  background: var(--green-600);
+  box-shadow: 
+    0 2px 4px rgba(34, 197, 94, 0.2),
+    0 6px 16px rgba(34, 197, 94, 0.15);
+}
+
+/* 文本按钮 */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+  background: var(--gray-100);
+  color: var(--text-primary);
+}
+
+/* 图标按钮 */
+.btn-icon {
+  padding: var(--space-2);
   border-radius: var(--radius-md);
 }
 
-.rounded-lg {
-  border-radius: var(--radius-lg);
+/* ═══════════════════════════════════════════════════════════
+   选择器系统
+   ═══════════════════════════════════════════════════════════ */
+
+.select {
+  padding: var(--space-2) var(--space-3);
+  padding-right: var(--space-6);
+  font-size: 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: 
+    border-color var(--duration-fast),
+    box-shadow var(--duration-fast);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
 }
 
-/* 动画 */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.select:hover {
+  border-color: var(--border-secondary);
 }
 
-@keyframes slideIn {
-  from { 
-    transform: translateY(-10px); 
-    opacity: 0; 
-  }
-  to { 
-    transform: translateY(0); 
-    opacity: 1; 
-  }
-}
-
-@keyframes slideInUp {
-  from { 
-    transform: translateY(20px); 
-    opacity: 0; 
-  }
-  to { 
-    transform: translateY(0); 
-    opacity: 1; 
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(-25%);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-  }
-  50% {
-    transform: translateY(0);
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out;
-}
-
-.animate-slideIn {
-  animation: slideIn 0.3s ease-out;
-}
-
-.animate-slideInUp {
-  animation: slideInUp 0.3s ease-out;
-}
-
-/* 预览区域过渡效果 */
-.preview-container {
-  transition: all var(--transition-normal);
-}
-
-.preview-container:hover {
-  box-shadow: var(--shadow-lg);
-}
-
-/* 主题切换过渡 */
-.mp-preview * {
-  transition: color var(--transition-normal), 
-              background-color var(--transition-normal), 
-              border-color var(--transition-normal);
-}
-
-/* 按钮悬停效果 */
-.btn-hover-lift:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-/* 输入框焦点效果 */
-input:focus, 
-textarea:focus, 
-select:focus {
+.select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 89, 152, 0.1);
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* 工具提示 */
-.tooltip {
-  position: relative;
+/* ═══════════════════════════════════════════════════════════
+   卡片系统
+   ═══════════════════════════════════════════════════════════ */
+
+.card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--duration-normal) var(--ease-out);
 }
 
-.tooltip::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 8px;
-  font-size: 12px;
-  color: white;
-  background: #374151;
-  border-radius: 4px;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all var(--transition-fast);
-  pointer-events: none;
-  margin-bottom: 4px;
+.card-hover:hover {
+  box-shadow: var(--shadow-card-hover);
 }
 
-.tooltip:hover::after {
-  opacity: 1;
-  visibility: visible;
+/* ═══════════════════════════════════════════════════════════
+   切换按钮组
+   ═══════════════════════════════════════════════════════════ */
+
+.toggle-group {
+  display: inline-flex;
+  background: var(--gray-100);
+  border-radius: var(--radius-md);
+  padding: 2px;
 }
 
-/* 深色模式支持 */
+.toggle-btn {
+  padding: var(--space-2) var(--space-3);
+  font-size: 14px;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--text-tertiary);
+  border: none;
+  cursor: pointer;
+  transition: 
+    background-color var(--duration-fast),
+    color var(--duration-fast),
+    box-shadow var(--duration-fast);
+}
+
+.toggle-btn:hover {
+  color: var(--text-secondary);
+}
+
+.toggle-btn.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   焦点状态
+   ═══════════════════════════════════════════════════════════ */
+
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   主题过渡
+   ═══════════════════════════════════════════════════════════ */
+
+.theme-transition,
+.theme-transition * {
+  transition: 
+    color var(--duration-slow) var(--ease-out),
+    background-color var(--duration-slow) var(--ease-out),
+    border-color var(--duration-slow) var(--ease-out);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   深色模式
+   ═══════════════════════════════════════════════════════════ */
+
 .dark {
-  color-scheme: dark;
+  --bg-primary: #1F2937;
+  --bg-secondary: #111827;
+  --bg-tertiary: #0D1117;
+  --border-primary: #374151;
+  --border-secondary: #4B5563;
+  --text-primary: #F9FAFB;
+  --text-secondary: #D1D5DB;
+  --text-tertiary: #9CA3AF;
+  --text-placeholder: #6B7280;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #4B5563;
+  background: var(--gray-600);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #6B7280;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  :root {
-    --radius-md: 6px;
-    --radius-lg: 10px;
-  }
+  background: var(--gray-500);
 }
