@@ -70,11 +70,27 @@
 - multi-agent-dev：多 Agent 协作开发
 
 ## 待办事项
-- [ ] 测试 Feishu 图片发送（升级到 2026.3.2 后）
 - [ ] 等待用户提供微信公众号 AppID/AppSecret
 - [ ] 用户考虑是否安装 Claude Code
+- [ ] 重启 Docker 容器让 compaction 配置生效
 
 ## 技术发现
+
+### Context Limit 配置
+- **问题**：Context limit exceeded 导致对话重置
+- **配置**：`agents.defaults.compaction.reserveTokensFloor: 20000`
+- **位置**：`/home/node/.openclaw/openclaw.json`
+- **日期**：2026-03-03
+
+### 媒体路径安全限制
+- **问题**：`LocalMediaAccessError: Local media path is not under an allowed directory: /tmp/`
+- **原因**：OpenClaw 安全策略限制，`/tmp/` 不在白名单
+- **解决方案**：截图和临时文件保存到 `~/.openclaw/workspace/screenshots/`
+- **已修复文件**：
+  - `wechat-ai-publisher/scripts.sh`
+  - `wechat-ai-publisher/SKILL.md`
+  - `scripts/playwright-test.py`
+- **日期**：2026-03-03
 
 ### Docker 部署升级
 - **升级方式**：以 root 用户执行 `npm install -g openclaw@latest @openclaw/feishu@latest`

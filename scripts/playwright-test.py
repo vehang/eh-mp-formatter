@@ -4,10 +4,15 @@ Playwright 浏览器自动化测试（简化版）
 """
 
 import asyncio
+import os
 from playwright.async_api import async_playwright
 
 async def quick_browser_test():
     """快速浏览器测试"""
+    
+    # 截图保存路径（workspace 目录）
+    screenshot_dir = os.path.expanduser("~/.openclaw/workspace/screenshots")
+    os.makedirs(screenshot_dir, exist_ok=True)
     
     print("=" * 60)
     print("🧪 Playwright 浏览器自动化测试")
@@ -40,8 +45,9 @@ async def quick_browser_test():
         # 测试 4：截图
         print("\n📋 测试 4：截图测试")
         await page.goto('https://github.com', timeout=15000)
-        await page.screenshot(path='/tmp/github-screenshot.png')
-        print("✅ 截图已保存: /tmp/github-screenshot.png")
+        screenshot_path = os.path.join(screenshot_dir, "github-screenshot.png")
+        await page.screenshot(path=screenshot_path)
+        print(f"✅ 截图已保存: {screenshot_path}")
         
         # 关闭浏览器
         await browser.close()
