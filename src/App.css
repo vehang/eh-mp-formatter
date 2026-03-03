@@ -6,6 +6,14 @@
   --bg-color: #F5F7FA;
   --text-color: #2C3E50;
   --border-color: #E1E8ED;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
 }
 
 /* 滚动条美化 */
@@ -21,10 +29,43 @@
 ::-webkit-scrollbar-thumb {
   background: #C1C7CD;
   border-radius: 3px;
+  transition: background var(--transition-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #A0A6AB;
+}
+
+/* 按钮基础样式 */
+button {
+  transition: all var(--transition-normal);
+}
+
+/* 选择器样式 */
+select {
+  transition: all var(--transition-normal);
+}
+
+/* 卡片阴影效果 */
+.card-shadow {
+  box-shadow: var(--shadow-md);
+}
+
+.card-shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+/* 圆角统一 */
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+
+.rounded-md {
+  border-radius: var(--radius-md);
+}
+
+.rounded-lg {
+  border-radius: var(--radius-lg);
 }
 
 /* 动画 */
@@ -34,8 +75,41 @@
 }
 
 @keyframes slideIn {
-  from { transform: translateY(-10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { 
+    transform: translateY(-10px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+@keyframes slideInUp {
+  from { 
+    transform: translateY(20px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
 }
 
 .animate-fadeIn {
@@ -44,4 +118,88 @@
 
 .animate-slideIn {
   animation: slideIn 0.3s ease-out;
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.3s ease-out;
+}
+
+/* 预览区域过渡效果 */
+.preview-container {
+  transition: all var(--transition-normal);
+}
+
+.preview-container:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* 主题切换过渡 */
+.mp-preview * {
+  transition: color var(--transition-normal), 
+              background-color var(--transition-normal), 
+              border-color var(--transition-normal);
+}
+
+/* 按钮悬停效果 */
+.btn-hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 输入框焦点效果 */
+input:focus, 
+textarea:focus, 
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 89, 152, 0.1);
+}
+
+/* 工具提示 */
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  font-size: 12px;
+  color: white;
+  background: #374151;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-fast);
+  pointer-events: none;
+  margin-bottom: 4px;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 深色模式支持 */
+.dark {
+  color-scheme: dark;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4B5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6B7280;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  :root {
+    --radius-md: 6px;
+    --radius-lg: 10px;
+  }
 }
