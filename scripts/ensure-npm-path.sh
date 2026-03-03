@@ -1,8 +1,12 @@
 #!/bin/bash
-# 确保 npm 全局路径正确
+# 确保 npm 全局路径和 Claude Code 配置正确
 # 如果发现路径不对，自动修复
 
 NPM_PREFIX="/home/node/.openclaw/npm-global"
+CLAUDE_CONFIG_DIR="/home/node/.openclaw/claude-config"
+CLAUDE_JSON="/home/node/.openclaw/.claude.json"
+
+echo "===== 检查 npm 全局路径 ====="
 EXPECTED_PREFIX="$NPM_PREFIX"
 CURRENT_PREFIX=$(npm config get prefix 2>/dev/null)
 
@@ -20,6 +24,60 @@ fi
 # 确保 PATH 包含自定义目录
 export PATH="$NPM_PREFIX/bin:$PATH"
 
+echo ""
+echo "===== 检查 Claude Code 配置 ====="
+
+# 检查 ~/.claude 符号链接
+if [ ! -L "/home/node/.claude" ] || [ "$(readlink /home/node/.claude)" != "$CLAUDE_CONFIG_DIR" ]; then
+    echo "⚠️ ~/.claude 符号链接不正确，正在修复..."
+    mkdir -p "$CLAUDE_CONFIG_DIR"
+    ln -sf "$CLAUDE_CONFIG_DIR" /home/node/.claude
+    echo "✅ 已修复 ~/.claude 符号链接"
+else
+    echo "✅ ~/.claude 符号链接正确"
+fi
+
+# 检查 ~/.claude.json 符号链接
+if [ ! -L "/home/node/.claude.json" ] || [ "$(readlink /home/node/.claude.json)" != "$CLAUDE_JSON" ]; then
+    echo "⚠️ ~/.claude.json 符号链接不正确，正在修复..."
+    ln -sf "$CLAUDE_JSON" /home/node/.claude.json
+    echo "✅ 已修复 ~/.claude.json 符号链接"
+else
+    echo "✅ ~/.claude.json 符号链接正确"
+fi
+
+# 检查 settings.json 是否存在
+if [ ! -f "$CLAUDE_CONFIG_DIR/settings.json" ]; then
+    echo "⚠️ Claude Code settings.json 不存在，正在创建..."
+    cat > "$CLAUDE_CONFIG_DIR/settings.json" << 'EOF'
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "697e4a18cc904043a768c421f6b26f1b.D5DLxHV4lKXSSnjl",
+    "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
+    "API_TIMEOUT_MS": "3000000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5"
+  }
+}
+EOF
+    echo "✅ 已创建 settings.json"
+else
+    echo "✅ settings.json 存在"
+fi
+
+# 检查 .claude.json 是否存在
+if [ ! -f "$CLAUDE_JSON" ]; then
+    echo "⚠️ .claude.json 不存在，正在创建..."
+    echo '{"hasCompletedOnboarding": true}' > "$CLAUDE_JSON"
+    echo "✅ 已创建 .claude.json"
+else
+    echo "✅ .claude.json 存在"
+fi
+
+echo ""
+echo "===== 检查 claude 命令 ====="
 # 检查 claude 是否可用
 if command -v claude &>/dev/null; then
     echo "✅ claude 命令可用: $(claude --version 2>&1 | head -1)"
@@ -30,3 +88,6 @@ else
     echo "⚠️ claude 未安装，正在安装..."
     npm install -g @anthropic-ai/claude-code
 fi
+
+echo ""
+echo "===== 全部检查完成 ====="

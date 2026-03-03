@@ -128,6 +128,19 @@ ls -la /path/to/image.png
 - **触发条件**：如果发现 claude 命令不可用，自动执行修复脚本
 - **日期**：2026-03-03
 
+### Claude Code 配置（智谱 GLM-5）
+- **配置目录**：`/home/node/.openclaw/claude-config/`（符号链接到 `~/.claude`）
+- **配置文件**：
+  - `settings.json` - 环境变量配置
+  - `~/.claude.json` - 完成引导标记
+- **模型映射**：
+  - Opus → GLM-5
+  - Sonnet → GLM-4.7
+  - Haiku → GLM-4.5-Air
+- **API Base URL**：`https://open.bigmodel.cn/api/anthropic`
+- **自动修复**：升级后运行 `scripts/ensure-npm-path.sh` 自动恢复
+- **日期**：2026-03-03
+
 ## 技术发现
 
 ### Context Limit 配置
