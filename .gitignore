@@ -1,0 +1,43 @@
+# 环境变量和敏感文件
+.env
+.env.*
+*.env
+
+# Token 和密钥
+*tokens*
+*tokens*.json
+*secret*
+*key*.pem
+*key*.key
+*.pem
+*.key
+
+# OpenClaw 内部敏感数据
+.openclaw/secrets/
+.openclaw/*.key
+.openclaw/*.token
+
+# 认证缓存
+.openclaw/auth-cache/
+.openclaw/sessions/
+
+# Node modules
+node_modules/
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+*.swp
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 已发送新闻去重文件（运行时数据）
+scripts/sent-news.json
+
+# Skills 中的敏感配置（如果有）
+skills/**/config.local.json
+skills/**/.env
