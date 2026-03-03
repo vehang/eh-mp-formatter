@@ -32,7 +32,7 @@ git add -A
 
 # 生成提交信息
 CHANGES=$(git status --short | wc -l)
-COMMIT_MSG="Auto backup: $CHANGES files changed ($(date '+%Y-%m-%d %H:%M'))"
+COMMIT_MSG="自动备份：$CHANGES 个文件变更 ($(date '+%Y-%m-%d %H:%M'))"
 
 # 提交
 git commit -m "$COMMIT_MSG" >> "$LOG_FILE" 2>&1
