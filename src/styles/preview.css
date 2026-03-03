@@ -3,13 +3,16 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.8;
   color: #333;
+  word-wrap: break-word;
 }
 
+/* 标题样式 */
 .mp-preview h1 {
   font-size: 24px;
   font-weight: 700;
   margin: 20px 0 10px;
   color: #333;
+  line-height: 1.4;
 }
 
 .mp-preview h2 {
@@ -19,6 +22,7 @@
   color: #333;
   border-bottom: 1px solid #eee;
   padding-bottom: 8px;
+  line-height: 1.4;
 }
 
 .mp-preview h3 {
@@ -26,45 +30,104 @@
   font-weight: 600;
   margin: 16px 0 6px;
   color: #333;
+  line-height: 1.4;
 }
 
+.mp-preview h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 14px 0 6px;
+  color: #333;
+}
+
+/* 段落 */
 .mp-preview p {
   margin: 12px 0;
   text-align: justify;
+  line-height: 1.8;
 }
 
-.mp-preview ul, .mp-preview ol {
+/* 无序列表 - 确保圆点显示 */
+.mp-preview ul {
   margin: 12px 0;
-  padding-left: 24px;
+  padding-left: 1.5em;
+  list-style-type: disc;
+  list-style-position: outside;
 }
 
-.mp-preview li {
+.mp-preview ul li {
+  margin: 6px 0;
+  line-height: 1.8;
+  list-style-type: disc;
+}
+
+/* 嵌套无序列表 */
+.mp-preview ul ul {
+  list-style-type: circle;
   margin: 4px 0;
 }
 
+.mp-preview ul ul ul {
+  list-style-type: square;
+}
+
+/* 有序列表 - 确保数字显示 */
+.mp-preview ol {
+  margin: 12px 0;
+  padding-left: 1.5em;
+  list-style-type: decimal;
+  list-style-position: outside;
+}
+
+.mp-preview ol li {
+  margin: 6px 0;
+  line-height: 1.8;
+  list-style-type: decimal;
+}
+
+/* 嵌套有序列表 */
+.mp-preview ol ol {
+  list-style-type: lower-alpha;
+  margin: 4px 0;
+}
+
+.mp-preview ol ol ol {
+  list-style-type: lower-roman;
+}
+
+/* 引用块 */
 .mp-preview blockquote {
   margin: 16px 0;
   padding: 12px 16px;
-  background: #f6f8fa;
+  background: #f8f9fa;
   border-left: 4px solid #8064a9;
   color: #555;
+  border-radius: 0 8px 8px 0;
+  font-style: normal;
 }
 
+.mp-preview blockquote p {
+  margin: 8px 0;
+}
+
+/* 行内代码 */
 .mp-preview code {
-  background: #f0f0f0;
+  background: #f4f4f5;
   padding: 2px 6px;
   border-radius: 4px;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 14px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.9em;
   color: #e83e8c;
 }
 
+/* 代码块 */
 .mp-preview pre {
   margin: 16px 0;
   padding: 16px;
   background: #282c34;
   border-radius: 8px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .mp-preview pre code {
@@ -73,38 +136,72 @@
   color: #abb2bf;
   font-size: 14px;
   line-height: 1.6;
+  white-space: pre;
 }
 
+/* 表格 */
 .mp-preview table {
   width: 100%;
   margin: 16px 0;
   border-collapse: collapse;
+  font-size: 14px;
 }
 
 .mp-preview th, .mp-preview td {
-  border: 1px solid #ddd;
-  padding: 10px 12px;
+  border: 1px solid #e8e8e8;
+  padding: 10px 14px;
   text-align: left;
 }
 
 .mp-preview th {
-  background: #f6f8fa;
+  background: #fafafa;
   font-weight: 600;
 }
 
+.mp-preview tr:nth-child(even) {
+  background: #fafafa;
+}
+
+/* 链接 */
 .mp-preview a {
   color: #576b95;
   text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
 }
 
+.mp-preview a:hover {
+  border-bottom-color: #576b95;
+}
+
+/* 图片 */
 .mp-preview img {
   max-width: 100%;
+  height: auto;
   border-radius: 4px;
   margin: 12px 0;
+  display: block;
 }
 
+/* 分割线 */
 .mp-preview hr {
   border: none;
   border-top: 1px solid #eee;
-  margin: 20px 0;
+  margin: 24px 0;
+}
+
+/* 强调 */
+.mp-preview strong {
+  font-weight: 600;
+  color: #333;
+}
+
+.mp-preview em {
+  font-style: italic;
+}
+
+/* 删除线 */
+.mp-preview del {
+  text-decoration: line-through;
+  color: #999;
 }
