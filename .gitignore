@@ -41,3 +41,6 @@ scripts/sent-news.json
 # Skills 中的敏感配置（如果有）
 skills/**/config.local.json
 skills/**/.env
+
+# 嵌套的 git 仓库（独立管理）
+wechat-ai-publisher/
