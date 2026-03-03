@@ -10,6 +10,17 @@ cd "$WORKSPACE" || exit 1
 # 记录时间
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting backup..." >> "$LOG_FILE"
 
+# 同步外部配置到备份目录
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Syncing external configs..." >> "$LOG_FILE"
+
+# 同步 Skills
+rsync -a --delete /home/node/.openclaw/skills/github-tools-publisher/ "$WORKSPACE/backup-configs/github-tools-publisher/" 2>> "$LOG_FILE"
+rsync -a --delete /home/node/.openclaw/skills/multi-agent-dev/ "$WORKSPACE/backup-configs/multi-agent-dev/" 2>> "$LOG_FILE"
+rsync -a --delete /home/node/.openclaw/skills/wechat-ai-publisher/ "$WORKSPACE/backup-configs/wechat-ai-publisher/" 2>> "$LOG_FILE"
+
+# 同步 Cron 配置
+cp /home/node/.openclaw/cron/jobs.json "$WORKSPACE/backup-configs/cron-jobs.json" 2>> "$LOG_FILE"
+
 # 检查是否有变更
 if git diff --quiet && git diff --staged --quiet; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] No changes to commit" >> "$LOG_FILE"

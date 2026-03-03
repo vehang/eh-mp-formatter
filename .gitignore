@@ -42,5 +42,5 @@ scripts/sent-news.json
 skills/**/config.local.json
 skills/**/.env
 
-# 嵌套的 git 仓库（独立管理）
-wechat-ai-publisher/
+# 嵌套的 git 仓库（独立管理，但备份配置目录除外）
+/wechat-ai-publisher/
