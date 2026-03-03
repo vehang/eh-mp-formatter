@@ -132,15 +132,6 @@ ls -la /path/to/image.png
   - `scripts/playwright-test.py`
 - **日期**：2026-03-03
 
-### Docker 部署升级
-- **升级方式**：以 root 用户执行 `npm install -g openclaw@latest @openclaw/feishu@latest`
-- **PATH 问题**：`node` 和 `root` 用户 PATH 不同，升级后需更新符号链接
-- **解决方案**：
-  ```bash
-  ln -sf /home/node/.npm-global/lib/node_modules/openclaw /usr/local/lib/node_modules/openclaw
-  ln -sf /home/node/.npm-global/bin/openclaw /usr/local/bin/openclaw
-  ```
-
 ### Agent 超时配置
 - 配置文件：`/home/node/.openclaw/openclaw.json`
 - 添加 `agents.defaults.timeoutSeconds: 120`
