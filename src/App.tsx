@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
+import { BrandLogo } from './components/BrandLogo'
+import { ToastProvider, useToast } from './components/Toast'
 import { parseMarkdown } from './utils/markdown'
 import { themes, applyTheme, defaultTheme } from './themes'
 import type { Theme } from './themes/types'
@@ -88,6 +90,8 @@ function App() {
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop')
   const [darkMode, setDarkMode] = useState(false)
   
+  const toast = useToast()
+  
   const html = useMemo(() => parseMarkdown(markdown), [markdown])
   
   useEffect(() => {
@@ -108,6 +112,25 @@ function App() {
     }
   }
 
+  const handleCopyHTML = () => {
+    navigator.clipboard.writeText(html).then(() => {
+      toast.showToast('已复制 HTML 到剪贴板', 'success')
+    }).catch(() => {
+      toast.showToast('复制失败', 'error')
+    })
+  }
+
+  const handleCopyText = () => {
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = html
+    const text = tempDiv.textContent || tempDiv.innerText || ''
+    navigator.clipboard.writeText(text).then(() => {
+      toast.showToast('已复制纯文本到剪贴板', 'success')
+    }).catch(() => {
+      toast.showToast('复制失败', 'error')
+    })
+  }
+
   return (
     <div className={`h-screen flex flex-col ${darkMode ? 'dark' : ''}`} style={{ background: darkMode ? 'var(--bg-secondary)' : 'var(--gray-50)' }}>
       {/* 顶部工具栏 */}
@@ -119,25 +142,7 @@ function App() {
           padding: '0 var(--space-5)'
         }}
       >
-        <div className="flex items-center gap-3">
-          <div 
-            className="flex items-center justify-center"
-            style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              fontSize: '14px',
-              fontWeight: 600,
-              color: 'white'
-            }}
-          >
-            M
-          </div>
-          <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
-            公众号排版工具
-          </span>
-        </div>
+        <BrandLogo />
         
         <div className="flex items-center gap-4">
           {/* 主题选择 */}
@@ -320,10 +325,10 @@ function App() {
         </div>
         
         <div className="flex items-center gap-2">
-          <button className="btn btn-primary">
+          <button className="btn btn-primary" onClick={handleCopyHTML}>
             复制 HTML
           </button>
-          <button className="btn btn-success">
+          <button className="btn btn-success" onClick={handleCopyText}>
             复制纯文本
           </button>
         </div>
