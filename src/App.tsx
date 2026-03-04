@@ -2,6 +2,9 @@ import { useState, useMemo, useEffect } from 'react'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
 import { BrandLogo } from './components/BrandLogo'
 import { ToastProvider, useToast } from './components/Toast'
+import { useHistory } from './hooks/useHistory'
+import { useKeyboard } from './hooks/useKeyboard'
+import { useAutoSave } from './hooks/useAutoSave'
 import { parseMarkdown } from './utils/markdown'
 import { themes, applyTheme, defaultTheme } from './themes'
 import type { Theme } from './themes/types'
@@ -81,7 +84,7 @@ greet('World')
 `
 
 function App() {
-  const [markdown, setMarkdown] = useState(defaultMarkdown)
+  const { value: markdown, setValue: setMarkdown, undo, redo, canUndo, canRedo } = useHistory(defaultMarkdown)
   const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
     const params = new URLSearchParams(window.location.search)
     const themeId = params.get('theme')
@@ -91,6 +94,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(false)
   
   const toast = useToast()
+  const { savedAt, isSaving } = useAutoSave('markdown-content', markdown, 2000)
   
   const html = useMemo(() => parseMarkdown(markdown), [markdown])
   
@@ -130,6 +134,15 @@ function App() {
       toast.showToast('复制失败', 'error')
     })
   }
+
+  // 快捷键系统
+  useKeyboard([
+    { key: 'z', ctrlKey: true, handler: undo },
+    { key: 'z', ctrlKey: true, shiftKey: true, handler: redo },
+    { key: 'y', ctrlKey: true, handler: redo },
+    { key: 's', ctrlKey: true, handler: () => toast.showToast('已自动保存', 'success') },
+    { key: 'c', ctrlKey: true, shiftKey: true, handler: handleCopyHTML },
+  ])
 
   return (
     <div className={`h-screen flex flex-col ${darkMode ? 'dark' : ''}`} style={{ background: darkMode ? 'var(--bg-secondary)' : 'var(--gray-50)' }}>
@@ -189,6 +202,24 @@ function App() {
             title={darkMode ? '切换到日间模式' : '切换到夜间模式'}
           >
             {darkMode ? '☀️' : '🌙'}
+          </button>
+          
+          {/* 撤销/重做 */}
+          <button 
+            onClick={undo}
+            disabled={!canUndo}
+            className="btn btn-ghost"
+            title="撤销 (Ctrl+Z)"
+          >
+            ↶
+          </button>
+          <button 
+            onClick={redo}
+            disabled={!canRedo}
+            className="btn btn-ghost"
+            title="重做 (Ctrl+Shift+Z)"
+          >
+            ↷
           </button>
           
           {/* 清空 */}
@@ -334,6 +365,12 @@ function App() {
         </div>
         
         <div className="flex items-center gap-3" style={{ fontSize: '12px', color: 'var(--text-placeholder)' }}>
+          {isSaving ? (
+            <span style={{ color: 'var(--amber-500)' }}>保存中...</span>
+          ) : savedAt ? (
+            <span>✓ 已保存</span>
+          ) : null}
+          <span>·</span>
           <span>{currentTheme.name}</span>
           <span>·</span>
           <span>{previewMode === 'mobile' ? '手机' : '电脑'}</span>
