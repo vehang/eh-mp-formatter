@@ -11,13 +11,40 @@ import { parseMarkdown } from './utils/markdown'
 import { fetchUrlContent } from './utils/urlFetcher'
 import { themes, applyTheme, defaultTheme } from './themes'
 import type { Theme } from './themes/types'
-import 'highlight.js/styles/github-dark.css'
 import './styles/preview.css'
 import './App.css'
 
+// 代码风格配置
+const codeStyles = [
+  { id: 'github-dark', name: 'GitHub Dark', css: 'highlight.js/styles/github-dark.css' },
+  { id: 'atom-one-dark', name: 'OneDark', css: 'highlight.js/styles/atom-one-dark.css' },
+  { id: 'monokai', name: 'Monokai', css: 'highlight.js/styles/monokai.css' },
+  { id: 'github', name: 'GitHub Light', css: 'highlight.js/styles/github.css' },
+  { id: 'atom-one-light', name: 'OneLight', css: 'highlight.js/styles/atom-one-light.css' },
+]
+
+// 动态加载代码风格
+let loadedStyleId: string | null = null
+function loadCodeStyle(styleId: string) {
+  if (loadedStyleId === styleId) return
+  const style = codeStyles.find(s => s.id === styleId)
+  if (style) {
+    // 移除旧样式
+    const oldLink = document.getElementById('hljs-style')
+    if (oldLink) oldLink.remove()
+    // 添加新样式
+    const link = document.createElement('link')
+    link.id = 'hljs-style'
+    link.rel = 'stylesheet'
+    link.href = style.css
+    document.head.appendChild(link)
+    loadedStyleId = styleId
+  }
+}
+
 const defaultMarkdown = `# 一级标题示例
 
-这是一段普通文字，用于测试**加粗**、*斜体*、~~删除线~~和\`行内代码\`的效果。
+这是一段普通文字，用于测试**加粗**、*斜体*、~~删除线~~和\`行内代码\`的效果。还可以包含[链接](https://github.com)和脚注[^1]。
 
 ## 二级标题：文本样式
 
@@ -28,41 +55,120 @@ const defaultMarkdown = `# 一级标题示例
 - ***加粗且斜体***
 - ~~这是删除线~~
 - \`这是行内代码\`
+- ==这是高亮文字==
 
-### 列表示例
+### 任务列表
 
-无序列表：
+- [x] 已完成的任务
+- [x] 另一个已完成
+- [ ] 待办事项
+- [ ] 还没做的事
+
+## 列表示例
+
+### 无序列表
+
 - 第一项
 - 第二项
   - 嵌套项 A
   - 嵌套项 B
+    - 更深层级
 - 第三项
 
-有序列表：
-1. 第一步
-2. 第二步
-3. 第三步
+### 有序列表
+
+1. 第一步：准备工作
+2. 第二步：执行操作
+3. 第三步：验证结果
 
 ## 代码块示例
 
+### JavaScript
+
 \`\`\`javascript
-// JavaScript 代码示例
-function greet(name) {
-  console.log(\`Hello, \${name}!\`)
+// 异步函数示例
+async function fetchUserData(userId) {
+  const response = await fetch(\`/api/users/\${userId}\`)
+  const data = await response.json()
+
   return {
-    message: 'Welcome',
-    timestamp: Date.now()
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    createdAt: new Date(data.timestamp)
   }
 }
 
-greet('World')
+// 使用示例
+const user = await fetchUserData(123)
+console.log(\`用户: \${user.name}\`)
+\`\`\`
+
+### Python
+
+\`\`\`python
+# 类定义示例
+class DataProcessor:
+    def __init__(self, config):
+        self.config = config
+        self.data = []
+
+    def process(self, items):
+        """处理数据列表"""
+        return [self._transform(item) for item in items]
+
+    def _transform(self, item):
+        return item.strip().lower()
+
+# 使用
+processor = DataProcessor({"mode": "strict"})
+result = processor.process(["Hello", "WORLD"])
+\`\`\`
+
+### CSS
+
+\`\`\`css
+/* 现代化卡片样式 */
+.card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+\`\`\`
+
+### TypeScript
+
+\`\`\`typescript
+interface User {
+  id: number
+  name: string
+  email: string
+  role: 'admin' | 'user' | 'guest'
+}
+
+function validateUser(user: unknown): user is User {
+  return (
+    typeof user === 'object' &&
+    user !== null &&
+    'id' in user &&
+    'name' in user
+  )
+}
 \`\`\`
 
 ## 引用块
 
-> 这是一段引用文字。
+> 💡 **提示**：这是一段引用文字，可以用于展示重要信息。
 >
-> 引用块可以包含多行内容，用于展示重要信息或引述他人观点。
+> 引用块可以包含多行内容，用于展示重要信息或引述他人观点。支持**加粗**和*斜体*。
 
 ## 表格示例
 
@@ -72,18 +178,48 @@ greet('World')
 | 主题切换 | ✅ | 5 套专业主题 |
 | 代码高亮 | ✅ | 多语言支持 |
 | 实时预览 | ✅ | 即时渲染 |
+| 导出功能 | 🚧 | 开发中 |
 
-## 链接与分隔
+### 复杂表格
 
-这是一段包含[链接](https://github.com)的文字。
+| 模块 | 技术 | 版本 | 描述 |
+|------|------|:----:|------|
+| 前端框架 | React | 18.2 | 用户界面构建 |
+| 状态管理 | Zustand | 4.4 | 轻量状态方案 |
+| 样式方案 | Tailwind | 3.4 | 原子化 CSS |
+| 构建工具 | Vite | 5.0 | 极速开发体验 |
+
+## 图片示例
+
+![Unsplash 示例图片](https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80)
+
+*图片来源：Unsplash - 代码与编程*
+
+## 数学公式
+
+行内公式：$E = mc^2$
+
+块级公式：
+
+$$
+\\sum_{i=1}^{n} x_i = x_1 + x_2 + \\cdots + x_n
+$$
+
+## 分隔线
+
+上面的内容与下面的内容之间有分隔。
 
 ---
 
 这是分隔线下方的文字。
 
+## 脚注
+
+[^1]: 这是一个脚注示例，用于添加额外说明或引用来源。
+
 ---
 
-*感谢使用排版助手！*
+*感谢使用排版助手！由 ❤️ 驱动开发*
 `
 
 function App() {
@@ -95,6 +231,7 @@ function App() {
     return themes.find(t => t.id === themeId) || defaultTheme
   })
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop')
+  const [codeStyle, setCodeStyle] = useState('github-dark')
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
   const [isFetchingUrl, setIsFetchingUrl] = useState(false)
 
@@ -106,6 +243,10 @@ function App() {
   useEffect(() => {
     applyTheme(currentTheme)
   }, [currentTheme])
+
+  useEffect(() => {
+    loadCodeStyle(codeStyle)
+  }, [codeStyle])
 
   const handleThemeChange = (themeId: string) => {
     const theme = themes.find(t => t.id === themeId)
@@ -219,10 +360,15 @@ function App() {
           {/* 代码风格 */}
           <div className="flex items-center gap-2">
             <span className="iconify icon-md" data-icon="lucide:code-2" style={{ color: 'var(--text-muted)' }}></span>
-            <select className="select" style={{ minWidth: '100px' }}>
-              <option>GitHub Dark</option>
-              <option>OneDark</option>
-              <option>Monokai</option>
+            <select
+              value={codeStyle}
+              onChange={(e) => setCodeStyle(e.target.value)}
+              className="select"
+              style={{ minWidth: '100px' }}
+            >
+              {codeStyles.map(style => (
+                <option key={style.id} value={style.id}>{style.name}</option>
+              ))}
             </select>
           </div>
 
@@ -324,10 +470,11 @@ function App() {
             <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
             <span className="panel-title">预览</span>
             <span className="panel-badge">{currentTheme.name}</span>
+            <div className="flex-1" />
             <button
               className="btn btn-primary"
               onClick={handleCopyHTML}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '8px', padding: '4px 10px', fontSize: '13px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
             >
               <span className="iconify icon-sm" data-icon="lucide:copy"></span>
               复制排版
@@ -335,13 +482,12 @@ function App() {
             <button
               className="btn btn-success"
               onClick={handleCopyText}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '8px', padding: '4px 10px', fontSize: '13px' }}
             >
               <span className="iconify icon-sm" data-icon="lucide:file-text"></span>
               复制文字
             </button>
-            <div className="flex-1" />
-            <span className="panel-meta">{previewMode === 'mobile' ? '375px' : '自适应'}</span>
+            <span className="panel-meta" style={{ marginLeft: '12px' }}>{previewMode === 'mobile' ? '375px' : '自适应'}</span>
           </div>
           <div
             className="flex-1 overflow-auto flex justify-center"
