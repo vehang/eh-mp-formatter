@@ -183,6 +183,26 @@ function App() {
         <BrandLogo />
 
         <div className="flex items-center gap-3">
+          {/* 复制按钮 */}
+          <button
+            className="btn btn-primary"
+            onClick={handleCopyHTML}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <span className="iconify icon-sm" data-icon="lucide:copy"></span>
+            复制排版
+          </button>
+          <button
+            className="btn btn-success"
+            onClick={handleCopyText}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <span className="iconify icon-sm" data-icon="lucide:file-text"></span>
+            复制文字
+          </button>
+
+          <div className="toolbar-divider" />
+
           {/* UI 主题切换 */}
           <button
             onClick={uiTheme.toggleTheme}
@@ -295,7 +315,16 @@ function App() {
             <span className="iconify icon-sm" data-icon="lucide:file-text" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
             <span className="panel-title">Markdown</span>
             <div className="flex-1" />
-            <span className="panel-meta">{markdown.length} 字</span>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setIsUrlModalOpen(true)}
+              title="抓取网页内容"
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', fontSize: '12px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:link"></span>
+              抓取链接
+            </button>
+            <span className="panel-meta" style={{ marginLeft: '8px' }}>{markdown.length} 字</span>
           </div>
           <div className="flex-1 min-h-0">
             <CodeMirrorEditor
@@ -352,47 +381,17 @@ function App() {
       </main>
 
       {/* ═══════════════════════════════════════════════
-          底部操作栏
+          底部状态栏
           ═══════════════════════════════════════════════ */}
       <footer
-        className="flex items-center justify-between"
+        className="flex items-center justify-end"
         style={{
-          height: '48px',
+          height: '36px',
           padding: '0 var(--space-5)',
           background: 'var(--bg-surface)',
           borderTop: '1px solid var(--border-subtle)'
         }}
       >
-        <div className="flex items-center gap-2">
-          <button
-            className="btn btn-secondary"
-            onClick={() => setIsUrlModalOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <span className="iconify icon-sm" data-icon="lucide:link"></span>
-            抓取链接
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            className="btn btn-primary"
-            onClick={handleCopyHTML}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <span className="iconify icon-sm" data-icon="lucide:copy"></span>
-            复制排版
-          </button>
-          <button
-            className="btn btn-success"
-            onClick={handleCopyText}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <span className="iconify icon-sm" data-icon="lucide:file-text"></span>
-            复制文字
-          </button>
-        </div>
-
         <div className="flex items-center gap-3" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
           {isSaving ? (
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
