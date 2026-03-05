@@ -5,6 +5,7 @@ import { useToast } from './components/Toast'
 import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useAutoSave } from './hooks/useAutoSave'
+import { useUITheme } from './hooks/useUITheme'
 import { parseMarkdown } from './utils/markdown'
 import { themes, applyTheme, defaultTheme } from './themes'
 import type { Theme } from './themes/types'
@@ -85,6 +86,7 @@ greet('World')
 
 function App() {
   const { value: markdown, setValue: setMarkdown, undo, redo, canUndo, canRedo } = useHistory(defaultMarkdown)
+  const uiTheme = useUITheme()
   const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
     const params = new URLSearchParams(window.location.search)
     const themeId = params.get('theme')
@@ -163,6 +165,24 @@ function App() {
         <BrandLogo />
 
         <div className="flex items-center gap-3">
+          {/* UI 主题切换 */}
+          <button
+            onClick={uiTheme.toggleTheme}
+            className="theme-toggle-btn"
+            title={uiTheme.isDark ? '切换到浅色模式' : '切换到深色模式'}
+          >
+            <div className="theme-icon-wrapper">
+              <span className="theme-icon-sun">
+                <span className="iconify" data-icon="lucide:sun" style={{ fontSize: '18px' }}></span>
+              </span>
+              <span className="theme-icon-moon">
+                <span className="iconify" data-icon="lucide:moon" style={{ fontSize: '18px' }}></span>
+              </span>
+            </div>
+          </button>
+
+          <div className="toolbar-divider" />
+
           {/* 主题选择 */}
           <div className="flex items-center gap-2">
             <span className="iconify icon-md" data-icon="lucide:palette" style={{ color: 'var(--text-muted)' }}></span>
