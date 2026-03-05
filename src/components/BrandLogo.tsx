@@ -4,35 +4,18 @@ export function BrandLogo() {
       <div
         className="flex items-center justify-center"
         style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: 'var(--radius-md)',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          boxShadow: '0 2px 4px rgba(102, 126, 234, 0.25), 0 4px 12px rgba(102, 126, 234, 0.15)'
+          width: '36px',
+          height: '36px',
+          borderRadius: 'var(--radius-lg)',
+          background: 'var(--orange-500)',
+          boxShadow: '0 2px 8px rgba(249, 115, 22, 0.3)'
         }}
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M10 2L2 7L10 12L18 7L10 2Z"
-            stroke="white"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M2 13L10 18L18 13"
-            stroke="white"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <span
+          className="iconify"
+          data-icon="lucide:pen-tool"
+          style={{ fontSize: '20px', color: 'white' }}
+        ></span>
       </div>
       <div className="flex flex-col">
         <span
@@ -43,16 +26,16 @@ export function BrandLogo() {
             lineHeight: 1.2
           }}
         >
-          公众号排版工具
+          排版助手
         </span>
         <span
           style={{
             fontSize: '11px',
-            color: 'var(--text-tertiary)',
+            color: 'var(--text-muted)',
             marginTop: '2px'
           }}
         >
-          专业 · 高效 · 美观
+          公众号 Markdown 排版
         </span>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
 import { BrandLogo } from './components/BrandLogo'
-import { ToastProvider, useToast } from './components/Toast'
+import { useToast } from './components/Toast'
 import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useAutoSave } from './hooks/useAutoSave'
@@ -80,7 +80,7 @@ greet('World')
 
 ---
 
-*感谢使用公众号排版工具！*
+*感谢使用排版助手！*
 `
 
 function App() {
@@ -91,13 +91,12 @@ function App() {
     return themes.find(t => t.id === themeId) || defaultTheme
   })
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop')
-  const [darkMode, setDarkMode] = useState(false)
-  
+
   const toast = useToast()
   const { savedAt, isSaving } = useAutoSave('markdown-content', markdown, 2000)
-  
+
   const html = useMemo(() => parseMarkdown(markdown), [markdown])
-  
+
   useEffect(() => {
     applyTheme(currentTheme)
   }, [currentTheme])
@@ -118,9 +117,9 @@ function App() {
 
   const handleCopyHTML = () => {
     navigator.clipboard.writeText(html).then(() => {
-      toast.showToast('已复制 HTML 到剪贴板', 'success')
+      toast.showToast('排版已复制，直接粘贴到公众号', 'success')
     }).catch(() => {
-      toast.showToast('复制失败', 'error')
+      toast.showToast('复制失败，请重试', 'error')
     })
   }
 
@@ -129,9 +128,9 @@ function App() {
     tempDiv.innerHTML = html
     const text = tempDiv.textContent || tempDiv.innerText || ''
     navigator.clipboard.writeText(text).then(() => {
-      toast.showToast('已复制纯文本到剪贴板', 'success')
+      toast.showToast('纯文本已复制', 'success')
     }).catch(() => {
-      toast.showToast('复制失败', 'error')
+      toast.showToast('复制失败，请重试', 'error')
     })
   }
 
@@ -145,184 +144,165 @@ function App() {
   ])
 
   return (
-    <div className={`h-screen flex flex-col ${darkMode ? 'dark' : ''}`} style={{ background: darkMode ? 'var(--bg-secondary)' : 'var(--gray-50)' }}>
-      {/* 顶部工具栏 */}
-      <header 
-        className="h-14 flex items-center justify-between border-b"
-        style={{ 
-          background: 'var(--bg-primary)', 
-          borderColor: 'var(--border-primary)',
-          padding: '0 var(--space-5)'
+    <div
+      className="h-screen flex flex-col"
+      style={{ background: 'var(--bg-base)' }}
+    >
+      {/* ═══════════════════════════════════════════════
+          顶部工具栏
+          ═══════════════════════════════════════════════ */}
+      <header
+        className="flex items-center justify-between"
+        style={{
+          height: '52px',
+          padding: '0 var(--space-5)',
+          background: 'var(--bg-surface)',
+          borderBottom: '1px solid var(--border-subtle)'
         }}
       >
         <BrandLogo />
-        
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-3">
           {/* 主题选择 */}
           <div className="flex items-center gap-2">
-            <select 
+            <span className="iconify icon-md" data-icon="lucide:palette" style={{ color: 'var(--text-muted)' }}></span>
+            <select
               value={currentTheme.id}
               onChange={(e) => handleThemeChange(e.target.value)}
               className="select"
-              style={{ minWidth: '110px' }}
+              style={{ minWidth: '90px' }}
             >
               {themes.map(theme => (
                 <option key={theme.id} value={theme.id}>{theme.name}</option>
               ))}
             </select>
           </div>
-          
+
           {/* 代码风格 */}
-          <select className="select" style={{ minWidth: '100px' }}>
-            <option>GitHub</option>
-            <option>OneDark</option>
-            <option>Monokai</option>
-          </select>
-          
+          <div className="flex items-center gap-2">
+            <span className="iconify icon-md" data-icon="lucide:code-2" style={{ color: 'var(--text-muted)' }}></span>
+            <select className="select" style={{ minWidth: '100px' }}>
+              <option>GitHub Dark</option>
+              <option>OneDark</option>
+              <option>Monokai</option>
+            </select>
+          </div>
+
+          <div className="toolbar-divider" />
+
           {/* 预览模式切换 */}
           <div className="toggle-group">
-            <button 
+            <button
               onClick={() => setPreviewMode('desktop')}
               className={`toggle-btn ${previewMode === 'desktop' ? 'active' : ''}`}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              电脑
+              <span className="iconify icon-sm" data-icon="lucide:monitor"></span>
+              宽屏
             </button>
-            <button 
+            <button
               onClick={() => setPreviewMode('mobile')}
               className={`toggle-btn ${previewMode === 'mobile' ? 'active' : ''}`}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
+              <span className="iconify icon-sm" data-icon="lucide:smartphone"></span>
               手机
             </button>
           </div>
-          
-          {/* 夜间模式 */}
-          <button 
-            onClick={() => setDarkMode(!darkMode)}
-            className="btn btn-icon btn-ghost"
-            title={darkMode ? '切换到日间模式' : '切换到夜间模式'}
-          >
-            {darkMode ? '☀️' : '🌙'}
-          </button>
-          
+
+          <div className="toolbar-divider" />
+
           {/* 撤销/重做 */}
-          <button 
+          <button
             onClick={undo}
             disabled={!canUndo}
-            className="btn btn-ghost"
+            className="btn btn-ghost btn-icon"
             title="撤销 (Ctrl+Z)"
           >
-            ↶
+            <span className="iconify icon-md" data-icon="lucide:undo-2"></span>
           </button>
-          <button 
+          <button
             onClick={redo}
             disabled={!canRedo}
-            className="btn btn-ghost"
+            className="btn btn-ghost btn-icon"
             title="重做 (Ctrl+Shift+Z)"
           >
-            ↷
+            <span className="iconify icon-md" data-icon="lucide:redo-2"></span>
           </button>
-          
+
           {/* 清空 */}
-          <button 
+          <button
             onClick={handleClear}
-            className="btn btn-ghost"
-            style={{ color: 'var(--red-500)' }}
+            className="btn btn-danger btn-icon"
+            title="清空内容"
           >
-            清空
+            <span className="iconify icon-md" data-icon="lucide:trash-2"></span>
           </button>
         </div>
       </header>
 
-      {/* 主内容区 */}
+      {/* ═══════════════════════════════════════════════
+          主内容区
+          ═══════════════════════════════════════════════ */}
       <main className="flex-1 flex overflow-hidden min-h-0">
         {/* 左侧编辑器 */}
-        <div 
-          className="w-1/2 flex flex-col border-r"
-          style={{ 
-            background: 'var(--bg-primary)', 
-            borderColor: 'var(--border-primary)' 
+        <div
+          className="w-1/2 flex flex-col"
+          style={{
+            background: 'var(--bg-surface)',
+            borderRight: '1px solid var(--border-subtle)'
           }}
         >
-          <div 
-            className="flex items-center border-b"
-            style={{ 
-              height: '40px',
-              padding: '0 var(--space-4)',
-              background: 'var(--bg-secondary)',
-              borderColor: 'var(--border-primary)'
-            }}
-          >
-            <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-tertiary)' }}>
-              Markdown
-            </span>
+          <div className="panel-header">
+            <span className="iconify icon-sm" data-icon="lucide:file-text" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
+            <span className="panel-title">Markdown</span>
             <div className="flex-1" />
-            <span style={{ fontSize: '12px', color: 'var(--text-placeholder)' }}>
-              {markdown.length} 字符
-            </span>
+            <span className="panel-meta">{markdown.length} 字</span>
           </div>
           <div className="flex-1 min-h-0">
             <CodeMirrorEditor
               value={markdown}
               onChange={setMarkdown}
-              placeholder="在这里输入 Markdown 内容..."
+              placeholder="在这里写 Markdown..."
             />
           </div>
         </div>
 
         {/* 右侧预览 */}
-        <div 
+        <div
           className="w-1/2 flex flex-col"
-          style={{ background: 'var(--bg-secondary)' }}
+          style={{ background: 'var(--bg-muted)' }}
         >
-          <div 
-            className="flex items-center justify-between border-b"
-            style={{ 
-              height: '40px',
-              padding: '0 var(--space-4)',
-              background: 'var(--bg-secondary)',
-              borderColor: 'var(--border-primary)'
+          <div className="panel-header">
+            <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
+            <span className="panel-title">预览</span>
+            <span className="panel-badge">{currentTheme.name}</span>
+            <div className="flex-1" />
+            <span className="panel-meta">{previewMode === 'mobile' ? '375px' : '自适应'}</span>
+          </div>
+          <div
+            className="flex-1 overflow-auto flex justify-center"
+            style={{
+              padding: 'var(--space-6)',
+              background: 'var(--bg-base)'
             }}
           >
-            <div className="flex items-center gap-2">
-              <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-tertiary)' }}>
-                预览
-              </span>
-              <span 
-                style={{ 
-                  fontSize: '11px', 
-                  padding: '2px 8px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'var(--gray-200)',
-                  color: 'var(--text-tertiary)'
-                }}
-              >
-                {currentTheme.name}
-              </span>
-            </div>
-            <span style={{ fontSize: '12px', color: 'var(--text-placeholder)' }}>
-              {previewMode === 'mobile' ? '375px' : '100%'}
-            </span>
-          </div>
-          <div 
-            className="flex-1 overflow-auto flex justify-center"
-            style={{ padding: 'var(--space-5)' }}
-          >
-            <div 
+            <div
               className="card"
-              style={{ 
+              style={{
                 width: previewMode === 'mobile' ? '375px' : '100%',
                 maxWidth: '100%',
                 overflow: 'hidden'
               }}
             >
-              <div 
+              <div
                 className="overflow-auto theme-transition"
-                style={{ 
-                  padding: 'var(--space-5)',
+                style={{
+                  padding: 'var(--space-6)',
                   maxHeight: 'calc(100vh - 180px)'
                 }}
               >
-                <div 
+                <div
                   className="mp-preview"
                   style={{ maxWidth: 'none' }}
                   dangerouslySetInnerHTML={{ __html: html }}
@@ -333,47 +313,64 @@ function App() {
         </div>
       </main>
 
-      {/* 底部操作栏 */}
-      <footer 
-        className="flex items-center justify-between border-t"
-        style={{ 
-          height: '52px',
+      {/* ═══════════════════════════════════════════════
+          底部操作栏
+          ═══════════════════════════════════════════════ */}
+      <footer
+        className="flex items-center justify-between"
+        style={{
+          height: '48px',
           padding: '0 var(--space-5)',
-          background: 'var(--bg-primary)',
-          borderColor: 'var(--border-primary)'
+          background: 'var(--bg-surface)',
+          borderTop: '1px solid var(--border-subtle)'
         }}
       >
         <div className="flex items-center gap-2">
-          <button className="btn btn-secondary">
-            粘贴富文本
+          <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="iconify icon-sm" data-icon="lucide:clipboard-paste"></span>
+            粘贴 Word
           </button>
-          <button className="btn btn-secondary">
-            提取 URL
+          <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="iconify icon-sm" data-icon="lucide:link"></span>
+            抓取链接
           </button>
-          <button className="btn btn-secondary">
-            导出 MD
+          <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="iconify icon-sm" data-icon="lucide:download"></span>
+            下载源文件
           </button>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <button className="btn btn-primary" onClick={handleCopyHTML}>
-            复制 HTML
+          <button
+            className="btn btn-primary"
+            onClick={handleCopyHTML}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <span className="iconify icon-sm" data-icon="lucide:copy"></span>
+            复制排版
           </button>
-          <button className="btn btn-success" onClick={handleCopyText}>
-            复制纯文本
+          <button
+            className="btn btn-success"
+            onClick={handleCopyText}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <span className="iconify icon-sm" data-icon="lucide:file-text"></span>
+            复制文字
           </button>
         </div>
-        
-        <div className="flex items-center gap-3" style={{ fontSize: '12px', color: 'var(--text-placeholder)' }}>
+
+        <div className="flex items-center gap-3" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
           {isSaving ? (
-            <span style={{ color: 'var(--amber-500)' }}>保存中...</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
+              保存中
+            </span>
           ) : savedAt ? (
-            <span>✓ 已保存</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="iconify icon-sm" data-icon="lucide:check" style={{ color: 'var(--green-500)' }}></span>
+              已保存
+            </span>
           ) : null}
-          <span>·</span>
-          <span>{currentTheme.name}</span>
-          <span>·</span>
-          <span>{previewMode === 'mobile' ? '手机' : '电脑'}</span>
         </div>
       </footer>
     </div>

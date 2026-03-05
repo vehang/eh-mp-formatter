@@ -32,24 +32,72 @@ export function CodeMirrorEditor({ value, onChange, placeholder }: CodeMirrorEdi
           '&': {
             height: '100%',
             fontSize: '14px',
+            background: 'var(--bg-surface)',
           },
           '.cm-scroller': {
             overflow: 'auto',
-            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+            fontFamily: "var(--font-mono)",
           },
           '.cm-content': {
             padding: '16px 0',
+            caretColor: 'var(--orange-500)',
           },
           '.cm-line': {
             padding: '0 16px',
+            color: 'var(--text-secondary)',
           },
           '.cm-gutters': {
             backgroundColor: 'transparent',
             border: 'none',
+            color: 'var(--text-muted)',
           },
           '.cm-lineNumbers .cm-gutterElement': {
             padding: '0 8px 0 16px',
             minWidth: '40px',
+          },
+          '.cm-activeLine': {
+            background: 'rgba(255, 255, 255, 0.03)',
+          },
+          '.cm-activeLineGutter': {
+            background: 'transparent',
+            color: 'var(--text-tertiary)',
+          },
+          '.cm-selectionBackground': {
+            background: 'rgba(249, 115, 22, 0.2) !important',
+          },
+          '&.cm-focused .cm-selectionBackground': {
+            background: 'rgba(249, 115, 22, 0.25) !important',
+          },
+          '.cm-cursor': {
+            borderLeftColor: 'var(--orange-500)',
+          },
+          // Markdown 语法高亮
+          '.cm-header': {
+            color: 'var(--orange-400)',
+            fontWeight: '600',
+          },
+          '.cm-strong': {
+            fontWeight: '700',
+            color: 'var(--text-primary)',
+          },
+          '.cm-em': {
+            fontStyle: 'italic',
+          },
+          '.cm-link': {
+            color: 'var(--blue-500)',
+          },
+          '.cm-url': {
+            color: 'var(--text-muted)',
+          },
+          '.cm-quote': {
+            color: 'var(--text-muted)',
+            fontStyle: 'italic',
+          },
+          '.cm-list': {
+            color: 'var(--orange-500)',
+          },
+          '.cm-meta': {
+            color: 'var(--text-muted)',
           },
         }),
         EditorView.lineWrapping,
