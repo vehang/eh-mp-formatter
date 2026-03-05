@@ -541,9 +541,23 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* 浅色主题下的次要按钮 */
+[data-theme="light"] .btn-secondary:hover {
+  background: var(--zinc-100);
+  border-color: var(--zinc-300);
+  color: var(--text-primary);
+}
+
 /* 浅色主题下的幽灵按钮 */
 [data-theme="light"] .btn-ghost:hover {
   background: var(--zinc-100);
+  color: var(--text-primary);
+}
+
+/* 浅色主题下的危险按钮 */
+[data-theme="light"] .btn-danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--red-600);
 }
 
 /* 浅色主题下的选择器 */
@@ -554,6 +568,27 @@ body {
 
 [data-theme="light"] .select:hover {
   border-color: var(--zinc-300);
+}
+
+/* 浅色主题下的主题切换按钮 */
+[data-theme="light"] .theme-toggle-btn:hover {
+  background: var(--zinc-100);
+  border-color: var(--zinc-300);
+}
+
+/* 浅色主题下的滚动条 */
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: var(--zinc-300);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--zinc-400);
+}
+
+/* 浅色主题下的切换按钮悬停 */
+[data-theme="light"] .toggle-btn:hover {
+  background: var(--zinc-100);
+  color: var(--text-secondary);
 }
 
 /* ═══════════════════════════════════════════════════════════
