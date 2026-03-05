@@ -183,26 +183,6 @@ function App() {
         <BrandLogo />
 
         <div className="flex items-center gap-3">
-          {/* 复制按钮 */}
-          <button
-            className="btn btn-primary"
-            onClick={handleCopyHTML}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <span className="iconify icon-sm" data-icon="lucide:copy"></span>
-            复制排版
-          </button>
-          <button
-            className="btn btn-success"
-            onClick={handleCopyText}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <span className="iconify icon-sm" data-icon="lucide:file-text"></span>
-            复制文字
-          </button>
-
-          <div className="toolbar-divider" />
-
           {/* UI 主题切换 */}
           <button
             onClick={uiTheme.toggleTheme}
@@ -344,6 +324,22 @@ function App() {
             <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
             <span className="panel-title">预览</span>
             <span className="panel-badge">{currentTheme.name}</span>
+            <button
+              className="btn btn-primary"
+              onClick={handleCopyHTML}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '8px', padding: '4px 10px', fontSize: '13px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:copy"></span>
+              复制排版
+            </button>
+            <button
+              className="btn btn-success"
+              onClick={handleCopyText}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:file-text"></span>
+              复制文字
+            </button>
             <div className="flex-1" />
             <span className="panel-meta">{previewMode === 'mobile' ? '375px' : '自适应'}</span>
           </div>

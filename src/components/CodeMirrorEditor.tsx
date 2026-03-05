@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { EditorState } from '@codemirror/state'
 import { EditorView, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view'
 import { markdown } from '@codemirror/lang-markdown'
-import { htmlToMarkdown, isRichTextClipboard, getHtmlFromClipboard } from '../utils/htmlToMarkdown'
+import { htmlToMarkdown } from '../utils/htmlToMarkdown'
 
 interface CodeMirrorEditorProps {
   value: string
@@ -106,37 +106,38 @@ export function CodeMirrorEditor({ value, onChange, placeholder }: CodeMirrorEdi
         // 处理粘贴事件
         EditorView.domEventHandlers({
           paste: (event, view) => {
-            const items = event.clipboardData?.items
-            if (!items) return
+            const clipboardData = event.clipboardData
+            if (!clipboardData) return
 
-            // 检查是否为富文本
-            if (isRichTextClipboard(items)) {
+            // 优先检查是否有 HTML 内容
+            const html = clipboardData.getData('text/html')
+            if (html && html.trim()) {
               event.preventDefault()
 
-              getHtmlFromClipboard(items).then((html) => {
-                if (html) {
-                  const markdown = htmlToMarkdown(html)
-                  if (markdown) {
-                    // 插入转换后的 Markdown
-                    const { from, to } = view.state.selection.main
-                    view.dispatch({
-                      changes: { from, to, insert: markdown },
-                      selection: { anchor: from + markdown.length },
-                    })
-                    return
-                  }
-                }
-
-                // 如果转换失败，回退到纯文本
-                const text = event.clipboardData?.getData('text/plain')
-                if (text) {
+              try {
+                const markdown = htmlToMarkdown(html)
+                if (markdown) {
+                  // 插入转换后的 Markdown
                   const { from, to } = view.state.selection.main
                   view.dispatch({
-                    changes: { from, to, insert: text },
-                    selection: { anchor: from + text.length },
+                    changes: { from, to, insert: markdown },
+                    selection: { anchor: from + markdown.length },
                   })
+                  return
                 }
-              })
+              } catch (error) {
+                console.error('Failed to convert HTML to Markdown:', error)
+              }
+
+              // 如果转换失败，回退到纯文本
+              const text = clipboardData.getData('text/plain')
+              if (text) {
+                const { from, to } = view.state.selection.main
+                view.dispatch({
+                  changes: { from, to, insert: text },
+                  selection: { anchor: from + text.length },
+                })
+              }
             }
           },
         }),
