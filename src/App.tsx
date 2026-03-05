@@ -1,12 +1,14 @@
 import { useState, useMemo, useEffect } from 'react'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
 import { BrandLogo } from './components/BrandLogo'
+import { UrlFetchModal } from './components/UrlFetchModal'
 import { useToast } from './components/Toast'
 import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useAutoSave } from './hooks/useAutoSave'
 import { useUITheme } from './hooks/useUITheme'
 import { parseMarkdown } from './utils/markdown'
+import { fetchUrlContent } from './utils/urlFetcher'
 import { themes, applyTheme, defaultTheme } from './themes'
 import type { Theme } from './themes/types'
 import 'highlight.js/styles/github-dark.css'
@@ -93,6 +95,8 @@ function App() {
     return themes.find(t => t.id === themeId) || defaultTheme
   })
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop')
+  const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false)
 
   const toast = useToast()
   const { savedAt, isSaving } = useAutoSave('markdown-content', markdown, 2000)
@@ -114,6 +118,20 @@ function App() {
   const handleClear = () => {
     if (markdown.length > 0) {
       setMarkdown('')
+    }
+  }
+
+  const handleFetchUrl = async (url: string) => {
+    setIsFetchingUrl(true)
+    const result = await fetchUrlContent(url)
+    setIsFetchingUrl(false)
+
+    if (result.success && result.content) {
+      setMarkdown(result.content)
+      setIsUrlModalOpen(false)
+      toast.showToast('网页内容已抓取', 'success')
+    } else {
+      toast.showToast(result.error || '抓取失败', 'error')
     }
   }
 
@@ -346,17 +364,13 @@ function App() {
         }}
       >
         <div className="flex items-center gap-2">
-          <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="iconify icon-sm" data-icon="lucide:clipboard-paste"></span>
-            粘贴 Word
-          </button>
-          <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setIsUrlModalOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
             <span className="iconify icon-sm" data-icon="lucide:link"></span>
             抓取链接
-          </button>
-          <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="iconify icon-sm" data-icon="lucide:download"></span>
-            下载源文件
           </button>
         </div>
 
@@ -393,6 +407,14 @@ function App() {
           ) : null}
         </div>
       </footer>
+
+      {/* URL 抓取弹窗 */}
+      <UrlFetchModal
+        isOpen={isUrlModalOpen}
+        onClose={() => setIsUrlModalOpen(false)}
+        onFetch={handleFetchUrl}
+        isLoading={isFetchingUrl}
+      />
     </div>
   )
 }
