@@ -1,12 +1,14 @@
 import { useState, useMemo, useEffect } from 'react'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
 import { BrandLogo } from './components/BrandLogo'
+import { UrlFetchModal } from './components/UrlFetchModal'
 import { useToast } from './components/Toast'
 import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useAutoSave } from './hooks/useAutoSave'
 import { useUITheme } from './hooks/useUITheme'
 import { parseMarkdown } from './utils/markdown'
+import { fetchUrlContent } from './utils/urlFetcher'
 import { themes, applyTheme, defaultTheme } from './themes'
 import type { Theme } from './themes/types'
 import 'highlight.js/styles/github-dark.css'
@@ -93,6 +95,8 @@ function App() {
     return themes.find(t => t.id === themeId) || defaultTheme
   })
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop')
+  const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false)
 
   const toast = useToast()
   const { savedAt, isSaving } = useAutoSave('markdown-content', markdown, 2000)
@@ -114,6 +118,20 @@ function App() {
   const handleClear = () => {
     if (markdown.length > 0) {
       setMarkdown('')
+    }
+  }
+
+  const handleFetchUrl = async (url: string) => {
+    setIsFetchingUrl(true)
+    const result = await fetchUrlContent(url)
+    setIsFetchingUrl(false)
+
+    if (result.success && result.content) {
+      setMarkdown(result.content)
+      setIsUrlModalOpen(false)
+      toast.showToast('网页内容已抓取', 'success')
+    } else {
+      toast.showToast(result.error || '抓取失败', 'error')
     }
   }
 
@@ -277,7 +295,16 @@ function App() {
             <span className="iconify icon-sm" data-icon="lucide:file-text" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
             <span className="panel-title">Markdown</span>
             <div className="flex-1" />
-            <span className="panel-meta">{markdown.length} 字</span>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setIsUrlModalOpen(true)}
+              title="抓取网页内容"
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', fontSize: '12px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:link"></span>
+              抓取链接
+            </button>
+            <span className="panel-meta" style={{ marginLeft: '8px' }}>{markdown.length} 字</span>
           </div>
           <div className="flex-1 min-h-0">
             <CodeMirrorEditor
@@ -297,6 +324,22 @@ function App() {
             <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
             <span className="panel-title">预览</span>
             <span className="panel-badge">{currentTheme.name}</span>
+            <button
+              className="btn btn-primary"
+              onClick={handleCopyHTML}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '8px', padding: '4px 10px', fontSize: '13px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:copy"></span>
+              复制排版
+            </button>
+            <button
+              className="btn btn-success"
+              onClick={handleCopyText}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:file-text"></span>
+              复制文字
+            </button>
             <div className="flex-1" />
             <span className="panel-meta">{previewMode === 'mobile' ? '375px' : '自适应'}</span>
           </div>
@@ -334,51 +377,17 @@ function App() {
       </main>
 
       {/* ═══════════════════════════════════════════════
-          底部操作栏
+          底部状态栏
           ═══════════════════════════════════════════════ */}
       <footer
-        className="flex items-center justify-between"
+        className="flex items-center justify-end"
         style={{
-          height: '48px',
+          height: '36px',
           padding: '0 var(--space-5)',
           background: 'var(--bg-surface)',
           borderTop: '1px solid var(--border-subtle)'
         }}
       >
-        <div className="flex items-center gap-2">
-          <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="iconify icon-sm" data-icon="lucide:clipboard-paste"></span>
-            粘贴 Word
-          </button>
-          <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="iconify icon-sm" data-icon="lucide:link"></span>
-            抓取链接
-          </button>
-          <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="iconify icon-sm" data-icon="lucide:download"></span>
-            下载源文件
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            className="btn btn-primary"
-            onClick={handleCopyHTML}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <span className="iconify icon-sm" data-icon="lucide:copy"></span>
-            复制排版
-          </button>
-          <button
-            className="btn btn-success"
-            onClick={handleCopyText}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <span className="iconify icon-sm" data-icon="lucide:file-text"></span>
-            复制文字
-          </button>
-        </div>
-
         <div className="flex items-center gap-3" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
           {isSaving ? (
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -393,6 +402,14 @@ function App() {
           ) : null}
         </div>
       </footer>
+
+      {/* URL 抓取弹窗 */}
+      <UrlFetchModal
+        isOpen={isUrlModalOpen}
+        onClose={() => setIsUrlModalOpen(false)}
+        onFetch={handleFetchUrl}
+        isLoading={isFetchingUrl}
+      />
     </div>
   )
 }

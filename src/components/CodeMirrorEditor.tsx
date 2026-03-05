@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { EditorState } from '@codemirror/state'
 import { EditorView, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view'
 import { markdown } from '@codemirror/lang-markdown'
+import { htmlToMarkdown } from '../utils/htmlToMarkdown'
 
 interface CodeMirrorEditorProps {
   value: string
@@ -102,6 +103,44 @@ export function CodeMirrorEditor({ value, onChange, placeholder }: CodeMirrorEdi
         }),
         EditorView.lineWrapping,
         placeholder ? EditorView.contentAttributes.of({ 'data-placeholder': placeholder }) : [],
+        // 处理粘贴事件
+        EditorView.domEventHandlers({
+          paste: (event, view) => {
+            const clipboardData = event.clipboardData
+            if (!clipboardData) return
+
+            // 优先检查是否有 HTML 内容
+            const html = clipboardData.getData('text/html')
+            if (html && html.trim()) {
+              event.preventDefault()
+
+              try {
+                const markdown = htmlToMarkdown(html)
+                if (markdown) {
+                  // 插入转换后的 Markdown
+                  const { from, to } = view.state.selection.main
+                  view.dispatch({
+                    changes: { from, to, insert: markdown },
+                    selection: { anchor: from + markdown.length },
+                  })
+                  return
+                }
+              } catch (error) {
+                console.error('Failed to convert HTML to Markdown:', error)
+              }
+
+              // 如果转换失败，回退到纯文本
+              const text = clipboardData.getData('text/plain')
+              if (text) {
+                const { from, to } = view.state.selection.main
+                view.dispatch({
+                  changes: { from, to, insert: text },
+                  selection: { anchor: from + text.length },
+                })
+              }
+            }
+          },
+        }),
       ],
     })
 
