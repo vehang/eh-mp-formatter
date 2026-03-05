@@ -284,7 +284,61 @@ body {
   box-shadow: var(--shadow-md);
   transition:
     box-shadow var(--duration-normal) var(--ease-out),
-    transform var(--duration-normal) var(--ease-out);
+    transform var(--duration-normal) var(--ease-out),
+    background-color var(--duration-normal) var(--ease-out);
+}
+
+/* 深色模式下的预览卡片 */
+[data-theme="dark"] .card {
+  background: var(--zinc-800);
+  border: 1px solid var(--zinc-700);
+}
+
+/* 深色模式下的预览内容样式 */
+[data-theme="dark"] .mp-preview {
+  color: var(--zinc-200);
+}
+
+[data-theme="dark"] .mp-preview h1,
+[data-theme="dark"] .mp-preview h2,
+[data-theme="dark"] .mp-preview h3,
+[data-theme="dark"] .mp-preview h4 {
+  color: var(--zinc-100);
+}
+
+[data-theme="dark"] .mp-preview p {
+  color: var(--zinc-300);
+}
+
+[data-theme="dark"] .mp-preview blockquote {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--zinc-300);
+  border-left-color: var(--orange-500);
+}
+
+[data-theme="dark"] .mp-preview table th {
+  background: var(--zinc-700);
+  color: var(--zinc-100);
+}
+
+[data-theme="dark"] .mp-preview table td {
+  border-color: var(--zinc-600);
+}
+
+[data-theme="dark"] .mp-preview tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .mp-preview hr {
+  border-top-color: var(--zinc-600);
+}
+
+[data-theme="dark"] .mp-preview a {
+  color: var(--orange-400);
+}
+
+[data-theme="dark"] .mp-preview a:hover {
+  border-bottom-color: var(--orange-400);
 }
 
 /* ═══════════════════════════════════════════════════════════

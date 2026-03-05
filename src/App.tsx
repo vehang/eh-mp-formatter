@@ -42,7 +42,11 @@ function loadCodeStyle(styleId: string) {
   }
 }
 
-const defaultMarkdown = `# 一级标题示例
+const defaultMarkdown = `![Unsplash 示例图片](https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80)
+
+*图片来源：Unsplash - 代码与编程*
+
+# 一级标题示例
 
 这是一段普通文字，用于测试**加粗**、*斜体*、~~删除线~~和\`行内代码\`的效果。还可以包含[链接](https://github.com)和脚注[^1]。
 
@@ -189,12 +193,6 @@ function validateUser(user: unknown): user is User {
 | 样式方案 | Tailwind | 3.4 | 原子化 CSS |
 | 构建工具 | Vite | 5.0 | 极速开发体验 |
 
-## 图片示例
-
-![Unsplash 示例图片](https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80)
-
-*图片来源：Unsplash - 代码与编程*
-
 ## 数学公式
 
 行内公式：$E = mc^2$
@@ -324,24 +322,6 @@ function App() {
         <BrandLogo />
 
         <div className="flex items-center gap-3">
-          {/* UI 主题切换 */}
-          <button
-            onClick={uiTheme.toggleTheme}
-            className="theme-toggle-btn"
-            title={uiTheme.isDark ? '切换到浅色模式' : '切换到深色模式'}
-          >
-            <div className="theme-icon-wrapper">
-              <span className="theme-icon-sun">
-                <span className="iconify" data-icon="lucide:sun" style={{ fontSize: '18px' }}></span>
-              </span>
-              <span className="theme-icon-moon">
-                <span className="iconify" data-icon="lucide:moon" style={{ fontSize: '18px' }}></span>
-              </span>
-            </div>
-          </button>
-
-          <div className="toolbar-divider" />
-
           {/* 主题选择 */}
           <div className="flex items-center gap-2">
             <span className="iconify icon-md" data-icon="lucide:palette" style={{ color: 'var(--text-muted)' }}></span>
@@ -393,6 +373,22 @@ function App() {
               手机
             </button>
           </div>
+
+          {/* UI 主题切换 */}
+          <button
+            onClick={uiTheme.toggleTheme}
+            className="theme-toggle-btn"
+            title={uiTheme.isDark ? '切换到浅色模式' : '切换到深色模式'}
+          >
+            <div className="theme-icon-wrapper">
+              <span className="theme-icon-sun">
+                <span className="iconify" data-icon="lucide:sun" style={{ fontSize: '18px' }}></span>
+              </span>
+              <span className="theme-icon-moon">
+                <span className="iconify" data-icon="lucide:moon" style={{ fontSize: '18px' }}></span>
+              </span>
+            </div>
+          </button>
 
           <div className="toolbar-divider" />
 

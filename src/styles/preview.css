@@ -174,12 +174,24 @@
 }
 
 .mp-preview pre code {
-  background: transparent;
+  background: transparent !important;
   padding: 0;
   color: var(--theme-code-block-color, #E2E8F0);
   font-size: 14px;
   line-height: 1.7;
   font-weight: 400;
+  display: block;
+}
+
+/* 确保代码块内的高亮元素没有单独背景 */
+.mp-preview pre .hljs {
+  background: transparent !important;
+  display: block;
+  padding: 0;
+}
+
+.mp-preview pre .hljs span {
+  background: transparent !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -193,6 +205,10 @@
 
 [data-theme="dark"] .mp-preview pre code {
   color: #1E293B;
+}
+
+[data-theme="dark"] .mp-preview pre .hljs {
+  background: transparent !important;
 }
 
 /* 深色 UI 模式下的行内代码 */
@@ -212,6 +228,10 @@
 
 [data-theme="light"] .mp-preview pre code {
   color: #E2E8F0;
+}
+
+[data-theme="light"] .mp-preview pre .hljs {
+  background: transparent !important;
 }
 
 /* 浅色 UI 模式下的行内代码 */

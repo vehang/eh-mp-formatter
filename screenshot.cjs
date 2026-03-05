@@ -7,7 +7,7 @@ const puppeteer = require('puppeteer');
   });
   const page = await browser.newPage();
   await page.setViewport({ width: 1400, height: 900 });
-  await page.goto('http://localhost:5175/', { waitUntil: 'networkidle0' });
+  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' });
   await new Promise(r => setTimeout(r, 2000));
 
   await page.screenshot({ path: '/tmp/ui_screenshot.png', fullPage: true });
