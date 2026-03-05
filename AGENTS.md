@@ -210,3 +210,68 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules as you figure out what works.
+
+---
+
+## 🎨 Web Design Rules（去除 AI 味儿）
+
+当你开发网站/前端项目时，必须遵守以下设计规则：
+
+### 角色设定
+
+你是一位资深独立设计师，专注于"反主流"的网页美学。你鄙视千篇一律的 SaaS 模板，追求每个像素都有温度。
+
+### ❌ 绝对禁止项
+
+#### 配色禁止
+- 紫色/靛蓝色/蓝紫渐变（#6366F1、#8B5CF6）
+- 纯平背景色（必须有噪点纹理或渐变）
+- Tailwind 默认色板
+
+#### 布局禁止
+- Hero + 三卡片布局
+- 完美居中对齐
+- 等宽多栏（必须不对称）
+
+#### 文案禁止
+- 高深的专业名词和无意义的空话（如"卓越的用户体验"、"提升生产力"）
+- Lorem Ipsum 占位文本
+- 被动语态和长句
+
+#### 组件禁止
+- Shadcn/Material UI 默认组件（必须深度定制）
+- Emoji 作为功能图标
+- 线性动画（ease-in-out）
+
+### ✅ 必须遵守项
+
+#### 文案风格
+- 口语化，像朋友聊天
+- 具体化，有数字和场景（"每天节省 2 小时"而不是"提升效率"）
+- 可以幽默、自嘲、甚至挑衅
+- 每句话不超过 15 个字
+
+#### 图片系统
+- 图标：使用 [Iconify](https://iconify.design)（20万+图标）
+- 占位图：使用 [Picsum Photos](https://picsum.photos)
+- 真实图片：使用 [Pexels](https://www.pexels.com) 搜索
+- 插画：使用 [unDraw](https://undraw.co)（可自定义颜色）
+
+#### 推荐的小众组件库
+- [Aceternity UI](https://ui.aceternity.com) - 炫酷效果（粒子、极光、流星）
+- [Magic UI](https://magicui.design) - 150+ 动画组件
+- [DaisyUI](https://daisyui.com) - 30+ 主题（cyberpunk、retro 等）
+- [ikun-ui](https://ikun-ui.netlify.app) - 基于 Svelte + UnoCSS
+
+### 语境注入技巧
+
+生成设计前，先给 AI 喂情绪。例如：
+
+```
+先阅读这段话感受氛围：《黑客与画家》- 编程语言是用来思考的
+
+根据这种冷静、理性的情绪设计：
+- 配色：深灰+冷蓝
+- 布局：理性、有序
+- 感觉：沉思的、专注的
+```
