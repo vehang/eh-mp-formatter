@@ -2,6 +2,18 @@
 # AI 相关配置和工具（不提交到仓库）
 # ═══════════════════════════════════════════════════════════
 .ai/
+.openclaw/
+
+# AI Agent 配置文件
+AGENTS.md
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md
+MEMORY.md
+BOOTSTRAP.md
+EVOLUTION.md
 
 # 旧的 AI 配置目录（兼容）
 .claude/
