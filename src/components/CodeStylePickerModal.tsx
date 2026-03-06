@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import hljs from 'highlight.js'
 
 interface CodeStyle {
@@ -24,40 +24,60 @@ const JAVA_HELLO_WORLD = `public class HelloWorld {
 
 /**
  * 代码预览组件 - 展示代码样式效果
+ * 使用 Shadow DOM 隔离样式，确保每个预览卡片显示正确的代码样式
  */
 function CodePreview({ css }: { css: string }) {
-  const [highlightedCode, setHighlightedCode] = useState('')
+  const containerRef = useRef<HTMLDivElement>(null)
+  const shadowRootRef = useRef<ShadowRoot | null>(null)
 
   useEffect(() => {
+    if (!containerRef.current) return
+
+    // 如果还没有创建 Shadow Root，创建一个
+    if (!shadowRootRef.current) {
+      shadowRootRef.current = containerRef.current.attachShadow({ mode: 'open' })
+    }
+
+    const shadowRoot = shadowRootRef.current
+
     // 高亮代码
     const highlighted = hljs.highlight(JAVA_HELLO_WORLD, { language: 'java' }).value
-    setHighlightedCode(highlighted)
-  }, [])
+
+    // 构建完整的 Shadow DOM 内容
+    shadowRoot.innerHTML = `
+      <style>
+        ${css}
+        .hljs {
+          margin: 0;
+          padding: 12px;
+          border-radius: 6px;
+          font-size: 11px;
+          line-height: 1.5;
+          overflow: auto;
+          max-height: 140px;
+          font-family: 'Fira Code', 'JetBrains Mono', 'SF Mono', Monaco, Consolas, 'Liberation Mono', monospace;
+        }
+        pre {
+          margin: 0;
+        }
+        code {
+          font-family: inherit;
+        }
+      </style>
+      <pre class="hljs"><code>${highlighted}</code></pre>
+    `
+  }, [css])
 
   return (
     <div
+      ref={containerRef}
       className="code-style-preview"
       style={{
-        position: 'relative'
+        position: 'relative',
+        borderRadius: '6px',
+        overflow: 'hidden'
       }}
-    >
-      <style>{css}</style>
-      <pre
-        className="hljs"
-        style={{
-          margin: 0,
-          padding: '12px',
-          borderRadius: '6px',
-          fontSize: '11px',
-          lineHeight: '1.5',
-          overflow: 'auto',
-          maxHeight: '140px',
-          fontFamily: 'var(--font-mono)'
-        }}
-      >
-        <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />
-      </pre>
-    </div>
+    />
   )
 }
 
