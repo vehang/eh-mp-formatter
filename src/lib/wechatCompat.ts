@@ -208,8 +208,8 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 代码块处理：从预览区域读取计算后的样式
-  // 注意：公众号不支持 overflow-x，使用 white-space: pre-wrap 自动换行
+  // 代码块处理：将 pre 替换为 section 以支持公众号横向滚动
+  // 公众号编辑器对 section 的 overflow-x 支持更好
   // ═══════════════════════════════════════════════════════════════
   const previewPreElements = previewEl.querySelectorAll('pre.hljs')
   const docPreElements = doc.querySelectorAll('pre.hljs')
@@ -220,13 +220,21 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
 
     // 从预览区域读取 pre 的计算样式
     const preStyle = getComputedStylesAsInline(previewPre)
-    // 公众号支持横向滚动，保持代码不换行
-    docPre.setAttribute('style', preStyle + '; overflow-x: auto; white-space: pre;')
+
+    // 创建 section 替换 pre，公众号对 section 的 overflow-x 支持更好
+    const section = doc.createElement('section')
+    section.setAttribute('style', preStyle + '; overflow-x: auto; white-space: pre; -webkit-overflow-scrolling: touch;')
+
+    // 将 pre 的内容移到 section 中
+    section.innerHTML = docPre.innerHTML
+
+    // 替换 pre 元素
+    docPre.parentNode?.replaceChild(section, docPre)
   })
 
   // 代码高亮 span：从预览区域读取计算后的颜色
   const previewCodeSpans = previewEl.querySelectorAll('pre.hljs span')
-  const docCodeSpans = doc.querySelectorAll('pre.hljs span')
+  const docCodeSpans = doc.querySelectorAll('section.hljs span, pre.hljs span')
 
   previewCodeSpans.forEach((previewSpan, index) => {
     const docSpan = docCodeSpans[index]
