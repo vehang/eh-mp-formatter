@@ -46,7 +46,7 @@ const forestColors: ThemeColor = {
   accent: '#15803D',
   background: '#FEFEFE',
   text: '#1E293B',
-  textLight: '#64748B',
+  textLight: '#166534',
   border: '#E2E8F0',
   code: {
     inline: { background: '#F0FDF4', color: '#166534' },
@@ -79,7 +79,7 @@ const roseColors: ThemeColor = {
   accent: '#E11D48',
   background: '#FFFBFC',
   text: '#1E293B',
-  textLight: '#64748B',
+  textLight: '#9F1239',
   border: '#FCE7F3',
   code: {
     inline: { background: '#FFF1F2', color: '#9F1239' },
@@ -112,7 +112,7 @@ const amberColors: ThemeColor = {
   accent: '#D97706',
   background: '#FFFBF5',
   text: '#1E293B',
-  textLight: '#64748B',
+  textLight: '#92400E',
   border: '#FEF3C7',
   code: {
     inline: { background: '#FFFBEB', color: '#92400E' },
@@ -145,7 +145,7 @@ const slateColors: ThemeColor = {
   accent: '#0EA5E9',
   background: '#FAFBFC',
   text: '#1E293B',
-  textLight: '#64748B',
+  textLight: '#0EA5E9',
   border: '#E2E8F0',
   code: {
     inline: { background: '#F1F5F9', color: '#334155' },
