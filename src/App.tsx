@@ -402,10 +402,19 @@ function App() {
           }
         }
 
-        // 特殊处理：代码块内的 span 元素（语法高亮）- 确保颜色被内联
-        if (el.tagName === 'SPAN' && el.closest && el.closest('pre, .hljs')) {
+        // 特殊处理：代码块内的 code 元素
+        if (el.tagName === 'CODE') {
+          const parent = el.parentElement
+          if (parent && (parent.tagName === 'PRE' || parent.classList.contains('hljs'))) {
+            // code 元素本身通常不需要额外样式，让 hljs 的样式生效
+          }
+        }
+
+        // 特殊处理：代码块内的所有子元素（语法高亮）- 确保颜色被内联
+        const isInsideCodeBlock = el.closest && el.closest('pre, .hljs')
+        if (isInsideCodeBlock && el.tagName !== 'PRE' && !el.classList.contains('hljs')) {
           const color = computedStyle.getPropertyValue('color')
-          if (color && color !== 'rgb(0, 0, 0)' && color !== '#000000' && color !== '#000') {
+          if (color && color !== 'rgb(0, 0, 0)' && color !== 'rgba(0, 0, 0, 0)') {
             styles.push(`color: ${color}`)
           }
           const fontStyle = computedStyle.getPropertyValue('font-style')
@@ -480,16 +489,52 @@ function App() {
       // 内联所有子元素样式
       inlineStyles(clone)
 
-      // 获取最终的 HTML
-      const styledHTML = clone.innerHTML
+      // 使用 section 标签包裹内容（公众号推荐格式）
+      const wrapper = document.createElement('section')
+      wrapper.setAttribute('style', rootStyles.join('; ') + ';')
+      wrapper.innerHTML = clone.innerHTML
 
-      // 使用 ClipboardItem API 同时复制 HTML 和纯文本
-      const clipboardItem = new ClipboardItem({
-        'text/html': new Blob([styledHTML], { type: 'text/html' }),
-        'text/plain': new Blob([styledHTML], { type: 'text/plain' })
-      })
-      await navigator.clipboard.write([clipboardItem])
-      toast.showToast('排版已复制，直接粘贴到公众号', 'success')
+      // 创建隐藏的可编辑区域
+      const editableDiv = document.createElement('div')
+      editableDiv.contentEditable = 'true'
+      editableDiv.style.cssText = 'position: fixed; left: -9999px; top: -9999px; opacity: 0;'
+      editableDiv.innerHTML = wrapper.outerHTML
+      document.body.appendChild(editableDiv)
+
+      // 选中内容
+      const range = document.createRange()
+      range.selectNodeContents(editableDiv)
+      const selection = window.getSelection()
+      if (selection) {
+        selection.removeAllRanges()
+        selection.addRange(range)
+
+        // 执行复制命令
+        const success = document.execCommand('copy')
+
+        // 清理
+        selection.removeAllRanges()
+        document.body.removeChild(editableDiv)
+
+        if (success) {
+          toast.showToast('排版已复制，直接粘贴到公众号', 'success')
+        } else {
+          // 后备方案：使用 ClipboardItem API
+          try {
+            const clipboardItem = new ClipboardItem({
+              'text/html': new Blob([wrapper.outerHTML], { type: 'text/html' }),
+              'text/plain': new Blob([wrapper.outerHTML], { type: 'text/plain' })
+            })
+            await navigator.clipboard.write([clipboardItem])
+            toast.showToast('排版已复制，直接粘贴到公众号', 'success')
+          } catch {
+            toast.showToast('复制失败，请重试', 'error')
+          }
+        }
+      } else {
+        document.body.removeChild(editableDiv)
+        toast.showToast('复制失败，请重试', 'error')
+      }
     } catch {
       toast.showToast('复制失败，请重试', 'error')
     }
