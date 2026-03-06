@@ -481,7 +481,7 @@ body {
 .panel-header {
   display: flex;
   align-items: center;
-  height: 36px;
+  height: 44px;
   padding: 0 var(--space-4);
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
