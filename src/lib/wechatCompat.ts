@@ -130,29 +130,30 @@ function forceStyleInheritance(section: HTMLElement, containerStyle: string): vo
 
 /**
  * 处理标点符号，防止断行
+ * 注意：已禁用，因为可能导致空格和引号问题
  */
-function processPunctuation(section: HTMLElement, doc: Document): void {
-  section.querySelectorAll('strong, b, em, span, a, code').forEach((el) => {
-    // 跳过代码块内的元素
-    if (el.closest('pre.hljs, code')) return
-
-    const nextSibling = el.nextSibling
-    if (!nextSibling || nextSibling.nodeType !== Node.TEXT_NODE) return
-
-    const text = nextSibling.textContent || ''
-    const match = text.match(/^(\s*)([：；，。！？、:.!?,])(.*)$/s)
-    if (!match) return
-
-    const [, , punct, rest] = match
-    el.appendChild(doc.createTextNode(punct))
-
-    if (rest) {
-      nextSibling.textContent = rest
-    } else {
-      nextSibling.parentNode?.removeChild(nextSibling)
-    }
-  })
-}
+// function processPunctuation(section: HTMLElement, doc: Document): void {
+//   section.querySelectorAll('strong, b, em, span, a, code').forEach((el) => {
+//     // 跳过代码块内的元素
+//     if (el.closest('pre.hljs, code')) return
+//
+//     const nextSibling = el.nextSibling
+//     if (!nextSibling || nextSibling.nodeType !== Node.TEXT_NODE) return
+//
+//     const text = nextSibling.textContent || ''
+//     const match = text.match(/^(\s*)([：；，。！？、:.!?,])(.*)$/s)
+//     if (!match) return
+//
+//     const [, , punct, rest] = match
+//     el.appendChild(doc.createTextNode(punct))
+//
+//     if (rest) {
+//       nextSibling.textContent = rest
+//     } else {
+//       nextSibling.parentNode?.removeChild(nextSibling)
+//     }
+//   })
+// }
 
 /**
  * 将样式内联到 HTML 元素（关键函数）
@@ -194,23 +195,23 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     const bgColor = computed.getPropertyValue('background-color')
     const color = computed.getPropertyValue('color')
     const fontSize = computed.getPropertyValue('font-size')
-    const fontFamily = computed.getPropertyValue('font-family')
     const lineHeight = computed.getPropertyValue('line-height')
     const padding = computed.getPropertyValue('padding')
     const borderRadius = computed.getPropertyValue('border-radius')
 
     // ⭐ pre 元素：设置背景色和 white-space: pre
     // white-space: pre 是防止代码换行的关键！
-    const preStyle = `margin: 10px 0px; padding: 0px; border-radius: ${borderRadius}; background: ${bgColor}; box-shadow: rgba(0, 0, 0, 0.55) 0px 2px 10px; text-align: left; white-space: pre;`
+    // font-family 使用等宽字体，确保代码字符正确显示
+    const preStyle = `margin: 10px 0px; padding: 0px; border-radius: ${borderRadius}; background: ${bgColor}; box-shadow: rgba(0, 0, 0, 0.55) 0px 2px 10px; text-align: left; white-space: pre; font-family: Consolas, Monaco, 'Courier New', monospace;`
 
     docPre.setAttribute('style', preStyle)
 
     // ⭐ 关键：在 code 元素上设置所有样式（完全匹配有效案例）
     // display: -webkit-box 是实现横向滚动的关键属性
-    // 注意：code 元素不需要 white-space: pre，因为 pre 元素已经有了
+    // font-family 确保使用等宽字体，防止单引号等字符被转换
     const docCode = docPre.querySelector('code')
     if (docCode) {
-      const codeStyle = `overflow-x: auto; padding: ${padding || '15px 16px 16px'}; color: ${color}; background: ${bgColor}; border-radius: ${borderRadius}; display: -webkit-box; font-family: ${fontFamily}; font-size: ${fontSize}; margin-bottom: 0px; line-height: ${lineHeight};`
+      const codeStyle = `overflow-x: auto; padding: ${padding || '15px 16px 16px'}; color: ${color}; background: ${bgColor}; border-radius: ${borderRadius}; display: -webkit-box; font-family: Consolas, Monaco, 'Courier New', monospace; font-size: ${fontSize}; margin-bottom: 0px; line-height: ${lineHeight};`
       docCode.setAttribute('style', codeStyle)
     }
   })
@@ -367,8 +368,8 @@ export async function makeWeChatCompatible(html: string, theme: Theme): Promise<
   // 3. 强制样式继承
   forceStyleInheritance(section, containerStyle)
 
-  // 4. 标点符号处理
-  processPunctuation(section, doc)
+  // 4. 标点符号处理 - 暂时禁用，可能是空格和引号问题的根源
+  // processPunctuation(section, doc)
 
   // 5. 图片转 Base64
   const images = Array.from(section.querySelectorAll('img'))
