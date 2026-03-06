@@ -334,3 +334,22 @@
 .mp-preview pre em {
   color: inherit;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   图片注解 - 居中显示的斜体说明文字
+   ═══════════════════════════════════════════════════════════ */
+
+/* 图片注解：紧跟在图片后面的斜体文字 */
+.mp-preview p:has(em:only-child) {
+  text-align: center;
+  font-size: 14px;
+  color: #6B7280;
+  margin-top: -12px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.mp-preview p em:only-child {
+  font-style: italic;
+  color: inherit;
+}
