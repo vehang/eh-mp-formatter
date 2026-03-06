@@ -203,10 +203,10 @@
   border: none;
 }
 
-/* 深色 UI 模式下的行内代码 - 使用适合深色背景的颜色 */
+/* 深色 UI 模式下的行内代码 - 使用主题配色 */
 [data-theme="dark"] .mp-preview code {
-  background: rgba(99, 102, 241, 0.2);
-  color: #A5B4FC;
+  background: var(--theme-code-inline-bg, rgba(99, 102, 241, 0.2));
+  color: var(--theme-code-inline-color, #A5B4FC);
 }
 
 /* 深色 UI 模式下的列表文本颜色 - 使用浅色确保可读性 */

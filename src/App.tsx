@@ -53,6 +53,8 @@ const defaultMarkdown = `![Unsplash 示例图片](https://images.unsplash.com/ph
 
 *图片来源：Unsplash - 代码与编程*
 
+> 💡 **提示**：支持直接粘贴富文本（Word、Notion、网页等），会自动转换为 Markdown 格式
+
 # 一级标题示例
 
 这是一段普通文字，用于测试**加粗**、*斜体*、~~删除线~~和\`行内代码\`的效果。还可以包含[链接](https://github.com)和脚注[^1]。
