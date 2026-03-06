@@ -528,7 +528,10 @@ function App() {
             <span className="panel-badge">{currentTheme.name}</span>
             
             {/* 预览模式切换 - 三个尺寸 */}
-            <div className="toggle-group" style={{ marginLeft: '12px', minWidth: '180px' }}>
+            <div className="toggle-group" style={{ 
+              marginLeft: '12px',
+              transition: 'all 0.2s ease-in-out'
+            }}>
               <button
                 onClick={() => setPreviewMode('desktop')}
                 className={`toggle-btn ${previewMode === 'desktop' ? 'active' : ''}`}
@@ -538,16 +541,11 @@ function App() {
                   alignItems: 'center', 
                   gap: '6px', 
                   padding: '4px 8px', 
-                  fontSize: '13px',
-                  minWidth: '56px'
+                  fontSize: '13px'
                 }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:monitor"></span>
-                <span style={{ 
-                  opacity: previewMode === 'mobile' ? 0 : 1,
-                  transition: 'opacity 0.2s ease-in-out',
-                  whiteSpace: 'nowrap'
-                }}>宽屏</span>
+                {previewMode !== 'mobile' && '宽屏'}
               </button>
               <button
                 onClick={() => setPreviewMode('pad')}
@@ -558,16 +556,11 @@ function App() {
                   alignItems: 'center', 
                   gap: '6px', 
                   padding: '4px 8px', 
-                  fontSize: '13px',
-                  minWidth: '50px'
+                  fontSize: '13px'
                 }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:tablet"></span>
-                <span style={{ 
-                  opacity: previewMode === 'mobile' ? 0 : 1,
-                  transition: 'opacity 0.2s ease-in-out',
-                  whiteSpace: 'nowrap'
-                }}>Pad</span>
+                {previewMode !== 'mobile' && 'Pad'}
               </button>
               <button
                 onClick={() => setPreviewMode('mobile')}
@@ -578,16 +571,11 @@ function App() {
                   alignItems: 'center', 
                   gap: '6px', 
                   padding: '4px 8px', 
-                  fontSize: '13px',
-                  minWidth: '56px'
+                  fontSize: '13px'
                 }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:smartphone"></span>
-                <span style={{ 
-                  opacity: previewMode === 'mobile' ? 0 : 1,
-                  transition: 'opacity 0.2s ease-in-out',
-                  whiteSpace: 'nowrap'
-                }}>手机</span>
+                {previewMode !== 'mobile' && '手机'}
               </button>
             </div>
 
