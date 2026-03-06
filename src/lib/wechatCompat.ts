@@ -209,6 +209,7 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
 
   // ═══════════════════════════════════════════════════════════════
   // 代码块处理：从预览区域读取计算后的样式
+  // 注意：公众号不支持 overflow-x，使用 white-space: pre-wrap 自动换行
   // ═══════════════════════════════════════════════════════════════
   const previewPreElements = previewEl.querySelectorAll('pre.hljs')
   const docPreElements = doc.querySelectorAll('pre.hljs')
@@ -219,7 +220,8 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
 
     // 从预览区域读取 pre 的计算样式
     const preStyle = getComputedStylesAsInline(previewPre)
-    docPre.setAttribute('style', preStyle + '; overflow-x: auto; white-space: pre;')
+    // 公众号不支持 overflow-x，使用 pre-wrap 让代码自动换行
+    docPre.setAttribute('style', preStyle + '; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;')
   })
 
   // 代码高亮 span：从预览区域读取计算后的颜色
