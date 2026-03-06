@@ -3,6 +3,7 @@ import { CodeMirrorEditor } from './components/CodeMirrorEditor'
 import { BrandLogo } from './components/BrandLogo'
 import { UrlFetchModal } from './components/UrlFetchModal'
 import { ThemePickerModal } from './components/ThemePickerModal'
+import { CodeStylePickerModal } from './components/CodeStylePickerModal'
 import { useToast } from './components/Toast'
 import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
@@ -272,6 +273,7 @@ function App() {
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
   const [isFetchingUrl, setIsFetchingUrl] = useState(false)
   const [isThemePickerOpen, setIsThemePickerOpen] = useState(false)
+  const [isCodeStylePickerOpen, setIsCodeStylePickerOpen] = useState(false)
 
   // 同步滚动
   useSyncScroll({
@@ -465,29 +467,32 @@ function App() {
                 gap: '6px',
                 padding: '4px 10px',
                 fontSize: '12px',
-                background: 'var(--color-primary-muted)',
-                color: 'var(--orange-500)',
-                border: '1px solid var(--orange-500)'
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-default)'
               }}
             >
               <span className="iconify icon-sm" data-icon="lucide:palette"></span>
               {currentTheme.name}
             </button>
 
-            {/* 代码风格 */}
-            <div className="flex items-center gap-1">
-              <span className="iconify icon-sm" data-icon="lucide:code-2" style={{ color: 'var(--text-muted)' }}></span>
-              <select
-                value={codeStyle}
-                onChange={(e) => setCodeStyle(e.target.value)}
-                className="select"
-                style={{ minWidth: '100px', fontSize: '12px', padding: '4px 8px' }}
-              >
-                {codeStyles.map(style => (
-                  <option key={style.id} value={style.id}>{style.name}</option>
-                ))}
-              </select>
-            </div>
+            {/* 代码风格 - 点击打开弹窗 */}
+            <button
+              onClick={() => setIsCodeStylePickerOpen(true)}
+              className="btn btn-ghost"
+              title="选择代码样式"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 10px',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-default)'
+              }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:code-2"></span>
+              {codeStyles.find(s => s.id === codeStyle)?.name || '代码样式'}
+            </button>
 
             {/* 同步滚动开关 */}
             <button
@@ -697,6 +702,15 @@ function App() {
         themes={themes}
         currentTheme={currentTheme}
         onSelectTheme={handleSelectTheme}
+      />
+
+      {/* 代码样式选择弹窗 */}
+      <CodeStylePickerModal
+        isOpen={isCodeStylePickerOpen}
+        onClose={() => setIsCodeStylePickerOpen(false)}
+        codeStyles={codeStyles}
+        currentStyle={codeStyle}
+        onSelectStyle={setCodeStyle}
       />
     </div>
   )
