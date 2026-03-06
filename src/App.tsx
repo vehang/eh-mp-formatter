@@ -4,6 +4,7 @@ import { BrandLogo } from './components/BrandLogo'
 import { UrlFetchModal } from './components/UrlFetchModal'
 import { ThemePickerModal } from './components/ThemePickerModal'
 import { CodeStylePickerModal } from './components/CodeStylePickerModal'
+import { ImageHostConfigModal } from './components/ImageHostConfigModal'
 import { useToast } from './components/Toast'
 import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
@@ -11,6 +12,7 @@ import { useAutoSave } from './hooks/useAutoSave'
 import { useUITheme } from './hooks/useUITheme'
 import { useSyncScroll } from './hooks/useSyncScroll'
 import { useSettings } from './hooks/useSettings'
+import { useImageHost } from './hooks/useImageHost'
 import { parseMarkdown } from './utils/markdown'
 import { makeWeChatCompatible, applyInlineStyles } from './lib/wechatCompat'
 import { fetchUrlContent } from './utils/urlFetcher'
@@ -274,6 +276,18 @@ function App() {
   const [isFetchingUrl, setIsFetchingUrl] = useState(false)
   const [isThemePickerOpen, setIsThemePickerOpen] = useState(false)
   const [isCodeStylePickerOpen, setIsCodeStylePickerOpen] = useState(false)
+  const [isImageHostModalOpen, setIsImageHostModalOpen] = useState(false)
+
+  // 图床管理
+  const {
+    settings: imageHostSettings,
+    uploadProgress,
+    updateHostConfig,
+    setDefaultHost,
+    handleUpload,
+    clearHostConfig,
+    hasConfiguredHost,
+  } = useImageHost()
 
   // 同步滚动
   useSyncScroll({
@@ -362,6 +376,27 @@ function App() {
       toast.showToast('排版已复制，直接粘贴到公众号', 'success')
     } catch {
       toast.showToast('复制失败，请重试', 'error')
+    }
+  }
+
+  // 处理图片粘贴
+  const handleImagePaste = async (file: File) => {
+    if (!hasConfiguredHost) {
+      toast.showToast('请先配置图床', 'error')
+      setIsImageHostModalOpen(true)
+      return
+    }
+
+    const result = await handleUpload(file)
+
+    if (result.success && result.url) {
+      // 插入 Markdown 图片链接
+      const imageMarkdown = `![image](${result.url})`
+      // 在当前内容末尾添加图片
+      setMarkdown(markdown + '\n' + imageMarkdown)
+      toast.showToast('图片上传成功', 'success')
+    } else {
+      toast.showToast(result.error || '上传失败', 'error')
     }
   }
 
@@ -494,6 +529,25 @@ function App() {
               {codeStyles.find(s => s.id === codeStyle)?.name || '代码样式'}
             </button>
 
+            {/* 图床配置 - 点击打开弹窗 */}
+            <button
+              onClick={() => setIsImageHostModalOpen(true)}
+              className="btn btn-ghost"
+              title="配置图床"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 10px',
+                fontSize: '12px',
+                color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-secondary)',
+                border: '1px solid var(--border-default)'
+              }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:image-up"></span>
+              图床
+            </button>
+
             {/* 同步滚动开关 */}
             <button
               onClick={() => setSyncScroll(!syncScroll)}
@@ -529,6 +583,7 @@ function App() {
               value={markdown}
               onChange={setMarkdown}
               placeholder="在这里写 Markdown..."
+              onImagePaste={handleImagePaste}
             />
           </div>
         </div>
@@ -673,6 +728,16 @@ function App() {
         }}
       >
         <div className="flex items-center gap-3" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          {/* 上传进度 */}
+          {uploadProgress.isUploading && (
+            <div className="upload-progress-bar">
+              <div
+                className="upload-progress-fill"
+                style={{ width: `${uploadProgress.progress}%` }}
+              />
+              <span className="upload-progress-text">{uploadProgress.statusText}</span>
+            </div>
+          )}
           {isSaving ? (
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
@@ -711,6 +776,16 @@ function App() {
         codeStyles={codeStyles}
         currentStyle={codeStyle}
         onSelectStyle={setCodeStyle}
+      />
+
+      {/* 图床配置弹窗 */}
+      <ImageHostConfigModal
+        isOpen={isImageHostModalOpen}
+        onClose={() => setIsImageHostModalOpen(false)}
+        settings={imageHostSettings}
+        onUpdateConfig={updateHostConfig}
+        onSetDefault={setDefaultHost}
+        onClearConfig={clearHostConfig}
       />
     </div>
   )

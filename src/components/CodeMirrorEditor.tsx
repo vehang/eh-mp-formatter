@@ -8,9 +8,10 @@ interface CodeMirrorEditorProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  onImagePaste?: (file: File) => void
 }
 
-export function CodeMirrorEditor({ value, onChange, placeholder }: CodeMirrorEditorProps) {
+export function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste }: CodeMirrorEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
 
@@ -108,6 +109,20 @@ export function CodeMirrorEditor({ value, onChange, placeholder }: CodeMirrorEdi
           paste: (event, view) => {
             const clipboardData = event.clipboardData
             if (!clipboardData) return
+
+            // 检查是否有图片文件
+            const items = clipboardData.items
+            for (let i = 0; i < items.length; i++) {
+              const item = items[i]
+              if (item.type.startsWith('image/')) {
+                const file = item.getAsFile()
+                if (file && onImagePaste) {
+                  event.preventDefault()
+                  onImagePaste(file)
+                  return
+                }
+              }
+            }
 
             // 优先检查是否有 HTML 内容
             const html = clipboardData.getData('text/html')
