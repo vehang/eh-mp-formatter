@@ -25,7 +25,7 @@ const JAVA_HELLO_WORLD = `public class HelloWorld {
 /**
  * 代码预览组件 - 展示代码样式效果
  */
-function CodePreview({ styleId, css }: { styleId: string; css: string }) {
+function CodePreview({ css }: { css: string }) {
   const [highlightedCode, setHighlightedCode] = useState('')
 
   useEffect(() => {
@@ -160,7 +160,7 @@ export function CodeStylePickerModal({
                 )}
 
                 {/* 代码预览 */}
-                <CodePreview styleId={style.id} css={style.css} />
+                <CodePreview css={style.css} />
 
                 {/* 样式信息 */}
                 <div className="theme-card-info" style={{ marginTop: '10px' }}>
