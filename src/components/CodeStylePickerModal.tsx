@@ -185,7 +185,6 @@ export function CodeStylePickerModal({
                 {/* 样式信息 */}
                 <div className="theme-card-info" style={{ marginTop: '10px' }}>
                   <span className="theme-card-name">{style.name}</span>
-                  <span className="theme-card-desc">Java 语法高亮</span>
                 </div>
               </button>
             )
