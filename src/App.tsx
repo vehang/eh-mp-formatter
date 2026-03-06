@@ -354,10 +354,10 @@ function App() {
       style={{ background: 'var(--bg-base)' }}
     >
       {/* ═══════════════════════════════════════════════
-          顶部工具栏 - 只显示品牌Logo
+          顶部工具栏 - 品牌 Logo + 主题切换
           ═══════════════════════════════════════════════ */}
       <header
-        className="flex items-center"
+        className="flex items-center justify-between"
         style={{
           height: '52px',
           padding: '0 var(--space-5)',
@@ -366,6 +366,22 @@ function App() {
         }}
       >
         <BrandLogo />
+        
+        {/* UI 主题切换 - 右上角 */}
+        <button
+          onClick={uiTheme.toggleTheme}
+          className="theme-toggle-btn"
+          title={uiTheme.isDark ? '切换到浅色模式' : '切换到深色模式'}
+        >
+          <div className="theme-icon-wrapper">
+            <span className="theme-icon-sun">
+              <span className="iconify" data-icon="lucide:sun" style={{ fontSize: '18px' }}></span>
+            </span>
+            <span className="theme-icon-moon">
+              <span className="iconify" data-icon="lucide:moon" style={{ fontSize: '18px' }}></span>
+            </span>
+          </div>
+        </button>
       </header>
 
       {/* ═══════════════════════════════════════════════
@@ -476,10 +492,8 @@ function App() {
             <span className="panel-title">预览</span>
             <span className="panel-badge">{currentTheme.name}</span>
             
-            <div className="flex-1" />
-            
-            {/* 预览模式切换 - 三个尺寸 */}
-            <div className="toggle-group" style={{ marginRight: '8px' }}>
+            {/* 预览模式切换 - 三个尺寸（左对齐） */}
+            <div className="toggle-group" style={{ marginLeft: '12px' }}>
               <button
                 onClick={() => setPreviewMode('desktop')}
                 className={`toggle-btn ${previewMode === 'desktop' ? 'active' : ''}`}
@@ -506,22 +520,7 @@ function App() {
               </button>
             </div>
 
-            {/* UI 主题切换 */}
-            <button
-              onClick={uiTheme.toggleTheme}
-              className="theme-toggle-btn"
-              title={uiTheme.isDark ? '切换到浅色模式' : '切换到深色模式'}
-              style={{ marginRight: '8px' }}
-            >
-              <div className="theme-icon-wrapper">
-                <span className="theme-icon-sun">
-                  <span className="iconify" data-icon="lucide:sun" style={{ fontSize: '18px' }}></span>
-                </span>
-                <span className="theme-icon-moon">
-                  <span className="iconify" data-icon="lucide:moon" style={{ fontSize: '18px' }}></span>
-                </span>
-              </div>
-            </button>
+            <div className="flex-1" />
 
             {/* 复制排版按钮 */}
             <button
@@ -549,7 +548,8 @@ function App() {
               style={{
                 width: previewMode === 'mobile' ? '375px' : previewMode === 'pad' ? '768px' : '100%',
                 maxWidth: '100%',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                transition: 'width 0.3s ease-in-out'
               }}
             >
               <div
