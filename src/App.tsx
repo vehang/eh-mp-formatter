@@ -390,7 +390,7 @@ function App() {
       <main className="flex-1 flex overflow-hidden min-h-0">
         {/* 左侧编辑器 */}
         <div
-          className="w-1/2 flex flex-col"
+          className="flex-1 flex flex-col"
           style={{
             background: 'var(--bg-surface)',
             borderRight: '1px solid var(--border-subtle)'
@@ -487,6 +487,7 @@ function App() {
           className="flex flex-col"
           style={{ 
             background: 'var(--bg-muted)',
+            flexShrink: 0,
             width: previewMode === 'desktop' ? '50%' 
                  : previewMode === 'pad' ? '820px' 
                  : '415px',
@@ -495,33 +496,39 @@ function App() {
         >
           <div className="panel-header">
             <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
+            {previewMode !== 'mobile' && (
+              <span className="panel-title">预览</span>
+            )}
             <span className="panel-badge">{currentTheme.name}</span>
             
-            {/* 预览模式切换 - 三个尺寸（左对齐，只显示图标） */}
+            {/* 预览模式切换 - 三个尺寸 */}
             <div className="toggle-group" style={{ marginLeft: '12px' }}>
               <button
                 onClick={() => setPreviewMode('desktop')}
                 className={`toggle-btn ${previewMode === 'desktop' ? 'active' : ''}`}
                 title="宽屏模式"
-                style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '13px' }}
+                style={{ display: 'flex', alignItems: 'center', gap: previewMode === 'mobile' ? '0' : '6px', padding: '4px 8px', fontSize: '13px' }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:monitor"></span>
+                {previewMode !== 'mobile' && '宽屏'}
               </button>
               <button
                 onClick={() => setPreviewMode('pad')}
                 className={`toggle-btn ${previewMode === 'pad' ? 'active' : ''}`}
                 title="Pad 模式"
-                style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '13px' }}
+                style={{ display: 'flex', alignItems: 'center', gap: previewMode === 'mobile' ? '0' : '6px', padding: '4px 8px', fontSize: '13px' }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:tablet"></span>
+                {previewMode !== 'mobile' && 'Pad'}
               </button>
               <button
                 onClick={() => setPreviewMode('mobile')}
                 className={`toggle-btn ${previewMode === 'mobile' ? 'active' : ''}`}
                 title="手机模式"
-                style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '13px' }}
+                style={{ display: 'flex', alignItems: 'center', gap: previewMode === 'mobile' ? '0' : '6px', padding: '4px 8px', fontSize: '13px' }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:smartphone"></span>
+                {previewMode !== 'mobile' && '手机'}
               </button>
             </div>
 
