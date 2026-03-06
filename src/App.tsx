@@ -8,7 +8,7 @@ import { useKeyboard } from './hooks/useKeyboard'
 import { useAutoSave } from './hooks/useAutoSave'
 import { useUITheme } from './hooks/useUITheme'
 import { parseMarkdown } from './utils/markdown'
-import { makeWeChatCompatible } from './lib/wechatCompat'
+import { makeWeChatCompatible, applyInlineStyles } from './lib/wechatCompat'
 import { fetchUrlContent } from './utils/urlFetcher'
 import { themes, applyTheme, defaultTheme } from './themes'
 import type { Theme } from './themes/types'
@@ -313,18 +313,21 @@ function App() {
       }
 
       // ═══════════════════════════════════════════════════════════════
-      // 使用 makeWeChatCompatible 处理 HTML，确保公众号兼容
-      // 然后使用 ClipboardItem API 复制
+      // 关键步骤（参考 raphael-publish）：
+      // 1. applyInlineStyles: 将样式内联到每个元素的 style 属性
+      // 2. makeWeChatCompatible: 处理公众号兼容性问题
       // ═══════════════════════════════════════════════════════════════
-      const processedHtml = await makeWeChatCompatible(
-        previewEl.innerHTML,
-        currentTheme.id
-      )
 
-      // 使用 ClipboardItem API 复制 HTML
+      // 步骤 1: 内联样式（关键！公众号不保留 CSS 类）
+      const htmlWithInlineStyles = applyInlineStyles(previewEl.innerHTML, currentTheme)
+
+      // 步骤 2: 公众号兼容性处理
+      const processedHtml = await makeWeChatCompatible(htmlWithInlineStyles, currentTheme)
+
+      // 步骤 3: 使用 ClipboardItem API 复制
       const clipboardItem = new ClipboardItem({
         'text/html': new Blob([processedHtml], { type: 'text/html' }),
-        'text/plain': new Blob([processedHtml], { type: 'text/plain' }),
+        'text/plain': new Blob([previewEl.innerText], { type: 'text/plain' }),
       })
 
       await navigator.clipboard.write([clipboardItem])

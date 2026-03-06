@@ -1,4 +1,4 @@
-import { themes } from '../themes'
+import type { Theme } from '../themes/types'
 
 /**
  * 将图片 URL 转换为 Base64 编码
@@ -23,7 +23,7 @@ async function imageToBase64(url: string): Promise<string> {
 }
 
 /**
- * 将 Flex 布局转换为 Table 布局
+ * 将 Flex 布局转换为 Table 布局（公众号不支持 flex）
  */
 function convertFlexToTable(section: HTMLElement, doc: Document): void {
   const flexElements = section.querySelectorAll('div, p')
@@ -44,20 +44,20 @@ function convertFlexToTable(section: HTMLElement, doc: Document): void {
 
     if (allImages && children.length > 0) {
       const table = doc.createElement('table')
-      table.setAttribute('style', 'width: 100%; border-collapse: collapse; margin: 16px 0; border: none;')
+      table.setAttribute('style', 'width: 100%; border-collapse: collapse; margin: 16px 0; border: none !important;')
 
       const tbody = doc.createElement('tbody')
       const tr = doc.createElement('tr')
-      tr.setAttribute('style', 'border: none; background: transparent;')
+      tr.setAttribute('style', 'border: none !important; background: transparent !important;')
 
       children.forEach((child) => {
         const td = doc.createElement('td')
-        td.setAttribute('style', 'padding: 0 4px; vertical-align: top; border: none; background: transparent;')
+        td.setAttribute('style', 'padding: 0 4px; vertical-align: top; border: none !important; background: transparent !important;')
 
         if (child.tagName === 'IMG') {
           const img = child as HTMLImageElement
           const currentStyle = img.getAttribute('style') || ''
-          img.setAttribute('style', currentStyle.replace(/width:\s*[^;]+;?/g, '') + ' width: 100%; display: block; margin: 0 auto;')
+          img.setAttribute('style', currentStyle.replace(/width:\s*[^;]+;?/g, '') + ' width: 100% !important; display: block; margin: 0 auto;')
         }
 
         td.appendChild(child)
@@ -78,13 +78,19 @@ function convertFlexToTable(section: HTMLElement, doc: Document): void {
  */
 function flattenListItems(section: HTMLElement, doc: Document): void {
   section.querySelectorAll('li').forEach((li) => {
-    li.querySelectorAll('p').forEach((p) => {
-      const span = doc.createElement('span')
-      span.innerHTML = p.innerHTML
-      const pStyle = p.getAttribute('style')
-      if (pStyle) span.setAttribute('style', pStyle)
-      p.parentNode?.replaceChild(span, p)
-    })
+    const hasBlockChildren = Array.from(li.children).some(child =>
+      ['P', 'DIV', 'UL', 'OL', 'BLOCKQUOTE'].includes(child.tagName)
+    )
+
+    if (hasBlockChildren) {
+      li.querySelectorAll('p').forEach((p) => {
+        const span = doc.createElement('span')
+        span.innerHTML = p.innerHTML
+        const pStyle = p.getAttribute('style')
+        if (pStyle) span.setAttribute('style', pStyle)
+        p.parentNode?.replaceChild(span, p)
+      })
+    }
   })
 }
 
@@ -146,25 +152,138 @@ function processPunctuation(section: HTMLElement, doc: Document): void {
 }
 
 /**
+ * 将样式内联到 HTML 元素（关键函数）
+ * 参考 raphael-publish 的 applyTheme 实现
+ */
+export function applyInlineStyles(html: string, theme: Theme): string {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+  const style = theme.styles
+
+  // 标题内联元素覆盖样式
+  const headingInlineOverrides: Record<string, string> = {
+    strong: 'font-weight: 700; color: inherit !important; background-color: transparent !important;',
+    em: 'font-style: italic; color: inherit !important; background-color: transparent !important;',
+    a: 'color: inherit !important; text-decoration: none !important; border-bottom: 1px solid currentColor !important; background-color: transparent !important;',
+    code: 'color: inherit !important; background-color: transparent !important; border: none !important; padding: 0 !important;',
+  }
+
+  // 遍历所有选择器并应用内联样式
+  const selectors: (keyof typeof style)[] = [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'li', 'blockquote', 'code', 'pre', 'pre code',
+    'a', 'hr', 'th', 'td', 'table', 'img', 'strong', 'em'
+  ]
+
+  selectors.forEach((selector) => {
+    if (selector === 'pre code') return // 跳过，单独处理
+
+    const elements = doc.querySelectorAll(selector)
+    elements.forEach((el) => {
+      // 跳过 pre 内的 code（代码块）
+      if (selector === 'code' && el.parentElement?.tagName === 'PRE') return
+      // 跳过图片网格中的图片
+      if (el.tagName === 'IMG' && el.closest('.image-grid')) return
+
+      const currentStyle = el.getAttribute('style') || ''
+      const newStyle = style[selector]
+      if (newStyle) {
+        el.setAttribute('style', currentStyle + '; ' + newStyle)
+      }
+    })
+  })
+
+  // 恢复列表标记（Tailwind preflight 会移除）
+  doc.querySelectorAll('ul').forEach((ul) => {
+    const currentStyle = ul.getAttribute('style') || ''
+    ul.setAttribute('style', `${currentStyle}; list-style-type: disc !important; list-style-position: outside; padding-left: 24px;`)
+  })
+  doc.querySelectorAll('ul ul').forEach((ul) => {
+    const currentStyle = ul.getAttribute('style') || ''
+    ul.setAttribute('style', `${currentStyle}; list-style-type: circle !important;`)
+  })
+  doc.querySelectorAll('ul ul ul').forEach((ul) => {
+    const currentStyle = ul.getAttribute('style') || ''
+    ul.setAttribute('style', `${currentStyle}; list-style-type: square !important;`)
+  })
+  doc.querySelectorAll('ol').forEach((ol) => {
+    const currentStyle = ol.getAttribute('style') || ''
+    ol.setAttribute('style', `${currentStyle}; list-style-type: decimal !important; list-style-position: outside; padding-left: 24px;`)
+  })
+
+  // 处理代码高亮 span
+  const hljsStyles: Record<string, string> = {
+    'hljs-comment': 'color: #6a737d; font-style: italic;',
+    'hljs-quote': 'color: #6a737d; font-style: italic;',
+    'hljs-keyword': 'color: #d73a49; font-weight: 600;',
+    'hljs-selector-tag': 'color: #d73a49; font-weight: 600;',
+    'hljs-string': 'color: #032f62;',
+    'hljs-title': 'color: #6f42c1; font-weight: 600;',
+    'hljs-section': 'color: #6f42c1; font-weight: 600;',
+    'hljs-type': 'color: #005cc5; font-weight: 600;',
+    'hljs-number': 'color: #005cc5;',
+    'hljs-literal': 'color: #005cc5;',
+    'hljs-built_in': 'color: #005cc5;',
+    'hljs-variable': 'color: #e36209;',
+    'hljs-template-variable': 'color: #e36209;',
+    'hljs-tag': 'color: #22863a;',
+    'hljs-name': 'color: #22863a;',
+    'hljs-attr': 'color: #6f42c1;',
+  }
+
+  doc.querySelectorAll('.hljs span').forEach((span) => {
+    let inlineStyle = span.getAttribute('style') || ''
+    if (inlineStyle && !inlineStyle.endsWith(';')) inlineStyle += '; '
+    span.classList.forEach((cls) => {
+      if (hljsStyles[cls]) {
+        inlineStyle += hljsStyles[cls] + '; '
+      }
+    })
+    if (inlineStyle) {
+      span.setAttribute('style', inlineStyle)
+    }
+  })
+
+  // 处理标题内的内联元素
+  const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6')
+  headings.forEach((heading) => {
+    Object.keys(headingInlineOverrides).forEach((tag) => {
+      heading.querySelectorAll(tag).forEach((node) => {
+        const override = headingInlineOverrides[tag]
+        node.setAttribute('style', `${node.getAttribute('style') || ''}; ${override}`)
+      })
+    })
+  })
+
+  // 统一图片样式
+  doc.querySelectorAll('img').forEach((img) => {
+    const inGrid = Boolean(img.closest('.image-grid'))
+    const currentStyle = img.getAttribute('style') || ''
+    const appendedStyle = inGrid
+      ? 'display:block; max-width:100%; height:auto; margin:0 !important; padding:8px !important; border-radius:14px !important; box-sizing:border-box; box-shadow:0 12px 28px rgba(15,23,42,0.18), 0 2px 8px rgba(15,23,42,0.12); border:1px solid rgba(255,255,255,0.75);'
+      : 'display:block; width:100%; max-width:100%; height:auto; margin:30px auto !important; padding:8px !important; border-radius:14px !important; box-sizing:border-box; box-shadow:0 16px 34px rgba(15,23,42,0.22), 0 4px 10px rgba(15,23,42,0.12); border:1px solid rgba(15,23,42,0.12);'
+    img.setAttribute('style', `${currentStyle}; ${appendedStyle}`)
+  })
+
+  // 创建容器
+  const container = doc.createElement('div')
+  container.setAttribute('style', style.container)
+  container.innerHTML = doc.body.innerHTML
+
+  return container.outerHTML
+}
+
+/**
  * 将 HTML 转换为公众号兼容格式
  * @param html 原始 HTML 内容（已内联样式）
- * @param themeId 主题 ID
+ * @param theme 主题对象
  * @returns 处理后的 HTML 字符串
  */
-export async function makeWeChatCompatible(html: string, themeId: string): Promise<string> {
+export async function makeWeChatCompatible(html: string, theme: Theme): Promise<string> {
   const parser = new DOMParser()
   const doc = parser.parseFromString(html, 'text/html')
 
-  const theme = themes.find((t) => t.id === themeId) || themes[0]
-  const c = theme.colors
-  const containerStyle = [
-    `background-color: ${c.background}`,
-    `color: ${c.text}`,
-    `font-size: 16px`,
-    `line-height: 1.8`,
-    `padding: 20px`,
-    `font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif`
-  ].join('; ')
+  const containerStyle = theme.styles.container
 
   const rootNodes = Array.from(doc.body.children)
 
