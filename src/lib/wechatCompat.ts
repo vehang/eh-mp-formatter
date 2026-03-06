@@ -133,6 +133,9 @@ function forceStyleInheritance(section: HTMLElement, containerStyle: string): vo
  */
 function processPunctuation(section: HTMLElement, doc: Document): void {
   section.querySelectorAll('strong, b, em, span, a, code').forEach((el) => {
+    // 跳过代码块内的元素
+    if (el.closest('pre.hljs, code')) return
+
     const nextSibling = el.nextSibling
     if (!nextSibling || nextSibling.nodeType !== Node.TEXT_NODE) return
 
@@ -169,8 +172,8 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 代码块处理：参考 raphael-publish 的简洁实现
-  // 关键：只在 pre 上设置 overflow-x: auto，不需要额外包裹或复杂处理
+  // 代码块处理：关键发现 - overflow-x 必须在 code 元素上，不是 pre！
+  // 参考实际有效案例：display: -webkit-box 是横向滚动的关键
   // ═══════════════════════════════════════════════════════════════
   const previewPreElements = previewEl.querySelectorAll('pre.hljs')
   const docPreElements = doc.querySelectorAll('pre.hljs')
@@ -189,21 +192,37 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     const padding = computed.getPropertyValue('padding')
     const borderRadius = computed.getPropertyValue('border-radius')
 
-    // pre 样式：简洁风格，只设置 overflow-x: auto
-    // 依赖浏览器默认的 <pre> 行为来保持空白
+    // ⭐ 关键修正：pre 只作为外层容器，不设置 overflow
     const preStyle = `
-      margin: 16px 0;
-      padding: ${padding};
-      background-color: ${bgColor};
+      margin: 10px 0;
+      padding: 0;
       border-radius: ${borderRadius};
-      overflow-x: auto;
+      box-shadow: rgba(0, 0, 0, 0.55) 0px 2px 10px;
+      text-align: left;
       font-size: ${fontSize};
-      font-family: ${fontFamily};
       line-height: ${lineHeight};
-      color: ${color};
     `.replace(/\s+/g, ' ').trim()
 
     docPre.setAttribute('style', preStyle)
+
+    // ⭐ 关键：在 code 元素上设置 overflow-x: auto 和 display: -webkit-box
+    // 这是实现横向滚动的正确方式！
+    const docCode = docPre.querySelector('code')
+    if (docCode) {
+      const codeStyle = `
+        overflow-x: auto;
+        padding: ${padding || '15px 16px 16px'};
+        color: ${color};
+        background: ${bgColor};
+        border-radius: ${borderRadius};
+        display: -webkit-box;
+        font-family: ${fontFamily};
+        font-size: ${fontSize};
+        line-height: ${lineHeight};
+        margin-bottom: 0;
+      `.replace(/\s+/g, ' ').trim()
+      docCode.setAttribute('style', codeStyle)
+    }
   })
 
   // 代码高亮 span：从预览区域读取计算后的颜色（只取颜色，不加背景）
