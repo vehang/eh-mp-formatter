@@ -258,7 +258,7 @@ function App() {
     const themeId = params.get('theme')
     return themes.find(t => t.id === themeId) || defaultTheme
   })
-  const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop')
+  const [previewMode, setPreviewMode] = useState<'mobile' | 'pad' | 'desktop'>('desktop')
   const [codeStyle, setCodeStyle] = useState('github-dark')
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
   const [isFetchingUrl, setIsFetchingUrl] = useState(false)
@@ -339,17 +339,6 @@ function App() {
     }
   }
 
-  const handleCopyText = () => {
-    const tempDiv = document.createElement('div')
-    tempDiv.innerHTML = html
-    const text = tempDiv.textContent || tempDiv.innerText || ''
-    navigator.clipboard.writeText(text).then(() => {
-      toast.showToast('纯文本已复制', 'success')
-    }).catch(() => {
-      toast.showToast('复制失败，请重试', 'error')
-    })
-  }
-
   // 快捷键系统
   useKeyboard([
     { key: 'z', ctrlKey: true, handler: undo },
@@ -365,10 +354,10 @@ function App() {
       style={{ background: 'var(--bg-base)' }}
     >
       {/* ═══════════════════════════════════════════════
-          顶部工具栏
+          顶部工具栏 - 只显示品牌Logo
           ═══════════════════════════════════════════════ */}
       <header
-        className="flex items-center justify-between"
+        className="flex items-center"
         style={{
           height: '52px',
           padding: '0 var(--space-5)',
@@ -377,105 +366,6 @@ function App() {
         }}
       >
         <BrandLogo />
-
-        <div className="flex items-center gap-3">
-          {/* 主题选择 */}
-          <div className="flex items-center gap-2">
-            <span className="iconify icon-md" data-icon="lucide:palette" style={{ color: 'var(--text-muted)' }}></span>
-            <select
-              value={currentTheme.id}
-              onChange={(e) => handleThemeChange(e.target.value)}
-              className="select"
-              style={{ minWidth: '90px' }}
-            >
-              {themes.map(theme => (
-                <option key={theme.id} value={theme.id}>{theme.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* 代码风格 */}
-          <div className="flex items-center gap-2">
-            <span className="iconify icon-md" data-icon="lucide:code-2" style={{ color: 'var(--text-muted)' }}></span>
-            <select
-              value={codeStyle}
-              onChange={(e) => setCodeStyle(e.target.value)}
-              className="select"
-              style={{ minWidth: '100px' }}
-            >
-              {codeStyles.map(style => (
-                <option key={style.id} value={style.id}>{style.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="toolbar-divider" />
-
-          {/* 预览模式切换 */}
-          <div className="toggle-group">
-            <button
-              onClick={() => setPreviewMode('desktop')}
-              className={`toggle-btn ${previewMode === 'desktop' ? 'active' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:monitor"></span>
-              宽屏
-            </button>
-            <button
-              onClick={() => setPreviewMode('mobile')}
-              className={`toggle-btn ${previewMode === 'mobile' ? 'active' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:smartphone"></span>
-              手机
-            </button>
-          </div>
-
-          {/* UI 主题切换 */}
-          <button
-            onClick={uiTheme.toggleTheme}
-            className="theme-toggle-btn"
-            title={uiTheme.isDark ? '切换到浅色模式' : '切换到深色模式'}
-          >
-            <div className="theme-icon-wrapper">
-              <span className="theme-icon-sun">
-                <span className="iconify" data-icon="lucide:sun" style={{ fontSize: '18px' }}></span>
-              </span>
-              <span className="theme-icon-moon">
-                <span className="iconify" data-icon="lucide:moon" style={{ fontSize: '18px' }}></span>
-              </span>
-            </div>
-          </button>
-
-          <div className="toolbar-divider" />
-
-          {/* 撤销/重做 */}
-          <button
-            onClick={undo}
-            disabled={!canUndo}
-            className="btn btn-ghost btn-icon"
-            title="撤销 (Ctrl+Z)"
-          >
-            <span className="iconify icon-md" data-icon="lucide:undo-2"></span>
-          </button>
-          <button
-            onClick={redo}
-            disabled={!canRedo}
-            className="btn btn-ghost btn-icon"
-            title="重做 (Ctrl+Shift+Z)"
-          >
-            <span className="iconify icon-md" data-icon="lucide:redo-2"></span>
-          </button>
-
-          {/* 清空 */}
-          <button
-            onClick={handleClear}
-            className="btn btn-danger btn-icon"
-            title="清空内容"
-          >
-            <span className="iconify icon-md" data-icon="lucide:trash-2"></span>
-          </button>
-        </div>
       </header>
 
       {/* ═══════════════════════════════════════════════
@@ -490,10 +380,72 @@ function App() {
             borderRight: '1px solid var(--border-subtle)'
           }}
         >
-          <div className="panel-header">
-            <span className="iconify icon-sm" data-icon="lucide:file-text" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
+          <div className="panel-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
+            <span className="iconify icon-sm" data-icon="lucide:file-text" style={{ marginRight: '4px', color: 'var(--text-muted)' }}></span>
             <span className="panel-title">Markdown</span>
+            
+            <div className="toolbar-divider" style={{ margin: '0 4px' }} />
+            
+            {/* 撤销/重做/清空 */}
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              className="btn btn-ghost btn-icon"
+              title="撤销 (Ctrl+Z)"
+            >
+              <span className="iconify icon-sm" data-icon="lucide:undo-2"></span>
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              className="btn btn-ghost btn-icon"
+              title="重做 (Ctrl+Shift+Z)"
+            >
+              <span className="iconify icon-sm" data-icon="lucide:redo-2"></span>
+            </button>
+            <button
+              onClick={handleClear}
+              className="btn btn-ghost btn-icon"
+              title="清空内容"
+              style={{ color: 'var(--red-500)' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:trash-2"></span>
+            </button>
+
+            <div className="toolbar-divider" style={{ margin: '0 4px' }} />
+
+            {/* 主题选择 */}
+            <div className="flex items-center gap-1">
+              <span className="iconify icon-sm" data-icon="lucide:palette" style={{ color: 'var(--text-muted)' }}></span>
+              <select
+                value={currentTheme.id}
+                onChange={(e) => handleThemeChange(e.target.value)}
+                className="select"
+                style={{ minWidth: '90px', fontSize: '12px', padding: '4px 8px' }}
+              >
+                {themes.map(theme => (
+                  <option key={theme.id} value={theme.id}>{theme.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* 代码风格 */}
+            <div className="flex items-center gap-1">
+              <span className="iconify icon-sm" data-icon="lucide:code-2" style={{ color: 'var(--text-muted)' }}></span>
+              <select
+                value={codeStyle}
+                onChange={(e) => setCodeStyle(e.target.value)}
+                className="select"
+                style={{ minWidth: '100px', fontSize: '12px', padding: '4px 8px' }}
+              >
+                {codeStyles.map(style => (
+                  <option key={style.id} value={style.id}>{style.name}</option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex-1" />
+            
             <button
               className="btn btn-ghost"
               onClick={() => setIsUrlModalOpen(true)}
@@ -503,7 +455,7 @@ function App() {
               <span className="iconify icon-sm" data-icon="lucide:link"></span>
               抓取链接
             </button>
-            <span className="panel-meta" style={{ marginLeft: '8px' }}>{markdown.length} 字</span>
+            <span className="panel-meta" style={{ marginLeft: '8px', fontSize: '12px' }}>{markdown.length} 字</span>
           </div>
           <div className="flex-1 min-h-0">
             <CodeMirrorEditor
@@ -523,7 +475,55 @@ function App() {
             <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
             <span className="panel-title">预览</span>
             <span className="panel-badge">{currentTheme.name}</span>
+            
             <div className="flex-1" />
+            
+            {/* 预览模式切换 - 三个尺寸 */}
+            <div className="toggle-group" style={{ marginRight: '8px' }}>
+              <button
+                onClick={() => setPreviewMode('desktop')}
+                className={`toggle-btn ${previewMode === 'desktop' ? 'active' : ''}`}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
+              >
+                <span className="iconify icon-sm" data-icon="lucide:monitor"></span>
+                宽屏
+              </button>
+              <button
+                onClick={() => setPreviewMode('pad')}
+                className={`toggle-btn ${previewMode === 'pad' ? 'active' : ''}`}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
+              >
+                <span className="iconify icon-sm" data-icon="lucide:tablet"></span>
+                Pad
+              </button>
+              <button
+                onClick={() => setPreviewMode('mobile')}
+                className={`toggle-btn ${previewMode === 'mobile' ? 'active' : ''}`}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
+              >
+                <span className="iconify icon-sm" data-icon="lucide:smartphone"></span>
+                手机
+              </button>
+            </div>
+
+            {/* UI 主题切换 */}
+            <button
+              onClick={uiTheme.toggleTheme}
+              className="theme-toggle-btn"
+              title={uiTheme.isDark ? '切换到浅色模式' : '切换到深色模式'}
+              style={{ marginRight: '8px' }}
+            >
+              <div className="theme-icon-wrapper">
+                <span className="theme-icon-sun">
+                  <span className="iconify" data-icon="lucide:sun" style={{ fontSize: '18px' }}></span>
+                </span>
+                <span className="theme-icon-moon">
+                  <span className="iconify" data-icon="lucide:moon" style={{ fontSize: '18px' }}></span>
+                </span>
+              </div>
+            </button>
+
+            {/* 复制排版按钮 */}
             <button
               className="btn btn-primary"
               onClick={handleCopyHTML}
@@ -532,15 +532,10 @@ function App() {
               <span className="iconify icon-sm" data-icon="lucide:copy"></span>
               复制排版
             </button>
-            <button
-              className="btn btn-success"
-              onClick={handleCopyText}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '8px', padding: '4px 10px', fontSize: '13px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:file-text"></span>
-              复制文字
-            </button>
-            <span className="panel-meta" style={{ marginLeft: '12px' }}>{previewMode === 'mobile' ? '375px' : '自适应'}</span>
+
+            <span className="panel-meta" style={{ marginLeft: '12px' }}>
+              {previewMode === 'mobile' ? '375px' : previewMode === 'pad' ? '768px' : '自适应'}
+            </span>
           </div>
           <div
             className="flex-1 overflow-auto flex justify-center"
@@ -552,7 +547,7 @@ function App() {
             <div
               className="card"
               style={{
-                width: previewMode === 'mobile' ? '375px' : '100%',
+                width: previewMode === 'mobile' ? '375px' : previewMode === 'pad' ? '768px' : '100%',
                 maxWidth: '100%',
                 overflow: 'hidden'
               }}

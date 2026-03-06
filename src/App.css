@@ -421,7 +421,7 @@ body {
 
 .toast-container {
   position: fixed;
-  top: 20px;
+  bottom: 20px;  /* 从右上角移到右下角 */
   right: 20px;
   display: flex;
   flex-direction: column;
