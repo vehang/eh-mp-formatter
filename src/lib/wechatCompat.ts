@@ -106,8 +106,8 @@ function forceStyleInheritance(section: HTMLElement, containerStyle: string): vo
   section.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, blockquote, span').forEach((el) => {
     const htmlEl = el as HTMLElement
 
-    // 跳过代码块内的 span
-    if (htmlEl.tagName === 'SPAN' && htmlEl.closest('pre, code')) return
+    // 跳过代码块内的 span（section 包裹 pre 的结构）
+    if (htmlEl.tagName === 'SPAN' && htmlEl.closest('pre.hljs, code')) return
 
     let currentStyle = htmlEl.getAttribute('style') || ''
 
@@ -208,8 +208,8 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 代码块处理：将 pre 替换为 section 以支持公众号横向滚动
-  // 公众号编辑器对 section 的 overflow-x 支持更好
+  // 代码块处理：用 section 包裹 pre 以支持公众号横向滚动
+  // 关键：section 负责 overflow-x: auto，pre 负责 white-space: pre
   // ═══════════════════════════════════════════════════════════════
   const previewPreElements = previewEl.querySelectorAll('pre.hljs')
   const docPreElements = doc.querySelectorAll('pre.hljs')
@@ -221,20 +221,21 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     // 从预览区域读取 pre 的计算样式
     const preStyle = getComputedStylesAsInline(previewPre)
 
-    // 创建 section 替换 pre，公众号对 section 的 overflow-x 支持更好
+    // 创建外层 section 作为滚动容器
     const section = doc.createElement('section')
-    section.setAttribute('style', preStyle + '; overflow-x: auto; white-space: pre; -webkit-overflow-scrolling: touch;')
+    section.setAttribute('style', 'width: 100%; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;')
 
-    // 将 pre 的内容移到 section 中
-    section.innerHTML = docPre.innerHTML
+    // 修改 pre 的样式：保留背景和字体，但让 section 处理滚动
+    docPre.setAttribute('style', preStyle + '; white-space: pre; overflow: visible; margin: 0;')
 
-    // 替换 pre 元素
-    docPre.parentNode?.replaceChild(section, docPre)
+    // 用 section 包裹 pre（不是替换）
+    docPre.parentNode?.insertBefore(section, docPre)
+    section.appendChild(docPre)
   })
 
-  // 代码高亮 span：从预览区域读取计算后的颜色
+  // 代码高亮 span：从预览区域读取计算后的颜色（只取颜色，不加背景）
   const previewCodeSpans = previewEl.querySelectorAll('pre.hljs span')
-  const docCodeSpans = doc.querySelectorAll('section.hljs span, pre.hljs span')
+  const docCodeSpans = doc.querySelectorAll('pre.hljs span')
 
   previewCodeSpans.forEach((previewSpan, index) => {
     const docSpan = docCodeSpans[index]
@@ -245,6 +246,7 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     const fontWeight = computed.getPropertyValue('font-weight')
     const fontStyle = computed.getPropertyValue('font-style')
 
+    // 只设置颜色和字体样式，不设置背景
     let inlineStyle = `color: ${color};`
     if (fontWeight && fontWeight !== '400' && fontWeight !== 'normal') {
       inlineStyle += ` font-weight: ${fontWeight};`
@@ -267,10 +269,8 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   selectors.forEach((selector) => {
     const elements = doc.querySelectorAll(selector)
     elements.forEach((el) => {
-      // 跳过 pre 内的 code（代码块已单独处理）
-      if (selector === 'code' && el.parentElement?.tagName === 'PRE') return
-      // 跳过 pre 元素（已单独处理）
-      if (selector === 'code' && el.closest('pre')) return
+      // 跳过代码块内的 code（代码块已单独处理）
+      if (selector === 'code' && el.closest('pre.hljs')) return
 
       const currentStyle = el.getAttribute('style') || ''
       const newStyle = style[selector]
