@@ -484,8 +484,14 @@ function App() {
 
         {/* 右侧预览 */}
         <div
-          className="w-1/2 flex flex-col"
-          style={{ background: 'var(--bg-muted)' }}
+          className="flex flex-col"
+          style={{ 
+            background: 'var(--bg-muted)',
+            width: previewMode === 'desktop' ? '50%' 
+                 : previewMode === 'pad' ? '820px' 
+                 : '415px',
+            transition: 'width 0.3s ease-in-out'
+          }}
         >
           <div className="panel-header">
             <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
