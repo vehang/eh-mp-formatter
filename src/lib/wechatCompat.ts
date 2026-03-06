@@ -161,7 +161,11 @@ function forceStyleInheritance(section: HTMLElement, containerStyle: string): vo
  * @param theme 主题对象
  */
 export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string {
-  const doc = new DOMParser().parseFromString(previewEl.innerHTML, 'text/html')
+  // ⭐ 使用 cloneNode 而不是 DOMParser，确保空格和换行符不丢失
+  // DOMParser 会合并多个空格，导致代码格式错误
+  const clone = previewEl.cloneNode(true) as HTMLElement
+  const doc = document.implementation.createHTMLDocument()
+  doc.body.appendChild(clone)
   const style = theme.styles
 
   // 标题内联元素覆盖样式
