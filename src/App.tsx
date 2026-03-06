@@ -8,6 +8,7 @@ import { useKeyboard } from './hooks/useKeyboard'
 import { useAutoSave } from './hooks/useAutoSave'
 import { useUITheme } from './hooks/useUITheme'
 import { parseMarkdown } from './utils/markdown'
+import { makeWeChatCompatible } from './lib/wechatCompat'
 import { fetchUrlContent } from './utils/urlFetcher'
 import { themes, applyTheme, defaultTheme } from './themes'
 import type { Theme } from './themes/types'
@@ -312,38 +313,22 @@ function App() {
       }
 
       // ═══════════════════════════════════════════════════════════════
-      // 模拟浏览器的原生复制行为
-      // 创建隐藏的可编辑区域，让浏览器自动处理样式
+      // 使用 makeWeChatCompatible 处理 HTML，确保公众号兼容
+      // 然后使用 ClipboardItem API 复制
       // ═══════════════════════════════════════════════════════════════
-      const editableDiv = document.createElement('div')
-      editableDiv.contentEditable = 'true'
-      editableDiv.style.cssText = 'position: fixed; left: -9999px; top: -9999px; width: 100%; opacity: 0; pointer-events: none;'
-      editableDiv.innerHTML = previewEl.innerHTML
-      document.body.appendChild(editableDiv)
+      const processedHtml = await makeWeChatCompatible(
+        previewEl.innerHTML,
+        currentTheme.id
+      )
 
-      // 选中内容
-      const range = document.createRange()
-      range.selectNodeContents(editableDiv)
-      const selection = window.getSelection()
-      if (!selection) {
-        document.body.removeChild(editableDiv)
-        toast.showToast('复制失败，请重试', 'error')
-        return
-      }
+      // 使用 ClipboardItem API 复制 HTML
+      const clipboardItem = new ClipboardItem({
+        'text/html': new Blob([processedHtml], { type: 'text/html' }),
+        'text/plain': new Blob([processedHtml], { type: 'text/plain' }),
+      })
 
-      selection.removeAllRanges()
-      selection.addRange(range)
-
-      // 执行复制（浏览器会自动处理样式）
-      const success = document.execCommand('copy')
-      selection.removeAllRanges()
-      document.body.removeChild(editableDiv)
-
-      if (success) {
-        toast.showToast('排版已复制，直接粘贴到公众号', 'success')
-      } else {
-        toast.showToast('复制失败，请重试', 'error')
-      }
+      await navigator.clipboard.write([clipboardItem])
+      toast.showToast('排版已复制，直接粘贴到公众号', 'success')
     } catch {
       toast.showToast('复制失败，请重试', 'error')
     }
