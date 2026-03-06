@@ -60,8 +60,9 @@ export function generateThemeStyles(theme: Theme): string {
 .mp-preview li { color: var(--theme-text); }
 .mp-preview blockquote { background: var(--theme-blockquote-bg); border-left-color: var(--theme-blockquote-border); color: var(--theme-blockquote-color); }
 .mp-preview code { background: var(--theme-code-inline-bg); color: var(--theme-code-inline-color); }
-.mp-preview pre { background: var(--theme-code-block-bg); color: var(--theme-code-block-color); }
-.mp-preview pre code { color: var(--theme-code-block-color); }
+/* 代码块样式由 highlight.js 控制，不设置背景和颜色 */
+.mp-preview pre { }
+.mp-preview pre code { }
 .mp-preview th { background: var(--theme-table-header-bg); border-color: var(--theme-table-border); }
 .mp-preview td { border-color: var(--theme-table-border); }
 .mp-preview tr:nth-child(even) { background: var(--theme-table-even-bg); }

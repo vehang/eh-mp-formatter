@@ -163,81 +163,75 @@
   font-weight: 500;
 }
 
-/* 代码块 */
+/* 代码块 - 基础样式，让 highlight.js 控制颜色和背景 */
 .mp-preview pre {
   margin: 20px 0;
   padding: 20px;
-  background: var(--theme-code-block-bg, #1E293B);
   border-radius: 12px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  /* 不设置背景，让 highlight.js 的 CSS 生效 */
 }
 
 .mp-preview pre code {
   background: transparent !important;
   padding: 0;
-  color: var(--theme-code-block-color, #E2E8F0);
   font-size: 14px;
   line-height: 1.7;
   font-weight: 400;
   display: block;
+  /* 不设置 color，让 highlight.js 的语法高亮颜色生效 */
 }
 
-/* 确保代码块内的高亮元素没有单独背景 */
+/* 代码块内的 hljs 元素 - 保留 highlight.js 的背景设置 */
 .mp-preview pre .hljs {
-  background: transparent !important;
   display: block;
   padding: 0;
+  /* 不强制背景透明，让 highlight.js 的背景生效 */
 }
 
 .mp-preview pre .hljs span {
-  background: transparent !important;
+  /* 不强制背景透明，让 highlight.js 的样式生效 */
 }
 
 /* ═══════════════════════════════════════════════════════════
-   深色 UI 模式下的代码块样式 - 浅色背景，深色文字
+   深色 UI 模式下的代码块样式 - 让 highlight.js 控制外观
    ═══════════════════════════════════════════════════════════ */
 
 [data-theme="dark"] .mp-preview pre {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-}
-
-[data-theme="dark"] .mp-preview pre code {
-  color: #1E293B;
-}
-
-[data-theme="dark"] .mp-preview pre .hljs {
-  background: transparent !important;
+  /* 不设置背景，让 highlight.js 的 CSS 生效 */
+  border: none;
 }
 
 /* 深色 UI 模式下的行内代码 */
 [data-theme="dark"] .mp-preview code {
-  background: #FEF3C7;
-  color: #92400E;
+  background: var(--theme-code-inline-bg, #EEF2FF);
+  color: var(--theme-code-inline-color, #4338CA);
+}
+
+/* 深色 UI 模式下的列表文本颜色 - 提高对比度 */
+[data-theme="dark"] .mp-preview li {
+  color: var(--theme-text, #1E293B);
 }
 
 /* ═══════════════════════════════════════════════════════════
-   浅色 UI 模式下的代码块样式 - 深色背景，浅色文字
+   浅色 UI 模式下的代码块样式 - 让 highlight.js 控制外观
    ═══════════════════════════════════════════════════════════ */
 
 [data-theme="light"] .mp-preview pre {
-  background: #1E293B;
+  /* 不设置背景，让 highlight.js 的 CSS 生效 */
   border: none;
-}
-
-[data-theme="light"] .mp-preview pre code {
-  color: #E2E8F0;
-}
-
-[data-theme="light"] .mp-preview pre .hljs {
-  background: transparent !important;
 }
 
 /* 浅色 UI 模式下的行内代码 */
 [data-theme="light"] .mp-preview code {
-  background: #DBEAFE;
-  color: #1E40AF;
+  background: var(--theme-code-inline-bg, #EEF2FF);
+  color: var(--theme-code-inline-color, #4338CA);
+}
+
+/* 浅色 UI 模式下的列表文本颜色 */
+[data-theme="light"] .mp-preview li {
+  color: var(--theme-text, #1E293B);
 }
 
 /* ═══════════════════════════════════════════════════════════

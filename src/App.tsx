@@ -87,6 +87,30 @@ const defaultMarkdown = `![Unsplash 示例图片](https://images.unsplash.com/ph
 
 ## 代码块示例
 
+### Java
+
+\`\`\`java
+// 服务类示例
+public class UserService {
+    private final UserRepository repository;
+
+    public UserService(UserRepository repository) {
+        this.repository = repository;
+    }
+
+    public User findById(Long id) throws UserNotFoundException {
+        return repository.findById(id)
+            .orElseThrow(() -> new UserNotFoundException("User not found: " + id));
+    }
+
+    public List<User> findActiveUsers() {
+        return repository.findAll().stream()
+            .filter(User::isActive)
+            .collect(Collectors.toList());
+    }
+}
+\`\`\`
+
 ### JavaScript
 
 \`\`\`javascript
@@ -274,12 +298,59 @@ function App() {
     }
   }
 
-  const handleCopyHTML = () => {
-    navigator.clipboard.writeText(html).then(() => {
+  const handleCopyHTML = async () => {
+    try {
+      // 获取预览区域的 HTML 内容
+      const previewEl = document.querySelector('.mp-preview') as HTMLElement
+      if (!previewEl) {
+        toast.showToast('复制失败，请重试', 'error')
+        return
+      }
+
+      // 克隆预览元素并内联计算样式
+      const clone = previewEl.cloneNode(true) as HTMLElement
+      clone.style.cssText = window.getComputedStyle(previewEl).cssText
+
+      // 内联所有子元素的样式
+      const inlineStyles = (element: Element) => {
+        const el = element as HTMLElement
+        const computedStyle = window.getComputedStyle(el)
+        // 只内联关键样式
+        const importantStyles = [
+          'color', 'background', 'background-color', 'font-size', 'font-weight',
+          'font-family', 'line-height', 'text-align', 'margin', 'margin-top',
+          'margin-bottom', 'padding', 'padding-left', 'padding-right',
+          'border', 'border-left', 'border-radius', 'display', 'list-style-type'
+        ]
+        importantStyles.forEach(prop => {
+          const value = computedStyle.getPropertyValue(prop)
+          if (value) {
+            el.style.setProperty(prop, value)
+          }
+        })
+        Array.from(el.children).forEach(inlineStyles)
+      }
+
+      inlineStyles(clone)
+
+      // 移除 CSS 变量引用，使用实际颜色值
+      clone.innerHTML = clone.innerHTML.replace(/var\(--[^)]+\)/g, (match) => {
+        // CSS 变量会在 getComputedStyle 中被解析，这里只是备份处理
+        return match
+      })
+
+      const styledHTML = clone.innerHTML
+
+      // 使用 ClipboardItem API 同时复制 HTML 和纯文本
+      const clipboardItem = new ClipboardItem({
+        'text/html': new Blob([styledHTML], { type: 'text/html' }),
+        'text/plain': new Blob([styledHTML], { type: 'text/plain' })
+      })
+      await navigator.clipboard.write([clipboardItem])
       toast.showToast('排版已复制，直接粘贴到公众号', 'success')
-    }).catch(() => {
+    } catch {
       toast.showToast('复制失败，请重试', 'error')
-    })
+    }
   }
 
   const handleCopyText = () => {
