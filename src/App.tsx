@@ -495,34 +495,33 @@ function App() {
         >
           <div className="panel-header">
             <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
-            <span className="panel-title">预览</span>
             <span className="panel-badge">{currentTheme.name}</span>
             
-            {/* 预览模式切换 - 三个尺寸（左对齐） */}
+            {/* 预览模式切换 - 三个尺寸（左对齐，只显示图标） */}
             <div className="toggle-group" style={{ marginLeft: '12px' }}>
               <button
                 onClick={() => setPreviewMode('desktop')}
                 className={`toggle-btn ${previewMode === 'desktop' ? 'active' : ''}`}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
+                title="宽屏模式"
+                style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '13px' }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:monitor"></span>
-                宽屏
               </button>
               <button
                 onClick={() => setPreviewMode('pad')}
                 className={`toggle-btn ${previewMode === 'pad' ? 'active' : ''}`}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
+                title="Pad 模式"
+                style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '13px' }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:tablet"></span>
-                Pad
               </button>
               <button
                 onClick={() => setPreviewMode('mobile')}
                 className={`toggle-btn ${previewMode === 'mobile' ? 'active' : ''}`}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
+                title="手机模式"
+                style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', fontSize: '13px' }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:smartphone"></span>
-                手机
               </button>
             </div>
 
@@ -538,9 +537,12 @@ function App() {
               复制排版
             </button>
 
-            <span className="panel-meta" style={{ marginLeft: '12px' }}>
-              {previewMode === 'mobile' ? '375px' : previewMode === 'pad' ? '768px' : '自适应'}
-            </span>
+            {/* 手机模式时隐藏尺寸显示 */}
+            {previewMode !== 'mobile' && (
+              <span className="panel-meta" style={{ marginLeft: '12px' }}>
+                {previewMode === 'pad' ? '768px' : '自适应'}
+              </span>
+            )}
           </div>
           <div
             className="flex-1 overflow-auto flex justify-center"
