@@ -11,7 +11,6 @@ import { parseMarkdown } from './utils/markdown'
 import { fetchUrlContent } from './utils/urlFetcher'
 import { themes, applyTheme, defaultTheme } from './themes'
 import type { Theme } from './themes/types'
-import { makeWeChatCompatible } from './lib/wechatCompat'
 import './styles/preview.css'
 import './App.css'
 
@@ -306,7 +305,6 @@ function App() {
 
   const handleCopyHTML = async () => {
     try {
-      // 获取预览区域的 HTML 内容
       const previewEl = document.querySelector('.mp-preview') as HTMLElement
       if (!previewEl) {
         toast.showToast('复制失败，请重试', 'error')
@@ -314,406 +312,36 @@ function App() {
       }
 
       // ═══════════════════════════════════════════════════════════════
-      // 公众号支持的 CSS 属性白名单（完整版）
-      // getComputedStyle 会自动解析 CSS 变量，返回实际颜色值
-      // ═══════════════════════════════════════════════════════════════
-      const supportedProps = new Set([
-        // 文字样式 - 公众号完全支持
-        'color', 'font-size', 'font-weight', 'font-family', 'font-style',
-        'line-height', 'text-align', 'text-decoration', 'letter-spacing',
-        // 盒模型 - 公众号支持
-        'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-        'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-        // 边框 - 公众号支持（完整属性）
-        'border', 'border-width', 'border-style', 'border-color',
-        'border-top', 'border-top-width', 'border-top-style', 'border-top-color',
-        'border-right', 'border-right-width', 'border-right-style', 'border-right-color',
-        'border-bottom', 'border-bottom-width', 'border-bottom-style', 'border-bottom-color',
-        'border-left', 'border-left-width', 'border-left-style', 'border-left-color',
-        'border-radius',
-        // 背景 - 公众号仅支持纯色
-        'background-color',
-        // 列表 - 公众号支持
-        'list-style-type',
-        // 表格 - 公众号支持
-        'border-collapse', 'border-spacing',
-        // 其他支持的属性
-        'vertical-align', 'white-space', 'max-width', 'box-sizing',
-        // 新增：宽度和显示属性
-        'width', 'min-width', 'display'
-      ])
-
-      // 单位转换：rem/em -> px
-      const convertUnit = (value: string): string => {
-        if (typeof value !== 'string') return value
-        // rem 转 px (基准 16px)
-        if (value.includes('rem')) {
-          const num = parseFloat(value)
-          if (!isNaN(num)) return `${Math.round(num * 16)}px`
-        }
-        // em 转 px (基准 16px)
-        if (value.includes('em') && !value.includes('rem')) {
-          const num = parseFloat(value)
-          if (!isNaN(num)) return `${Math.round(num * 16)}px`
-        }
-        return value
-      }
-
-      // 检查颜色值是否有效（非透明、非空、非默认）
-      const isValidColor = (color: string): boolean => {
-        if (!color) return false
-        const lower = color.toLowerCase().trim()
-        return lower !== 'transparent' &&
-               lower !== 'rgba(0, 0, 0, 0)' &&
-               lower !== 'rgba(0,0,0,0)' &&
-               !lower.includes('initial') &&
-               !lower.includes('inherit') &&
-               lower !== ''
-      }
-
-      // 判断是否为有效的非零值
-      const isValidValue = (value: string, prop: string): boolean => {
-        if (!value || value === 'none' || value === 'auto' ||
-            value === 'initial' || value === 'inherit' || value === 'normal') {
-          return false
-        }
-        // margin/padding 为 0 时跳过
-        if (value === '0px' && (prop.includes('margin') || prop.includes('padding'))) {
-          return false
-        }
-        return true
-      }
-
-      // ═══════════════════════════════════════════════════════════════
-      // 克隆预览元素
-      // ═══════════════════════════════════════════════════════════════
-      const clone = previewEl.cloneNode(true) as HTMLElement
-
-      // ═══════════════════════════════════════════════════════════════
-      // 预处理：表格斑马纹（公众号不支持 :nth-child 伪类）
-      // ═══════════════════════════════════════════════════════════════
-      const processTableZebra = (root: HTMLElement) => {
-        const tables = root.querySelectorAll('table')
-        tables.forEach(table => {
-          const rows = table.querySelectorAll('tr')
-          rows.forEach((row, index) => {
-            // 跳过表头行（第一个 tr 或者包含 th 的行）
-            const isFirstRow = index === 0
-            const hasTh = row.querySelector('th')
-            if (isFirstRow || hasTh) return
-
-            // 偶数行添加斑马纹标记
-            if (index % 2 === 0) {
-              row.setAttribute('data-zebra', 'true')
-            }
-          })
-        })
-      }
-      processTableZebra(clone)
-
-      // ═══════════════════════════════════════════════════════════════
-      // 递归内联所有元素的样式
-      // 核心改进：getComputedStyle 自动解析 CSS 变量为实际值
-      // ═══════════════════════════════════════════════════════════════
-      const inlineStyles = (element: Element, depth: number = 0) => {
-        const el = element as HTMLElement
-        if (el.nodeType !== Node.ELEMENT_NODE) return
-
-        const computedStyle = window.getComputedStyle(el)
-        const styles: string[] = []
-
-        // ─────────────────────────────────────────────────
-        // 1. 遍历白名单属性，获取计算后的实际值
-        // getComputedStyle 会自动将 CSS 变量解析为实际颜色值
-        // ─────────────────────────────────────────────────
-        supportedProps.forEach(prop => {
-          let value = computedStyle.getPropertyValue(prop)
-          if (!isValidValue(value, prop)) return
-
-          // 单位转换
-          value = convertUnit(value)
-          styles.push(`${prop}: ${value}`)
-        })
-
-        // ─────────────────────────────────────────────────
-        // 2. 行内代码特殊处理（P0 - 高优先级）
-        // 确保不在 pre 内的 code 元素有背景色
-        // ─────────────────────────────────────────────────
-        if (el.tagName === 'CODE') {
-          const isInsidePre = el.closest('pre')
-          if (!isInsidePre) {
-            // 强制内联背景色和颜色
-            const bgColor = computedStyle.getPropertyValue('background-color')
-            if (isValidColor(bgColor)) {
-              styles.push(`background-color: ${bgColor}`)
-            }
-            const color = computedStyle.getPropertyValue('color')
-            if (isValidColor(color)) {
-              styles.push(`color: ${color}`)
-            }
-            // 行内代码的内边距
-            const padding = computedStyle.getPropertyValue('padding')
-            if (padding && padding !== '0px') {
-              styles.push(`padding: ${padding}`)
-            }
-            // 圆角
-            const borderRadius = computedStyle.getPropertyValue('border-radius')
-            if (borderRadius && borderRadius !== '0px') {
-              styles.push(`border-radius: ${borderRadius}`)
-            }
-          }
-        }
-
-        // ─────────────────────────────────────────────────
-        // 3. 代码块处理（PRE 和 HLJS）
-        // 确保背景、圆角、内边距完整
-        // ─────────────────────────────────────────────────
-        if (el.tagName === 'PRE' || el.classList.contains('hljs')) {
-          const bgColor = computedStyle.getPropertyValue('background-color')
-          if (isValidColor(bgColor)) {
-            styles.push(`background-color: ${bgColor}`)
-          }
-          const borderRadius = computedStyle.getPropertyValue('border-radius')
-          if (borderRadius && borderRadius !== '0px') {
-            styles.push(`border-radius: ${borderRadius}`)
-          }
-          const padding = computedStyle.getPropertyValue('padding')
-          if (padding && padding !== '0px') {
-            styles.push(`padding: ${padding}`)
-          }
-          // overflow 处理
-          const overflow = computedStyle.getPropertyValue('overflow-x')
-          if (overflow === 'auto') {
-            styles.push('overflow-x: auto')
-          }
-        }
-
-        // ─────────────────────────────────────────────────
-        // 4. 代码块内所有子元素 - 强制内联颜色（P1）
-        // 确保语法高亮的 span 元素颜色正确
-        // ─────────────────────────────────────────────────
-        const isInsideCodeBlock = el.closest && el.closest('pre')
-        if (isInsideCodeBlock && el.tagName !== 'PRE') {
-          // 强制内联颜色（这是语法高亮的核心）
-          const color = computedStyle.getPropertyValue('color')
-          if (isValidColor(color)) {
-            styles.push(`color: ${color}`)
-          }
-          // 字体样式（斜体）
-          const fontStyle = computedStyle.getPropertyValue('font-style')
-          if (fontStyle && fontStyle !== 'normal') {
-            styles.push(`font-style: ${fontStyle}`)
-          }
-          // 字重（粗体）
-          const fontWeight = computedStyle.getPropertyValue('font-weight')
-          if (fontWeight && fontWeight !== '400' && fontWeight !== 'normal') {
-            styles.push(`font-weight: ${fontWeight}`)
-          }
-        }
-
-        // ─────────────────────────────────────────────────
-        // 5. 引用块特殊处理
-        // ─────────────────────────────────────────────────
-        if (el.tagName === 'BLOCKQUOTE') {
-          // 左边框
-          const borderLeftWidth = computedStyle.getPropertyValue('border-left-width')
-          const borderLeftStyle = computedStyle.getPropertyValue('border-left-style')
-          const borderLeftColor = computedStyle.getPropertyValue('border-left-color')
-          if (borderLeftWidth && borderLeftStyle && isValidColor(borderLeftColor)) {
-            styles.push(`border-left: ${borderLeftWidth} ${borderLeftStyle} ${borderLeftColor}`)
-          }
-          // 背景
-          const bg = computedStyle.getPropertyValue('background-color')
-          if (isValidColor(bg)) {
-            styles.push(`background-color: ${bg}`)
-          }
-          // 内边距
-          const padding = computedStyle.getPropertyValue('padding')
-          if (padding && padding !== '0px') {
-            styles.push(`padding: ${padding}`)
-          }
-          // 圆角
-          const borderRadius = computedStyle.getPropertyValue('border-radius')
-          if (borderRadius && borderRadius !== '0px') {
-            styles.push(`border-radius: ${borderRadius}`)
-          }
-          // 文字颜色
-          const color = computedStyle.getPropertyValue('color')
-          if (isValidColor(color)) {
-            styles.push(`color: ${color}`)
-          }
-        }
-
-        // ─────────────────────────────────────────────────
-        // 6. 表格处理 - 标题、单元格、斑马纹
-        // ─────────────────────────────────────────────────
-        if (el.tagName === 'TH') {
-          const bg = computedStyle.getPropertyValue('background-color')
-          if (isValidColor(bg)) {
-            styles.push(`background-color: ${bg}`)
-          }
-          const color = computedStyle.getPropertyValue('color')
-          if (isValidColor(color)) {
-            styles.push(`color: ${color}`)
-          }
-        }
-
-        if (el.tagName === 'TD') {
-          const bg = computedStyle.getPropertyValue('background-color')
-          if (isValidColor(bg)) {
-            styles.push(`background-color: ${bg}`)
-          }
-        }
-
-        // 斑马纹行
-        if (el.tagName === 'TR' && el.getAttribute('data-zebra') === 'true') {
-          const bg = computedStyle.getPropertyValue('background-color')
-          if (isValidColor(bg)) {
-            styles.push(`background-color: ${bg}`)
-          }
-          el.removeAttribute('data-zebra')
-        }
-
-        // ─────────────────────────────────────────────────
-        // 7. 列表项处理（P2 - 列表符号颜色）
-        // 公众号不支持 ::marker，但 li 颜色会部分影响符号
-        // ─────────────────────────────────────────────────
-        if (el.tagName === 'LI') {
-          const color = computedStyle.getPropertyValue('color')
-          if (isValidColor(color)) {
-            styles.push(`color: ${color}`)
-          }
-        }
-
-        // ─────────────────────────────────────────────────
-        // 8. 链接处理
-        // ─────────────────────────────────────────────────
-        if (el.tagName === 'A') {
-          const color = computedStyle.getPropertyValue('color')
-          if (isValidColor(color)) {
-            styles.push(`color: ${color}`)
-          }
-          const textDecoration = computedStyle.getPropertyValue('text-decoration')
-          if (textDecoration && textDecoration !== 'none') {
-            styles.push(`text-decoration: ${textDecoration}`)
-          }
-        }
-
-        // ─────────────────────────────────────────────────
-        // 9. 标题处理 - 确保颜色正确
-        // ─────────────────────────────────────────────────
-        if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(el.tagName)) {
-          const color = computedStyle.getPropertyValue('color')
-          if (isValidColor(color)) {
-            styles.push(`color: ${color}`)
-          }
-        }
-
-        // ─────────────────────────────────────────────────
-        // 10. 强调文本处理
-        // ─────────────────────────────────────────────────
-        if (el.tagName === 'STRONG') {
-          const color = computedStyle.getPropertyValue('color')
-          if (isValidColor(color)) {
-            styles.push(`color: ${color}`)
-          }
-        }
-
-        // ─────────────────────────────────────────────────
-        // 设置内联样式
-        // ─────────────────────────────────────────────────
-        if (styles.length > 0) {
-          el.setAttribute('style', styles.join('; ') + ';')
-        }
-
-        // 移除 class 和 data 属性（公众号会过滤）
-        el.removeAttribute('class')
-        el.removeAttribute('data-theme')
-
-        // 递归处理所有子元素
-        Array.from(el.children).forEach(child => inlineStyles(child, depth + 1))
-      }
-
-      // ═══════════════════════════════════════════════════════════════
-      // 获取根元素样式（从预览元素读取计算后的实际值）
-      // ═══════════════════════════════════════════════════════════════
-      const rootComputedStyle = window.getComputedStyle(previewEl)
-      const rootBgColor = rootComputedStyle.getPropertyValue('background-color') || '#ffffff'
-      const rootColor = rootComputedStyle.getPropertyValue('color') || '#1F2937'
-      const rootFontSize = rootComputedStyle.getPropertyValue('font-size') || '16px'
-      const rootLineHeight = rootComputedStyle.getPropertyValue('line-height') || '1.8'
-
-      const rootStyles: string[] = [
-        `background-color: ${convertUnit(rootBgColor)}`,
-        `color: ${convertUnit(rootColor)}`,
-        `font-size: ${convertUnit(rootFontSize)}`,
-        `line-height: ${rootLineHeight}`,
-        'padding: 20px',
-        "font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif"
-      ]
-
-      clone.setAttribute('style', rootStyles.join('; ') + ';')
-      clone.removeAttribute('class')
-      clone.removeAttribute('data-theme')
-
-      // 内联所有子元素样式
-      inlineStyles(clone)
-
-      // 使用 section 标签包裹内容（公众号推荐格式）
-      const wrapper = document.createElement('section')
-      wrapper.setAttribute('style', rootStyles.join('; ') + ';')
-      wrapper.innerHTML = clone.innerHTML
-
-      let htmlContent = wrapper.outerHTML
-
-      // ═══════════════════════════════════════════════════════════════
-      // 使用 wechatCompat 引擎处理 HTML
-      // 确保 flex 布局转换、列表扁平化、图片转 base64 等
-      // ═══════════════════════════════════════════════════════════════
-      try {
-        htmlContent = await makeWeChatCompatible(htmlContent, currentTheme.id)
-      } catch (e) {
-        console.warn('wechatCompat processing failed, using original html:', e)
-      }
-
-      // ═══════════════════════════════════════════════════════════════
-      // 复制到剪贴板
-      // 优先使用 execCommand，公众号兼容性更好
+      // 模拟浏览器的原生复制行为
+      // 创建隐藏的可编辑区域，让浏览器自动处理样式
       // ═══════════════════════════════════════════════════════════════
       const editableDiv = document.createElement('div')
       editableDiv.contentEditable = 'true'
-      editableDiv.style.cssText = 'position: fixed; left: -9999px; top: -9999px; opacity: 0; pointer-events: none;'
-      editableDiv.innerHTML = htmlContent
+      editableDiv.style.cssText = 'position: fixed; left: -9999px; top: -9999px; width: 100%; opacity: 0; pointer-events: none;'
+      editableDiv.innerHTML = previewEl.innerHTML
       document.body.appendChild(editableDiv)
 
+      // 选中内容
       const range = document.createRange()
       range.selectNodeContents(editableDiv)
       const selection = window.getSelection()
-      if (selection) {
-        selection.removeAllRanges()
-        selection.addRange(range)
-
-        const success = document.execCommand('copy')
-        selection.removeAllRanges()
+      if (!selection) {
         document.body.removeChild(editableDiv)
+        toast.showToast('复制失败，请重试', 'error')
+        return
+      }
 
-        if (success) {
-          toast.showToast('排版已复制，直接粘贴到公众号', 'success')
-        } else {
-          // execCommand 失败，尝试 ClipboardItem API
-          try {
-            const clipboardItem = new ClipboardItem({
-              'text/html': new Blob([htmlContent], { type: 'text/html' }),
-              'text/plain': new Blob([htmlContent], { type: 'text/plain' })
-            })
-            await navigator.clipboard.write([clipboardItem])
-            toast.showToast('排版已复制，直接粘贴到公众号', 'success')
-          } catch {
-            toast.showToast('复制失败，请重试', 'error')
-          }
-        }
+      selection.removeAllRanges()
+      selection.addRange(range)
+
+      // 执行复制（浏览器会自动处理样式）
+      const success = document.execCommand('copy')
+      selection.removeAllRanges()
+      document.body.removeChild(editableDiv)
+
+      if (success) {
+        toast.showToast('排版已复制，直接粘贴到公众号', 'success')
       } else {
-        document.body.removeChild(editableDiv)
         toast.showToast('复制失败，请重试', 'error')
       }
     } catch {
