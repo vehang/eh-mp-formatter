@@ -11,6 +11,7 @@ import { parseMarkdown } from './utils/markdown'
 import { fetchUrlContent } from './utils/urlFetcher'
 import { themes, applyTheme, defaultTheme } from './themes'
 import type { Theme } from './themes/types'
+import { makeWeChatCompatible } from './lib/wechatCompat'
 import './styles/preview.css'
 import './App.css'
 
@@ -663,7 +664,17 @@ function App() {
       wrapper.setAttribute('style', rootStyles.join('; ') + ';')
       wrapper.innerHTML = clone.innerHTML
 
-      const htmlContent = wrapper.outerHTML
+      let htmlContent = wrapper.outerHTML
+
+      // ═══════════════════════════════════════════════════════════════
+      // 使用 wechatCompat 引擎处理 HTML
+      // 确保 flex 布局转换、列表扁平化、图片转 base64 等
+      // ═══════════════════════════════════════════════════════════════
+      try {
+        htmlContent = await makeWeChatCompatible(htmlContent, currentTheme.id)
+      } catch (e) {
+        console.warn('wechatCompat processing failed, using original html:', e)
+      }
 
       // ═══════════════════════════════════════════════════════════════
       // 复制到剪贴板
