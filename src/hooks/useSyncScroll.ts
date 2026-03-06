@@ -63,6 +63,7 @@ export function useSyncScroll({
         // 使用 requestAnimationFrame 确保滚动完成后再解锁
         requestAnimationFrame(() => {
           isScrollingRef.current = false
+          scrollSourceRef.current = null // 重置滚动源
         })
       }
     },

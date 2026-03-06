@@ -483,7 +483,7 @@ function App() {
               }}
             >
               <span className="iconify icon-sm" data-icon={syncScroll ? 'lucide:link' : 'lucide:link-off'}></span>
-              {syncScroll ? '跟随' : '独立'}
+              跟随
             </button>
 
             <div className="flex-1" />
