@@ -9,6 +9,7 @@ import {
   type UploadProgress,
   type UploadResult,
   IMAGE_HOSTS,
+  HOST_REQUIRES_TOKEN,
 } from '../types/imageHost'
 import { uploadImage } from '../utils/imageUploader'
 
@@ -59,14 +60,18 @@ export function useImageHost() {
   // 更新图床配置
   const updateHostConfig = useCallback((
     hostType: ImageHostType,
-    config: { token: string }
+    config: { token?: string }
   ) => {
     setSettings((prev) => {
-      const isConfigured = !!config.token.trim()
+      // 判断是否已配置：需要 token 的图床必须有 token，闪电图床直接算配置
+      const isConfigured = HOST_REQUIRES_TOKEN[hostType]
+        ? !!config.token?.trim()
+        : true
+
       const newSettings: ImageHostSettings = {
         ...prev,
         [hostType]: {
-          token: config.token,
+          token: config.token || '',
           isConfigured,
         },
       }

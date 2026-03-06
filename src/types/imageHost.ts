@@ -24,10 +24,17 @@ export interface ImageHostSettings {
     isConfigured: boolean
   }
   bolt: {
-    token: string
+    token?: string // 闪电图床不需要 token
     isConfigured: boolean
   }
   defaultHost: ImageHostType | null
+}
+
+// 图床是否需要 token
+export const HOST_REQUIRES_TOKEN: Record<ImageHostType, boolean> = {
+  hello: true,
+  dk: true,
+  bolt: false, // 闪电图床不需要 token
 }
 
 // 上传进度

@@ -3,19 +3,19 @@
  * 支持上传到多个图床服务
  */
 
-import { IMAGE_HOSTS, type ImageHostType, type UploadProgress, type UploadResult } from '../types/imageHost'
+import { IMAGE_HOSTS, HOST_REQUIRES_TOKEN, type ImageHostType, type UploadProgress, type UploadResult } from '../types/imageHost'
 
 /**
  * 上传图片到图床
  * @param file 图片文件
  * @param hostType 图床类型
- * @param token API Token
+ * @param token API Token（闪电图床不需要）
  * @param onProgress 进度回调
  */
 export function uploadImage(
   file: File,
   hostType: ImageHostType,
-  token: string,
+  token?: string,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   return new Promise((resolve) => {
@@ -26,7 +26,8 @@ export function uploadImage(
       return
     }
 
-    if (!token) {
+    // 只有需要 token 的图床才检查
+    if (HOST_REQUIRES_TOKEN[hostType] && !token) {
       resolve({ success: false, error: '请先配置图床 Token' })
       return
     }
@@ -54,7 +55,10 @@ export function uploadImage(
     const formData = new FormData()
 
     // 构建 FormData
-    formData.append('token', token)
+    // 只有需要 token 的图床才添加 token 字段
+    if (HOST_REQUIRES_TOKEN[hostType] && token) {
+      formData.append('token', token)
+    }
     formData.append('file', file)
 
     // 监听上传进度

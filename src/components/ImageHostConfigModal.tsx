@@ -2,22 +2,28 @@
  * 图床配置弹窗组件
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   type ImageHostType,
   type ImageHostSettings,
+  HOST_REQUIRES_TOKEN,
 } from '../types/imageHost'
+import { uploadImage } from '../utils/imageUploader'
+
+// 1x1 透明像素 PNG（用于验证）
+const TEST_PIXEL_PNG_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 
 interface ImageHostConfigModalProps {
   isOpen: boolean
   onClose: () => void
   settings: ImageHostSettings
-  onUpdateConfig: (hostType: ImageHostType, config: { token: string }) => void
+  onUpdateConfig: (hostType: ImageHostType, config: { token?: string }) => void
   onSetDefault: (hostType: ImageHostType) => void
   onClearConfig: (hostType: ImageHostType) => void
 }
 
 type TabType = ImageHostType
+type ValidationStatus = 'idle' | 'validating' | 'success' | 'error'
 
 export function ImageHostConfigModal({
   isOpen,
@@ -29,15 +35,59 @@ export function ImageHostConfigModal({
 }: ImageHostConfigModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('hello')
   const [token, setToken] = useState('')
+  const [validationStatus, setValidationStatus] = useState<ValidationStatus>('idle')
+  const [validationError, setValidationError] = useState('')
   const modalRef = useRef<HTMLDivElement>(null)
 
   // 同步表单状态
   useEffect(() => {
     if (isOpen) {
       const currentConfig = settings[activeTab]
-      setToken(currentConfig.token)
+      setToken(currentConfig.token || '')
+      setValidationStatus('idle')
+      setValidationError('')
     }
   }, [activeTab, isOpen, settings])
+
+  // 验证配置
+  const validateConfig = useCallback(async () => {
+    // 检查是否需要 token 且已填写
+    if (HOST_REQUIRES_TOKEN[activeTab] && !token.trim()) {
+      setValidationError('请输入 API Token')
+      setValidationStatus('error')
+      return false
+    }
+
+    setValidationStatus('validating')
+    setValidationError('')
+
+    try {
+      // 创建测试文件
+      const response = await fetch(TEST_PIXEL_PNG_BASE64)
+      const blob = await response.blob()
+      const testFile = new File([blob], 'test.png', { type: 'image/png' })
+
+      // 尝试上传
+      const result = await uploadImage(
+        testFile,
+        activeTab,
+        token.trim() || undefined
+      )
+
+      if (result.success) {
+        setValidationStatus('success')
+        return true
+      } else {
+        setValidationStatus('error')
+        setValidationError(result.error || '验证失败')
+        return false
+      }
+    } catch (error) {
+      setValidationStatus('error')
+      setValidationError(error instanceof Error ? error.message : '验证失败')
+      return false
+    }
+  }, [activeTab, token])
 
   // 点击背景关闭
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -77,11 +127,22 @@ export function ImageHostConfigModal({
   }, [isOpen])
 
   // 保存配置
-  const handleSave = () => {
-    if (token.trim()) {
+  const handleSave = async () => {
+    // 闪电图床直接保存（不需要 token 和验证）
+    if (!HOST_REQUIRES_TOKEN[activeTab]) {
+      onUpdateConfig(activeTab, {})
+      return
+    }
+
+    // 其他图床需要先验证
+    const isValid = await validateConfig()
+    if (isValid) {
       onUpdateConfig(activeTab, { token: token.trim() })
     }
   }
+
+  // 判断是否可以保存
+  const canSave = !HOST_REQUIRES_TOKEN[activeTab] || token.trim().length > 0
 
   // 清除配置
   const handleClear = () => {
@@ -194,43 +255,127 @@ export function ImageHostConfigModal({
             </div>
           )}
 
-          {/* Token 输入 */}
-          <div style={{ marginBottom: '16px' }}>
-            <label
+          {/* Token 输入 - 闪电图床不需要 */}
+          {HOST_REQUIRES_TOKEN[activeTab] && (
+            <div style={{ marginBottom: '16px' }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: 'var(--text-secondary)',
+                  marginBottom: '8px',
+                }}
+              >
+                API Token
+              </label>
+              <input
+                type="password"
+                value={token}
+                onChange={(e) => {
+                  setToken(e.target.value)
+                  setValidationStatus('idle')
+                  setValidationError('')
+                }}
+                placeholder="请输入图床 API Token"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  background: 'var(--bg-base)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: '6px',
+                  color: 'var(--text-primary)',
+                  outline: 'none',
+                  transition: 'border-color 0.2s',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'var(--orange-500)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'var(--border-default)'
+                }}
+              />
+            </div>
+          )}
+
+          {/* 闪电图床说明 */}
+          {!HOST_REQUIRES_TOKEN[activeTab] && (
+            <div
               style={{
-                display: 'block',
-                fontSize: '12px',
-                fontWeight: '600',
-                color: 'var(--text-secondary)',
-                marginBottom: '8px',
+                padding: '12px 16px',
+                background: 'rgba(34, 197, 94, 0.1)',
+                borderRadius: '8px',
+                marginBottom: '16px',
               }}
             >
-              API Token
-            </label>
-            <input
-              type="password"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="请输入图床 API Token"
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span className="iconify icon-sm" data-icon="lucide:zap" style={{ color: 'var(--green-500)' }}></span>
+                <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>闪电图床</span>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+                闪电图床无需配置 Token，点击保存即可直接使用。
+              </p>
+            </div>
+          )}
+
+          {/* 验证状态提示 */}
+          {validationStatus === 'validating' && (
+            <div
               style={{
-                width: '100%',
-                padding: '10px 12px',
-                fontSize: '14px',
-                background: 'var(--bg-base)',
-                border: '1px solid var(--border-default)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 12px',
+                marginBottom: '16px',
                 borderRadius: '6px',
-                color: 'var(--text-primary)',
-                outline: 'none',
-                transition: 'border-color 0.2s',
+                background: 'rgba(59, 130, 246, 0.15)',
+                color: 'var(--blue-500)',
+                fontSize: '13px',
               }}
-              onFocus={(e) => {
-                e.target.style.borderColor = 'var(--orange-500)'
+            >
+              <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
+              正在验证配置...
+            </div>
+          )}
+
+          {validationStatus === 'success' && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 12px',
+                marginBottom: '16px',
+                borderRadius: '6px',
+                background: 'rgba(34, 197, 94, 0.15)',
+                color: 'var(--green-500)',
+                fontSize: '13px',
               }}
-              onBlur={(e) => {
-                e.target.style.borderColor = 'var(--border-default)'
+            >
+              <span className="iconify icon-sm" data-icon="lucide:check-circle"></span>
+              验证成功！
+            </div>
+          )}
+
+          {validationStatus === 'error' && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 12px',
+                marginBottom: '16px',
+                borderRadius: '6px',
+                background: 'rgba(239, 68, 68, 0.15)',
+                color: 'var(--red-500)',
+                fontSize: '13px',
               }}
-            />
-          </div>
+            >
+              <span className="iconify icon-sm" data-icon="lucide:x-circle"></span>
+              {validationError || '验证失败'}
+            </div>
+          )}
 
           {/* 操作按钮 */}
           <div
@@ -243,11 +388,20 @@ export function ImageHostConfigModal({
             <button
               onClick={handleSave}
               className="btn btn-primary"
-              disabled={!token.trim()}
+              disabled={!canSave || validationStatus === 'validating'}
               style={{ flex: 1 }}
             >
-              <span className="iconify icon-sm" data-icon="lucide:save"></span>
-              保存配置
+              {validationStatus === 'validating' ? (
+                <>
+                  <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
+                  验证中...
+                </>
+              ) : (
+                <>
+                  <span className="iconify icon-sm" data-icon="lucide:save"></span>
+                  {HOST_REQUIRES_TOKEN[activeTab] ? '验证并保存' : '保存配置'}
+                </>
+              )}
             </button>
             {isConfigured && (
               <button
