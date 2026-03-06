@@ -315,11 +315,13 @@ function App() {
       // ═══════════════════════════════════════════════════════════════
       // 关键步骤（参考 raphael-publish）：
       // 1. applyInlineStyles: 将样式内联到每个元素的 style 属性
+      //    - 传入 previewEl 以读取代码块的计算后样式
       // 2. makeWeChatCompatible: 处理公众号兼容性问题
       // ═══════════════════════════════════════════════════════════════
 
       // 步骤 1: 内联样式（关键！公众号不保留 CSS 类）
-      const htmlWithInlineStyles = applyInlineStyles(previewEl.innerHTML, currentTheme)
+      // 传入 previewEl 以读取代码块的实际样式（支持 GitHub Dark, Monokai 等）
+      const htmlWithInlineStyles = applyInlineStyles(previewEl, currentTheme)
 
       // 步骤 2: 公众号兼容性处理
       const processedHtml = await makeWeChatCompatible(htmlWithInlineStyles, currentTheme)

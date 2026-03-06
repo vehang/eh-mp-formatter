@@ -152,12 +152,51 @@ function processPunctuation(section: HTMLElement, doc: Document): void {
 }
 
 /**
- * 将样式内联到 HTML 元素（关键函数）
- * 参考 raphael-publish 的 applyTheme 实现
+ * 从 DOM 元素读取计算后的样式并转换为内联样式字符串
  */
-export function applyInlineStyles(html: string, theme: Theme): string {
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(html, 'text/html')
+function getComputedStylesAsInline(el: Element): string {
+  const computed = window.getComputedStyle(el)
+  const importantStyles = [
+    'background-color',
+    'color',
+    'font-size',
+    'font-weight',
+    'font-style',
+    'font-family',
+    'line-height',
+    'padding',
+    'padding-top',
+    'padding-right',
+    'padding-bottom',
+    'padding-left',
+    'margin',
+    'margin-top',
+    'margin-right',
+    'margin-bottom',
+    'margin-left',
+    'border-radius',
+    'text-align',
+    'display',
+  ]
+
+  const styles: string[] = []
+  importantStyles.forEach((prop) => {
+    const value = computed.getPropertyValue(prop)
+    if (value && value !== 'none' && value !== 'normal' && value !== 'auto') {
+      styles.push(`${prop}: ${value}`)
+    }
+  })
+
+  return styles.join('; ')
+}
+
+/**
+ * 将样式内联到 HTML 元素（关键函数）
+ * @param previewEl 预览区域的 DOM 元素，用于读取计算后的样式
+ * @param theme 主题对象
+ */
+export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string {
+  const doc = new DOMParser().parseFromString(previewEl.innerHTML, 'text/html')
   const style = theme.styles
 
   // 标题内联元素覆盖样式
@@ -168,20 +207,60 @@ export function applyInlineStyles(html: string, theme: Theme): string {
     code: 'color: inherit !important; background-color: transparent !important; border: none !important; padding: 0 !important;',
   }
 
-  // 遍历所有选择器并应用内联样式
+  // ═══════════════════════════════════════════════════════════════
+  // 代码块处理：从预览区域读取计算后的样式
+  // ═══════════════════════════════════════════════════════════════
+  const previewPreElements = previewEl.querySelectorAll('pre.hljs')
+  const docPreElements = doc.querySelectorAll('pre.hljs')
+
+  previewPreElements.forEach((previewPre, index) => {
+    const docPre = docPreElements[index]
+    if (!docPre) return
+
+    // 从预览区域读取 pre 的计算样式
+    const preStyle = getComputedStylesAsInline(previewPre)
+    docPre.setAttribute('style', preStyle + '; overflow-x: auto; white-space: pre;')
+  })
+
+  // 代码高亮 span：从预览区域读取计算后的颜色
+  const previewCodeSpans = previewEl.querySelectorAll('pre.hljs span')
+  const docCodeSpans = doc.querySelectorAll('pre.hljs span')
+
+  previewCodeSpans.forEach((previewSpan, index) => {
+    const docSpan = docCodeSpans[index]
+    if (!docSpan) return
+
+    const computed = window.getComputedStyle(previewSpan)
+    const color = computed.getPropertyValue('color')
+    const fontWeight = computed.getPropertyValue('font-weight')
+    const fontStyle = computed.getPropertyValue('font-style')
+
+    let inlineStyle = `color: ${color};`
+    if (fontWeight && fontWeight !== '400' && fontWeight !== 'normal') {
+      inlineStyle += ` font-weight: ${fontWeight};`
+    }
+    if (fontStyle && fontStyle !== 'normal') {
+      inlineStyle += ` font-style: ${fontStyle};`
+    }
+
+    docSpan.setAttribute('style', inlineStyle)
+  })
+
+  // ═══════════════════════════════════════════════════════════════
+  // 常规元素处理：使用主题样式
+  // ═══════════════════════════════════════════════════════════════
   const selectors: (keyof typeof style)[] = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'p', 'li', 'blockquote', 'code', 'pre', 'pre code',
-    'a', 'hr', 'th', 'td', 'table', 'img', 'strong', 'em'
+    'p', 'li', 'blockquote', 'code', 'a', 'hr', 'th', 'td', 'table', 'strong', 'em'
   ]
 
   selectors.forEach((selector) => {
     const elements = doc.querySelectorAll(selector)
     elements.forEach((el) => {
-      // 跳过 pre 内的 code（代码块）- 使用 pre code 样式
+      // 跳过 pre 内的 code（代码块已单独处理）
       if (selector === 'code' && el.parentElement?.tagName === 'PRE') return
-      // 跳过图片网格中的图片
-      if (el.tagName === 'IMG' && el.closest('.image-grid')) return
+      // 跳过 pre 元素（已单独处理）
+      if (selector === 'code' && el.closest('pre')) return
 
       const currentStyle = el.getAttribute('style') || ''
       const newStyle = style[selector]
@@ -189,15 +268,6 @@ export function applyInlineStyles(html: string, theme: Theme): string {
         el.setAttribute('style', currentStyle + '; ' + newStyle)
       }
     })
-  })
-
-  // 单独处理 pre code（代码块内的 code）
-  doc.querySelectorAll('pre code').forEach((code) => {
-    const currentStyle = code.getAttribute('style') || ''
-    const preCodeStyle = style['pre code']
-    if (preCodeStyle) {
-      code.setAttribute('style', currentStyle + '; ' + preCodeStyle)
-    }
   })
 
   // 恢复列表标记（Tailwind preflight 会移除）
@@ -218,39 +288,6 @@ export function applyInlineStyles(html: string, theme: Theme): string {
     ol.setAttribute('style', `${currentStyle}; list-style-type: decimal !important; list-style-position: outside; padding-left: 24px;`)
   })
 
-  // 处理代码高亮 span
-  const hljsStyles: Record<string, string> = {
-    'hljs-comment': 'color: #6a737d; font-style: italic;',
-    'hljs-quote': 'color: #6a737d; font-style: italic;',
-    'hljs-keyword': 'color: #d73a49; font-weight: 600;',
-    'hljs-selector-tag': 'color: #d73a49; font-weight: 600;',
-    'hljs-string': 'color: #032f62;',
-    'hljs-title': 'color: #6f42c1; font-weight: 600;',
-    'hljs-section': 'color: #6f42c1; font-weight: 600;',
-    'hljs-type': 'color: #005cc5; font-weight: 600;',
-    'hljs-number': 'color: #005cc5;',
-    'hljs-literal': 'color: #005cc5;',
-    'hljs-built_in': 'color: #005cc5;',
-    'hljs-variable': 'color: #e36209;',
-    'hljs-template-variable': 'color: #e36209;',
-    'hljs-tag': 'color: #22863a;',
-    'hljs-name': 'color: #22863a;',
-    'hljs-attr': 'color: #6f42c1;',
-  }
-
-  doc.querySelectorAll('.hljs span').forEach((span) => {
-    let inlineStyle = span.getAttribute('style') || ''
-    if (inlineStyle && !inlineStyle.endsWith(';')) inlineStyle += '; '
-    span.classList.forEach((cls) => {
-      if (hljsStyles[cls]) {
-        inlineStyle += hljsStyles[cls] + '; '
-      }
-    })
-    if (inlineStyle) {
-      span.setAttribute('style', inlineStyle)
-    }
-  })
-
   // 处理标题内的内联元素
   const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6')
   headings.forEach((heading) => {
@@ -262,15 +299,38 @@ export function applyInlineStyles(html: string, theme: Theme): string {
     })
   })
 
-  // 统一图片样式（不添加边框，保持与网页一致）
+  // ═══════════════════════════════════════════════════════════════
+  // 图片处理
+  // ═══════════════════════════════════════════════════════════════
   doc.querySelectorAll('img').forEach((img) => {
     const inGrid = Boolean(img.closest('.image-grid'))
     const currentStyle = img.getAttribute('style') || ''
-    // 移除边框，只保留基本样式
     const appendedStyle = inGrid
       ? 'display:block; max-width:100%; height:auto; margin:0 !important; border-radius:8px;'
       : 'display:block; width:100%; max-width:100%; height:auto; margin:20px auto; border-radius:8px;'
     img.setAttribute('style', `${currentStyle}; ${appendedStyle}`)
+  })
+
+  // ═══════════════════════════════════════════════════════════════
+  // 图片注解处理：识别紧跟在图片后面的斜体文字
+  // ═══════════════════════════════════════════════════════════════
+  doc.querySelectorAll('p').forEach((p) => {
+    // 检查是否只包含 em 元素（图片注解格式）
+    const emOnly = p.children.length === 1 && p.children[0].tagName === 'EM'
+    const textContent = p.textContent?.trim() || ''
+    const isShortText = textContent.length < 100 // 注解通常较短
+
+    if (emOnly && isShortText) {
+      // 应用图片注解样式
+      p.setAttribute('style', `
+        text-align: center;
+        font-size: 14px;
+        color: #6B7280;
+        margin-top: -12px;
+        margin-bottom: 16px;
+        line-height: 1.5;
+      `.trim().replace(/\s+/g, ' '))
+    }
   })
 
   // 创建容器
