@@ -176,10 +176,10 @@ export const slateTheme: Theme = {
 // ═══════════════════════════════════════════════════════════════
 
 export const themes: Theme[] = [
+  amberTheme,
   indigoTheme,
   forestTheme,
   roseTheme,
-  amberTheme,
   slateTheme
 ]
 
@@ -200,4 +200,4 @@ export function getThemeById(id: string): Theme | undefined {
   return themes.find(t => t.id === id)
 }
 
-export const defaultTheme = indigoTheme
+export const defaultTheme = amberTheme
