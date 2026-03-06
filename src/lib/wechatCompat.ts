@@ -176,11 +176,9 @@ export function applyInlineStyles(html: string, theme: Theme): string {
   ]
 
   selectors.forEach((selector) => {
-    if (selector === 'pre code') return // 跳过，单独处理
-
     const elements = doc.querySelectorAll(selector)
     elements.forEach((el) => {
-      // 跳过 pre 内的 code（代码块）
+      // 跳过 pre 内的 code（代码块）- 使用 pre code 样式
       if (selector === 'code' && el.parentElement?.tagName === 'PRE') return
       // 跳过图片网格中的图片
       if (el.tagName === 'IMG' && el.closest('.image-grid')) return
@@ -191,6 +189,15 @@ export function applyInlineStyles(html: string, theme: Theme): string {
         el.setAttribute('style', currentStyle + '; ' + newStyle)
       }
     })
+  })
+
+  // 单独处理 pre code（代码块内的 code）
+  doc.querySelectorAll('pre code').forEach((code) => {
+    const currentStyle = code.getAttribute('style') || ''
+    const preCodeStyle = style['pre code']
+    if (preCodeStyle) {
+      code.setAttribute('style', currentStyle + '; ' + preCodeStyle)
+    }
   })
 
   // 恢复列表标记（Tailwind preflight 会移除）
@@ -255,13 +262,14 @@ export function applyInlineStyles(html: string, theme: Theme): string {
     })
   })
 
-  // 统一图片样式
+  // 统一图片样式（不添加边框，保持与网页一致）
   doc.querySelectorAll('img').forEach((img) => {
     const inGrid = Boolean(img.closest('.image-grid'))
     const currentStyle = img.getAttribute('style') || ''
+    // 移除边框，只保留基本样式
     const appendedStyle = inGrid
-      ? 'display:block; max-width:100%; height:auto; margin:0 !important; padding:8px !important; border-radius:14px !important; box-sizing:border-box; box-shadow:0 12px 28px rgba(15,23,42,0.18), 0 2px 8px rgba(15,23,42,0.12); border:1px solid rgba(255,255,255,0.75);'
-      : 'display:block; width:100%; max-width:100%; height:auto; margin:30px auto !important; padding:8px !important; border-radius:14px !important; box-sizing:border-box; box-shadow:0 16px 34px rgba(15,23,42,0.22), 0 4px 10px rgba(15,23,42,0.12); border:1px solid rgba(15,23,42,0.12);'
+      ? 'display:block; max-width:100%; height:auto; margin:0 !important; border-radius:8px;'
+      : 'display:block; width:100%; max-width:100%; height:auto; margin:20px auto; border-radius:8px;'
     img.setAttribute('style', `${currentStyle}; ${appendedStyle}`)
   })
 
