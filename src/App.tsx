@@ -14,13 +14,19 @@ import type { Theme } from './themes/types'
 import './styles/preview.css'
 import './App.css'
 
-// 代码风格配置
+// 代码风格配置 - 预导入 highlight.js 样式
+import githubDark from 'highlight.js/styles/github-dark.css?inline'
+import atomOneDark from 'highlight.js/styles/atom-one-dark.css?inline'
+import monokai from 'highlight.js/styles/monokai.css?inline'
+import github from 'highlight.js/styles/github.css?inline'
+import atomOneLight from 'highlight.js/styles/atom-one-light.css?inline'
+
 const codeStyles = [
-  { id: 'github-dark', name: 'GitHub Dark', css: 'highlight.js/styles/github-dark.css' },
-  { id: 'atom-one-dark', name: 'OneDark', css: 'highlight.js/styles/atom-one-dark.css' },
-  { id: 'monokai', name: 'Monokai', css: 'highlight.js/styles/monokai.css' },
-  { id: 'github', name: 'GitHub Light', css: 'highlight.js/styles/github.css' },
-  { id: 'atom-one-light', name: 'OneLight', css: 'highlight.js/styles/atom-one-light.css' },
+  { id: 'github-dark', name: 'GitHub Dark', css: githubDark },
+  { id: 'atom-one-dark', name: 'OneDark', css: atomOneDark },
+  { id: 'monokai', name: 'Monokai', css: monokai },
+  { id: 'github', name: 'GitHub Light', css: github },
+  { id: 'atom-one-light', name: 'OneLight', css: atomOneLight },
 ]
 
 // 动态加载代码风格
@@ -30,14 +36,13 @@ function loadCodeStyle(styleId: string) {
   const style = codeStyles.find(s => s.id === styleId)
   if (style) {
     // 移除旧样式
-    const oldLink = document.getElementById('hljs-style')
-    if (oldLink) oldLink.remove()
-    // 添加新样式
-    const link = document.createElement('link')
-    link.id = 'hljs-style'
-    link.rel = 'stylesheet'
-    link.href = style.css
-    document.head.appendChild(link)
+    const oldStyle = document.getElementById('hljs-style')
+    if (oldStyle) oldStyle.remove()
+    // 添加新样式（使用 style 标签而非 link）
+    const styleEl = document.createElement('style')
+    styleEl.id = 'hljs-style'
+    styleEl.textContent = style.css
+    document.head.appendChild(styleEl)
     loadedStyleId = styleId
   }
 }
@@ -307,38 +312,87 @@ function App() {
         return
       }
 
-      // 克隆预览元素并内联计算样式
+      // 克隆预览元素
       const clone = previewEl.cloneNode(true) as HTMLElement
-      clone.style.cssText = window.getComputedStyle(previewEl).cssText
 
-      // 内联所有子元素的样式
+      // 完整的关键样式属性列表
+      const importantStyles = [
+        // 文字样式
+        'color', 'font-size', 'font-weight', 'font-family', 'font-style',
+        'line-height', 'text-align', 'text-decoration', 'letter-spacing',
+        'white-space', 'word-break', 'word-wrap',
+        // 盒模型
+        'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+        'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+        'width', 'max-width', 'min-width', 'height', 'max-height', 'min-height',
+        // 边框
+        'border', 'border-width', 'border-style', 'border-color',
+        'border-top', 'border-top-width', 'border-top-style', 'border-top-color',
+        'border-right', 'border-right-width', 'border-right-style', 'border-right-color',
+        'border-bottom', 'border-bottom-width', 'border-bottom-style', 'border-bottom-color',
+        'border-left', 'border-left-width', 'border-left-style', 'border-left-color',
+        'border-radius', 'border-top-left-radius', 'border-top-right-radius',
+        'border-bottom-left-radius', 'border-bottom-right-radius',
+        // 背景
+        'background', 'background-color', 'background-image',
+        // 布局
+        'display', 'position', 'top', 'right', 'bottom', 'left',
+        'flex', 'flex-direction', 'flex-wrap', 'justify-content', 'align-items',
+        'float', 'clear', 'overflow', 'overflow-x', 'overflow-y',
+        'vertical-align',
+        // 列表
+        'list-style', 'list-style-type', 'list-style-position',
+        // 其他
+        'opacity', 'box-shadow', 'text-shadow', 'visibility',
+        'border-collapse', 'border-spacing', 'empty-cells', 'table-layout'
+      ]
+
+      // 递归内联所有元素的样式
       const inlineStyles = (element: Element) => {
         const el = element as HTMLElement
+        if (el.nodeType !== Node.ELEMENT_NODE) return
+
         const computedStyle = window.getComputedStyle(el)
-        // 只内联关键样式
-        const importantStyles = [
-          'color', 'background', 'background-color', 'font-size', 'font-weight',
-          'font-family', 'line-height', 'text-align', 'margin', 'margin-top',
-          'margin-bottom', 'padding', 'padding-left', 'padding-right',
-          'border', 'border-left', 'border-radius', 'display', 'list-style-type'
-        ]
+
+        // 内联所有关键样式
         importantStyles.forEach(prop => {
           const value = computedStyle.getPropertyValue(prop)
-          if (value) {
-            el.style.setProperty(prop, value)
+          // 过滤掉无效值
+          if (value && value !== 'none' && value !== 'normal' && value !== 'auto' &&
+              value !== 'initial' && value !== 'inherit' && value !== 'transparent') {
+            el.style.setProperty(prop, value, 'important')
           }
         })
-        Array.from(el.children).forEach(inlineStyles)
+
+        // 特殊处理：确保代码块的背景色被正确设置
+        if (el.classList.contains('hljs') || el.tagName === 'PRE') {
+          const bgColor = computedStyle.getPropertyValue('background-color')
+          if (bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)') {
+            el.style.setProperty('background-color', bgColor, 'important')
+          }
+        }
+
+        // 递归处理所有子元素（包括文本节点）
+        Array.from(el.children).forEach(child => inlineStyles(child))
       }
 
+      // 先设置克隆元素本身的样式
+      const rootStyle = window.getComputedStyle(previewEl)
+      clone.style.cssText = ''
+      importantStyles.forEach(prop => {
+        const value = rootStyle.getPropertyValue(prop)
+        if (value && value !== 'none' && value !== 'normal' && value !== 'auto' &&
+            value !== 'initial' && value !== 'inherit') {
+          clone.style.setProperty(prop, value, 'important')
+        }
+      })
+      clone.style.setProperty('background-color', '#ffffff', 'important')
+      clone.style.setProperty('color', '#1F2937', 'important')
+
+      // 内联所有子元素样式
       inlineStyles(clone)
 
-      // 移除 CSS 变量引用，使用实际颜色值
-      clone.innerHTML = clone.innerHTML.replace(/var\(--[^)]+\)/g, (match) => {
-        // CSS 变量会在 getComputedStyle 中被解析，这里只是备份处理
-        return match
-      })
-
+      // 获取最终的 HTML
       const styledHTML = clone.innerHTML
 
       // 使用 ClipboardItem API 同时复制 HTML 和纯文本

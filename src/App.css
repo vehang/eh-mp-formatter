@@ -310,6 +310,25 @@ body {
   color: var(--zinc-300);
 }
 
+/* 深色模式下的列表样式 - 确保文字可见 */
+[data-theme="dark"] .mp-preview ul,
+[data-theme="dark"] .mp-preview ol {
+  color: var(--zinc-200);
+}
+
+[data-theme="dark"] .mp-preview li {
+  color: var(--zinc-200) !important;
+}
+
+[data-theme="dark"] .mp-preview li::marker {
+  color: var(--zinc-400);
+}
+
+/* 深色模式下的任务列表 */
+[data-theme="dark"] .mp-preview input[type="checkbox"] {
+  accent-color: var(--orange-500);
+}
+
 [data-theme="dark"] .mp-preview blockquote {
   background: rgba(99, 102, 241, 0.15);
   color: var(--zinc-300);

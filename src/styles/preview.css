@@ -203,15 +203,20 @@
   border: none;
 }
 
-/* 深色 UI 模式下的行内代码 */
+/* 深色 UI 模式下的行内代码 - 使用适合深色背景的颜色 */
 [data-theme="dark"] .mp-preview code {
-  background: var(--theme-code-inline-bg, #EEF2FF);
-  color: var(--theme-code-inline-color, #4338CA);
+  background: rgba(99, 102, 241, 0.2);
+  color: #A5B4FC;
 }
 
-/* 深色 UI 模式下的列表文本颜色 - 提高对比度 */
+/* 深色 UI 模式下的列表文本颜色 - 使用浅色确保可读性 */
 [data-theme="dark"] .mp-preview li {
-  color: var(--theme-text, #1E293B);
+  color: var(--zinc-200, #E4E4E7) !important;
+}
+
+/* 深色 UI 模式下的任务列表 */
+[data-theme="dark"] .mp-preview input[type="checkbox"] {
+  accent-color: var(--orange-500, #F97316);
 }
 
 /* ═══════════════════════════════════════════════════════════
