@@ -177,15 +177,11 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 代码块处理：完全匹配网页预览效果
+  // 代码块处理：完全匹配网页预览效果 + 公众号兼容
   // 核心原则：网页效果 = 公众号效果
   //
-  // 网页样式来源 (preview.css):
-  //   pre: margin: 20px 0; padding: 20px; border-radius: 12px; overflow-x: auto;
-  //   code: padding: 0; font-size: 14px; line-height: 1.7;
-  //
-  // highlight.js 样式:
-  //   .hljs: background: #0d1117; color: #c9d1d9;
+  // 关键修复：公众号编辑器不支持 white-space: pre
+  // 解决方案：将普通空格替换为 &nbsp;（不间断空格）
   // ═══════════════════════════════════════════════════════════════
   const previewPreElements = previewEl.querySelectorAll('pre.hljs')
   const docPreElements = doc.querySelectorAll('pre.hljs')
@@ -206,6 +202,7 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     const paddingBottom = preComputed.getPropertyValue('padding-bottom')
 
     // ⭐ pre 元素样式：完全匹配网页效果
+    // 注意：不使用 white-space: pre，因为公众号不支持
     const preStyle = `
       margin: ${marginTop} 0px ${marginBottom};
       padding: ${paddingTop} ${paddingRight} ${paddingBottom} ${paddingLeft};
@@ -213,7 +210,6 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
       background: ${bgColor};
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      white-space: pre;
       font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', Consolas, 'Liberation Mono', monospace;
       text-align: left;
     `.trim().replace(/\s+/g, ' ')
@@ -241,6 +237,36 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
       `.trim().replace(/\s+/g, ' ')
 
       docCode.setAttribute('style', codeStyle)
+
+      // ⭐ 关键修复：将 code 内的普通空格替换为 &nbsp;，换行符替换为 <br>
+      // 这样即使公众号不支持 white-space: pre，代码格式也能正确显示
+      const processNode = (node: Node, parent: Element): void => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent || ''
+          if (text.includes(' ') || text.includes('\n')) {
+            // 将空格和换行符分开处理
+            const parts = text.split(/(\n)/)
+            const fragment = doc.createDocumentFragment()
+
+            parts.forEach(part => {
+              if (part === '\n') {
+                // 换行符替换为 <br>
+                fragment.appendChild(doc.createElement('br'))
+              } else if (part) {
+                // 普通文本中的空格替换为不间断空格
+                const textNode = doc.createTextNode(part.replace(/ /g, '\u00A0'))
+                fragment.appendChild(textNode)
+              }
+            })
+
+            parent.replaceChild(fragment, node)
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          // 递归处理子节点（需要复制数组，因为处理过程中会修改 childNodes）
+          Array.from(node.childNodes).forEach(child => processNode(child, node as Element))
+        }
+      }
+      Array.from(docCode.childNodes).forEach(child => processNode(child, docCode))
     }
   })
 
