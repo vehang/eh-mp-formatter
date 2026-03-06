@@ -152,45 +152,6 @@ function processPunctuation(section: HTMLElement, doc: Document): void {
 }
 
 /**
- * 从 DOM 元素读取计算后的样式并转换为内联样式字符串
- */
-function getComputedStylesAsInline(el: Element): string {
-  const computed = window.getComputedStyle(el)
-  const importantStyles = [
-    'background-color',
-    'color',
-    'font-size',
-    'font-weight',
-    'font-style',
-    'font-family',
-    'line-height',
-    'padding',
-    'padding-top',
-    'padding-right',
-    'padding-bottom',
-    'padding-left',
-    'margin',
-    'margin-top',
-    'margin-right',
-    'margin-bottom',
-    'margin-left',
-    'border-radius',
-    'text-align',
-    'display',
-  ]
-
-  const styles: string[] = []
-  importantStyles.forEach((prop) => {
-    const value = computed.getPropertyValue(prop)
-    if (value && value !== 'none' && value !== 'normal' && value !== 'auto') {
-      styles.push(`${prop}: ${value}`)
-    }
-  })
-
-  return styles.join('; ')
-}
-
-/**
  * 将样式内联到 HTML 元素（关键函数）
  * @param previewEl 预览区域的 DOM 元素，用于读取计算后的样式
  * @param theme 主题对象
@@ -208,8 +169,8 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 代码块处理：用 section 包裹 pre 以支持公众号横向滚动
-  // 关键：section 负责 overflow-x: auto，pre 负责 white-space: pre
+  // 代码块处理：参考 raphael-publish 的简洁实现
+  // 关键：只在 pre 上设置 overflow-x: auto，不需要额外包裹或复杂处理
   // ═══════════════════════════════════════════════════════════════
   const previewPreElements = previewEl.querySelectorAll('pre.hljs')
   const docPreElements = doc.querySelectorAll('pre.hljs')
@@ -218,19 +179,31 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     const docPre = docPreElements[index]
     if (!docPre) return
 
-    // 从预览区域读取 pre 的计算样式
-    const preStyle = getComputedStylesAsInline(previewPre)
+    // 从预览区域读取 pre 的计算样式（背景、字体等）
+    const computed = window.getComputedStyle(previewPre)
+    const bgColor = computed.getPropertyValue('background-color')
+    const color = computed.getPropertyValue('color')
+    const fontSize = computed.getPropertyValue('font-size')
+    const fontFamily = computed.getPropertyValue('font-family')
+    const lineHeight = computed.getPropertyValue('line-height')
+    const padding = computed.getPropertyValue('padding')
+    const borderRadius = computed.getPropertyValue('border-radius')
 
-    // 创建外层 section 作为滚动容器
-    const section = doc.createElement('section')
-    section.setAttribute('style', 'width: 100%; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;')
+    // pre 样式：简洁风格，只设置 overflow-x: auto
+    // 依赖浏览器默认的 <pre> 行为来保持空白
+    const preStyle = `
+      margin: 16px 0;
+      padding: ${padding};
+      background-color: ${bgColor};
+      border-radius: ${borderRadius};
+      overflow-x: auto;
+      font-size: ${fontSize};
+      font-family: ${fontFamily};
+      line-height: ${lineHeight};
+      color: ${color};
+    `.replace(/\s+/g, ' ').trim()
 
-    // 修改 pre 的样式：保留背景和字体，但让 section 处理滚动
-    docPre.setAttribute('style', preStyle + '; white-space: pre; overflow: visible; margin: 0;')
-
-    // 用 section 包裹 pre（不是替换）
-    docPre.parentNode?.insertBefore(section, docPre)
-    section.appendChild(docPre)
+    docPre.setAttribute('style', preStyle)
   })
 
   // 代码高亮 span：从预览区域读取计算后的颜色（只取颜色，不加背景）
