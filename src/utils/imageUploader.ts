@@ -10,14 +10,12 @@ import { IMAGE_HOSTS, type ImageHostType, type UploadProgress, type UploadResult
  * @param file 图片文件
  * @param hostType 图床类型
  * @param token API Token
- * @param storage 存储位置（可选，部分图床支持）
  * @param onProgress 进度回调
  */
 export function uploadImage(
   file: File,
   hostType: ImageHostType,
   token: string,
-  storage?: string,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   return new Promise((resolve) => {
@@ -58,9 +56,6 @@ export function uploadImage(
     // 构建 FormData
     formData.append('token', token)
     formData.append('file', file)
-    if (storage && hostType === 'hello') {
-      formData.append('storage', storage)
-    }
 
     // 监听上传进度
     xhr.upload.addEventListener('progress', (e) => {

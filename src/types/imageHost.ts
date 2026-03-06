@@ -10,7 +10,6 @@ export interface ImageHostConfig {
   type: ImageHostType
   name: string
   token: string
-  storage?: string
   isConfigured: boolean
 }
 
@@ -18,7 +17,6 @@ export interface ImageHostConfig {
 export interface ImageHostSettings {
   hello: {
     token: string
-    storage?: string
     isConfigured: boolean
   }
   dk: {

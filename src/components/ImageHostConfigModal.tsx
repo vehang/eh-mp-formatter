@@ -12,7 +12,7 @@ interface ImageHostConfigModalProps {
   isOpen: boolean
   onClose: () => void
   settings: ImageHostSettings
-  onUpdateConfig: (hostType: ImageHostType, config: { token: string; storage?: string }) => void
+  onUpdateConfig: (hostType: ImageHostType, config: { token: string }) => void
   onSetDefault: (hostType: ImageHostType) => void
   onClearConfig: (hostType: ImageHostType) => void
 }
@@ -29,7 +29,6 @@ export function ImageHostConfigModal({
 }: ImageHostConfigModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('hello')
   const [token, setToken] = useState('')
-  const [storage, setStorage] = useState('')
   const modalRef = useRef<HTMLDivElement>(null)
 
   // 同步表单状态
@@ -37,7 +36,6 @@ export function ImageHostConfigModal({
     if (isOpen) {
       const currentConfig = settings[activeTab]
       setToken(currentConfig.token)
-      setStorage('storage' in currentConfig ? (currentConfig.storage || '') : '')
     }
   }, [activeTab, isOpen, settings])
 
@@ -81,14 +79,13 @@ export function ImageHostConfigModal({
   // 保存配置
   const handleSave = () => {
     if (token.trim()) {
-      onUpdateConfig(activeTab, { token: token.trim(), storage: storage.trim() || undefined })
+      onUpdateConfig(activeTab, { token: token.trim() })
     }
   }
 
   // 清除配置
   const handleClear = () => {
     setToken('')
-    setStorage('')
     onClearConfig(activeTab)
   }
 
@@ -235,35 +232,6 @@ export function ImageHostConfigModal({
             />
           </div>
 
-          {/* Storage 选择（仅 Hello 图床） */}
-          {activeTab === 'hello' && (
-            <div style={{ marginBottom: '16px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '8px',
-                }}
-              >
-                存储位置（可选）
-              </label>
-              <select
-                value={storage}
-                onChange={(e) => setStorage(e.target.value)}
-                className="select"
-                style={{ width: '100%' }}
-              >
-                <option value="">默认存储</option>
-                <option value="s3">S3</option>
-                <option value="oss">阿里云 OSS</option>
-                <option value="cos">腾讯云 COS</option>
-                <option value="r2">Cloudflare R2</option>
-              </select>
-            </div>
-          )}
-
           {/* 操作按钮 */}
           <div
             style={{
@@ -281,13 +249,15 @@ export function ImageHostConfigModal({
               <span className="iconify icon-sm" data-icon="lucide:save"></span>
               保存配置
             </button>
-            {isConfigured && !isDefault && (
+            {isConfigured && (
               <button
                 onClick={handleSetDefault}
-                className="btn btn-secondary"
+                className={`btn ${isDefault ? 'btn-primary' : 'btn-secondary'}`}
+                disabled={isDefault}
+                title={isDefault ? '当前已是默认图床' : '设为默认图床'}
               >
-                <span className="iconify icon-sm" data-icon="lucide:star"></span>
-                设为默认
+                <span className="iconify icon-sm" data-icon={isDefault ? 'lucide:star' : 'lucide:star'}></span>
+                {isDefault ? '默认' : '设为默认'}
               </button>
             )}
             {isConfigured && (

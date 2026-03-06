@@ -22,6 +22,9 @@ const defaultSettings: ImageHostSettings = {
   defaultHost: null,
 }
 
+// 图床顺序（用于失败时的备选顺序）
+const HOST_ORDER: ImageHostType[] = ['hello', 'dk', 'bolt']
+
 // 从 localStorage 读取设置
 function loadSettings(): ImageHostSettings {
   try {
@@ -56,16 +59,14 @@ export function useImageHost() {
   // 更新图床配置
   const updateHostConfig = useCallback((
     hostType: ImageHostType,
-    config: { token: string; storage?: string }
+    config: { token: string }
   ) => {
     setSettings((prev) => {
       const isConfigured = !!config.token.trim()
       const newSettings: ImageHostSettings = {
         ...prev,
         [hostType]: {
-          ...prev[hostType],
           token: config.token,
-          ...(config.storage !== undefined && { storage: config.storage }),
           isConfigured,
         },
       }
@@ -78,7 +79,7 @@ export function useImageHost() {
       // 如果当前默认图床被取消配置，需要重新选择
       if (!isConfigured && prev.defaultHost === hostType) {
         // 找到下一个已配置的图床
-        const configuredHosts = (['hello', 'dk', 'bolt'] as ImageHostType[]).filter(
+        const configuredHosts = HOST_ORDER.filter(
           (h) => h !== hostType && newSettings[h].isConfigured
         )
         newSettings.defaultHost = configuredHosts[0] || null
@@ -92,9 +93,11 @@ export function useImageHost() {
   // 设置默认图床
   const setDefaultHost = useCallback((hostType: ImageHostType) => {
     setSettings((prev) => {
+      // 只有已配置的图床才能设为默认
       if (!prev[hostType].isConfigured) {
         return prev
       }
+      // 设置新的默认图床（自动覆盖之前的默认）
       const newSettings = { ...prev, defaultHost: hostType }
       saveSettings(newSettings)
       return newSettings
@@ -103,7 +106,7 @@ export function useImageHost() {
 
   // 获取当前可用的图床
   const getAvailableHosts = useCallback(() => {
-    return (['hello', 'dk', 'bolt'] as ImageHostType[])
+    return HOST_ORDER
       .filter((h) => settings[h].isConfigured)
       .map((h) => ({
         type: h,
@@ -112,52 +115,86 @@ export function useImageHost() {
       }))
   }, [settings])
 
+  // 检查是否有任何已配置的图床
+  const hasAnyConfiguredHost = useCallback(() => {
+    return HOST_ORDER.some((h) => settings[h].isConfigured)
+  }, [settings])
+
   // 上传图片
   const handleUpload = useCallback(async (
     file: File,
     hostType?: ImageHostType
   ): Promise<UploadResult> => {
-    // 确定使用的图床
-    const targetHost = hostType || settings.defaultHost
-
-    if (!targetHost) {
+    // 检查是否有任何已配置的图床
+    if (!hasAnyConfiguredHost()) {
       return { success: false, error: '请先配置图床' }
     }
 
-    const hostConfig = settings[targetHost]
-    if (!hostConfig.isConfigured) {
-      return { success: false, error: '请先配置图床 Token' }
-    }
+    // 确定图床尝试顺序：优先使用指定的或默认图床，然后是其他已配置的图床
+    let hostsToTry: ImageHostType[] = []
 
-    const result = await uploadImage(
-      file,
-      targetHost,
-      hostConfig.token,
-      'storage' in hostConfig ? hostConfig.storage : undefined,
-      setUploadProgress
-    )
-
-    // 上传完成后，重置进度（延迟一下让用户看到完成状态）
-    if (!result.success) {
-      setTimeout(() => {
-        setUploadProgress({
-          isUploading: false,
-          progress: 0,
-          statusText: '',
-        })
-      }, 2000)
+    if (hostType && settings[hostType].isConfigured) {
+      // 如果指定了图床且已配置，只使用这个
+      hostsToTry = [hostType]
+    } else if (settings.defaultHost && settings[settings.defaultHost].isConfigured) {
+      // 优先使用默认图床，然后按顺序尝试其他已配置的图床
+      hostsToTry = [
+        settings.defaultHost,
+        ...HOST_ORDER.filter(h => h !== settings.defaultHost && settings[h].isConfigured)
+      ]
     } else {
-      setTimeout(() => {
-        setUploadProgress({
-          isUploading: false,
-          progress: 0,
-          statusText: '',
-        })
-      }, 1000)
+      // 没有默认图床，按顺序尝试所有已配置的图床
+      hostsToTry = HOST_ORDER.filter(h => settings[h].isConfigured)
     }
 
-    return result
-  }, [settings])
+    // 尝试上传
+    for (const targetHost of hostsToTry) {
+      const hostConfig = settings[targetHost]
+
+      const result = await uploadImage(
+        file,
+        targetHost,
+        hostConfig.token,
+        setUploadProgress
+      )
+
+      if (result.success) {
+        // 上传成功，重置进度
+        setTimeout(() => {
+          setUploadProgress({
+            isUploading: false,
+            progress: 0,
+            statusText: '',
+          })
+        }, 1000)
+        return result
+      }
+
+      // 如果还有其他图床要尝试，显示正在尝试下一个
+      const currentIndex = hostsToTry.indexOf(targetHost)
+      if (currentIndex < hostsToTry.length - 1) {
+        setUploadProgress({
+          isUploading: true,
+          progress: 0,
+          statusText: `${IMAGE_HOSTS[targetHost].name}上传失败，正在尝试其他图床...`,
+        })
+      }
+    }
+
+    // 所有图床都失败了
+    setTimeout(() => {
+      setUploadProgress({
+        isUploading: false,
+        progress: 0,
+        statusText: '',
+      })
+    }, 2000)
+
+    return {
+      success: false,
+      error: '所有图床上传失败，请检查配置',
+    }
+  }, [settings, hasAnyConfiguredHost])
 
   // 清除图床配置
   const clearHostConfig = useCallback((hostType: ImageHostType) => {
@@ -169,7 +206,7 @@ export function useImageHost() {
 
       // 如果清除的是默认图床，重新选择
       if (prev.defaultHost === hostType) {
-        const configuredHosts = (['hello', 'dk', 'bolt'] as ImageHostType[]).filter(
+        const configuredHosts = HOST_ORDER.filter(
           (h) => h !== hostType && newSettings[h].isConfigured
         )
         newSettings.defaultHost = configuredHosts[0] || null
@@ -188,6 +225,6 @@ export function useImageHost() {
     getAvailableHosts,
     handleUpload,
     clearHostConfig,
-    hasConfiguredHost: !!settings.defaultHost,
+    hasConfiguredHost: hasAnyConfiguredHost(),
   }
 }
