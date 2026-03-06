@@ -173,15 +173,15 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 代码块处理：完全匹配用户提供的有效案例
-  // 有效案例：<code style="overflow-x: auto; padding: 15px 16px 16px; color: rgb(...);
-  //          background: rgb(...); border-radius: 5px; display: -webkit-box;
-  //          font-family: ...; font-size: 12px; margin-bottom: 0px; line-height: 1.6;">
+  // 代码块处理：完全匹配网页预览效果
+  // 核心原则：网页效果 = 公众号效果
   //
-  // 关键发现：
-  // 1. overflow-x: auto 必须在 code 元素上
-  // 2. display: -webkit-box 是横向滚动的关键（公众号 webkit 环境）
-  // 3. pre 元素也需要 white-space: pre 防止代码换行
+  // 网页样式来源 (preview.css):
+  //   pre: margin: 20px 0; padding: 20px; border-radius: 12px; overflow-x: auto;
+  //   code: padding: 0; font-size: 14px; line-height: 1.7;
+  //
+  // highlight.js 样式:
+  //   .hljs: background: #0d1117; color: #c9d1d9;
   // ═══════════════════════════════════════════════════════════════
   const previewPreElements = previewEl.querySelectorAll('pre.hljs')
   const docPreElements = doc.querySelectorAll('pre.hljs')
@@ -190,28 +190,52 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     const docPre = docPreElements[index]
     if (!docPre) return
 
-    // 从预览区域读取 pre 的计算样式（背景、字体等）
-    const computed = window.getComputedStyle(previewPre)
-    const bgColor = computed.getPropertyValue('background-color')
-    const color = computed.getPropertyValue('color')
-    const fontSize = computed.getPropertyValue('font-size')
-    const lineHeight = computed.getPropertyValue('line-height')
-    const padding = computed.getPropertyValue('padding')
-    const borderRadius = computed.getPropertyValue('border-radius')
+    // 从预览区域读取 pre 的计算样式
+    const preComputed = window.getComputedStyle(previewPre)
+    const bgColor = preComputed.getPropertyValue('background-color')
+    const borderRadius = preComputed.getPropertyValue('border-radius')
+    const marginTop = preComputed.getPropertyValue('margin-top')
+    const marginBottom = preComputed.getPropertyValue('margin-bottom')
+    const paddingLeft = preComputed.getPropertyValue('padding-left')
+    const paddingRight = preComputed.getPropertyValue('padding-right')
+    const paddingTop = preComputed.getPropertyValue('padding-top')
+    const paddingBottom = preComputed.getPropertyValue('padding-bottom')
 
-    // ⭐ pre 元素：设置背景色和 white-space: pre
-    // white-space: pre 是防止代码换行的关键！
-    // font-family 使用等宽字体，确保代码字符正确显示
-    const preStyle = `margin: 10px 0px; padding: 0px; border-radius: ${borderRadius}; background: ${bgColor}; box-shadow: rgba(0, 0, 0, 0.55) 0px 2px 10px; text-align: left; white-space: pre; font-family: Consolas, Monaco, 'Courier New', monospace;`
+    // ⭐ pre 元素样式：完全匹配网页效果
+    const preStyle = `
+      margin: ${marginTop} 0px ${marginBottom};
+      padding: ${paddingTop} ${paddingRight} ${paddingBottom} ${paddingLeft};
+      border-radius: ${borderRadius};
+      background: ${bgColor};
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: pre;
+      font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', Consolas, 'Liberation Mono', monospace;
+      text-align: left;
+    `.trim().replace(/\s+/g, ' ')
 
     docPre.setAttribute('style', preStyle)
 
-    // ⭐ 关键：在 code 元素上设置所有样式（完全匹配有效案例）
-    // display: -webkit-box 是实现横向滚动的关键属性
-    // font-family 确保使用等宽字体，防止单引号等字符被转换
+    // ⭐ code 元素样式：从 code 元素读取样式
+    const previewCode = previewPre.querySelector('code')
     const docCode = docPre.querySelector('code')
-    if (docCode) {
-      const codeStyle = `overflow-x: auto; padding: ${padding || '15px 16px 16px'}; color: ${color}; background: ${bgColor}; border-radius: ${borderRadius}; display: -webkit-box; font-family: Consolas, Monaco, 'Courier New', monospace; font-size: ${fontSize}; margin-bottom: 0px; line-height: ${lineHeight};`
+    if (previewCode && docCode) {
+      const codeComputed = window.getComputedStyle(previewCode)
+      const color = codeComputed.getPropertyValue('color')
+      const fontSize = codeComputed.getPropertyValue('font-size')
+      const lineHeight = codeComputed.getPropertyValue('line-height')
+
+      const codeStyle = `
+        padding: 0;
+        background: transparent;
+        color: ${color};
+        font-size: ${fontSize};
+        line-height: ${lineHeight};
+        font-family: inherit;
+        font-weight: 400;
+        display: block;
+      `.trim().replace(/\s+/g, ' ')
+
       docCode.setAttribute('style', codeStyle)
     }
   })
