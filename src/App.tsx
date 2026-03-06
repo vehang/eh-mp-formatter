@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import html2pdf from 'html2pdf.js'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
 import { BrandLogo } from './components/BrandLogo'
 import { UrlFetchModal } from './components/UrlFetchModal'
@@ -277,6 +278,8 @@ function App() {
   const [isThemePickerOpen, setIsThemePickerOpen] = useState(false)
   const [isCodeStylePickerOpen, setIsCodeStylePickerOpen] = useState(false)
   const [isImageHostModalOpen, setIsImageHostModalOpen] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const previewRef = useRef<HTMLDivElement>(null)
 
   // 图床管理
   const {
@@ -376,6 +379,67 @@ function App() {
       toast.showToast('排版已复制，直接粘贴到公众号', 'success')
     } catch {
       toast.showToast('复制失败，请重试', 'error')
+    }
+  }
+
+  const handleDownloadPDF = async () => {
+    if (!previewRef.current || isDownloading) return
+
+    setIsDownloading(true)
+    toast.showToast('正在生成 PDF...', 'success')
+
+    try {
+      const previewEl = previewRef.current.querySelector('.mp-preview') as HTMLElement
+      if (!previewEl) {
+        toast.showToast('生成失败，请重试', 'error')
+        return
+      }
+
+      // 克隆元素以避免影响原预览
+      const clone = previewEl.cloneNode(true) as HTMLElement
+
+      // 创建临时容器
+      const container = document.createElement('div')
+      container.style.cssText = `
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        width: 800px;
+        padding: 40px;
+        background: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      `
+      container.appendChild(clone)
+      document.body.appendChild(container)
+
+      // 生成 PDF
+      const opt = {
+        margin: [15, 15, 15, 15] as [number, number, number, number],
+        filename: `markdown-formatter-${Date.now()}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          letterRendering: true
+        },
+        jsPDF: {
+          unit: 'mm' as const,
+          format: 'a4' as const,
+          orientation: 'portrait' as const
+        }
+      }
+
+      await html2pdf().set(opt).from(container).save()
+
+      // 清理临时容器
+      document.body.removeChild(container)
+
+      toast.showToast('PDF 下载成功', 'success')
+    } catch {
+      toast.showToast('PDF 生成失败，请重试', 'error')
+    } finally {
+      setIsDownloading(false)
     }
   }
 
@@ -664,6 +728,31 @@ function App() {
 
             <div className="flex-1" />
 
+            {/* 下载 PDF 按钮 */}
+            <button
+              className="btn btn-ghost"
+              onClick={handleDownloadPDF}
+              disabled={isDownloading}
+              title="下载 PDF"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 10px',
+                fontSize: '13px',
+                color: isDownloading ? 'var(--text-muted)' : 'var(--text-secondary)',
+                border: '1px solid var(--border-default)',
+                opacity: isDownloading ? 0.6 : 1
+              }}
+            >
+              {isDownloading ? (
+                <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
+              ) : (
+                <span className="iconify icon-sm" data-icon="lucide:download"></span>
+              )}
+              下载 PDF
+            </button>
+
             {/* 复制排版按钮 */}
             <button
               className="btn btn-primary"
@@ -689,6 +778,7 @@ function App() {
             }}
           >
             <div
+              ref={previewRef}
               className="card"
               style={{
                 width: previewMode === 'mobile' ? '375px' : previewMode === 'pad' ? '768px' : '100%',
