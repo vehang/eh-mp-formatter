@@ -312,40 +312,49 @@ function App() {
         return
       }
 
-      // 克隆预览元素
-      const clone = previewEl.cloneNode(true) as HTMLElement
-
-      // 完整的关键样式属性列表
-      const importantStyles = [
-        // 文字样式
+      // 公众号支持的 CSS 属性（白名单）
+      const supportedProps = new Set([
+        // 文字样式 - 公众号完全支持
         'color', 'font-size', 'font-weight', 'font-family', 'font-style',
         'line-height', 'text-align', 'text-decoration', 'letter-spacing',
-        'white-space', 'word-break', 'word-wrap',
-        // 盒模型
+        // 盒模型 - 公众号支持
         'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
         'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-        'width', 'max-width', 'min-width', 'height', 'max-height', 'min-height',
-        // 边框
+        // 边框 - 公众号支持
         'border', 'border-width', 'border-style', 'border-color',
         'border-top', 'border-top-width', 'border-top-style', 'border-top-color',
         'border-right', 'border-right-width', 'border-right-style', 'border-right-color',
         'border-bottom', 'border-bottom-width', 'border-bottom-style', 'border-bottom-color',
         'border-left', 'border-left-width', 'border-left-style', 'border-left-color',
-        'border-radius', 'border-top-left-radius', 'border-top-right-radius',
-        'border-bottom-left-radius', 'border-bottom-right-radius',
-        // 背景
-        'background', 'background-color', 'background-image',
-        // 布局
-        'display', 'position', 'top', 'right', 'bottom', 'left',
-        'flex', 'flex-direction', 'flex-wrap', 'justify-content', 'align-items',
-        'float', 'clear', 'overflow', 'overflow-x', 'overflow-y',
-        'vertical-align',
-        // 列表
-        'list-style', 'list-style-type', 'list-style-position',
+        'border-radius',
+        // 背景 - 公众号支持
+        'background-color',
+        // 列表 - 公众号支持
+        'list-style-type',
+        // 表格 - 公众号支持
+        'border-collapse', 'border-spacing',
         // 其他
-        'opacity', 'box-shadow', 'text-shadow', 'visibility',
-        'border-collapse', 'border-spacing', 'empty-cells', 'table-layout'
-      ]
+        'vertical-align', 'white-space'
+      ])
+
+      // 需要特殊处理的属性（值需要转换）
+      const needsValueConversion = (_prop: string, value: string): string => {
+        // 处理 rem/em 单位转换为 px
+        if (value.includes('rem') || value.includes('em')) {
+          const num = parseFloat(value)
+          if (!isNaN(num)) {
+            if (value.includes('rem')) {
+              return `${num * 16}px`
+            } else if (value.includes('em') && !value.includes('rem')) {
+              return `${num * 16}px`
+            }
+          }
+        }
+        return value
+      }
+
+      // 克隆预览元素
+      const clone = previewEl.cloneNode(true) as HTMLElement
 
       // 递归内联所有元素的样式
       const inlineStyles = (element: Element) => {
@@ -353,41 +362,120 @@ function App() {
         if (el.nodeType !== Node.ELEMENT_NODE) return
 
         const computedStyle = window.getComputedStyle(el)
+        const styles: string[] = []
 
-        // 内联所有关键样式
-        importantStyles.forEach(prop => {
-          const value = computedStyle.getPropertyValue(prop)
-          // 过滤掉无效值
-          if (value && value !== 'none' && value !== 'normal' && value !== 'auto' &&
-              value !== 'initial' && value !== 'inherit' && value !== 'transparent') {
-            el.style.setProperty(prop, value, 'important')
+        // 遍历所有支持的属性
+        supportedProps.forEach(prop => {
+          let value = computedStyle.getPropertyValue(prop)
+
+          // 跳过无效值
+          if (!value ||
+              value === 'none' ||
+              value === 'auto' ||
+              value === 'initial' ||
+              value === 'inherit' ||
+              value === 'transparent' ||
+              (value === '0px' && (prop.includes('margin') || prop.includes('padding')))) {
+            return
           }
+
+          // 转换值
+          value = needsValueConversion(prop, value)
+
+          styles.push(`${prop}: ${value}`)
         })
 
-        // 特殊处理：确保代码块的背景色被正确设置
-        if (el.classList.contains('hljs') || el.tagName === 'PRE') {
+        // 特殊处理：代码块（pre 和 hljs）- 确保背景色和圆角
+        if (el.tagName === 'PRE' || el.classList.contains('hljs')) {
           const bgColor = computedStyle.getPropertyValue('background-color')
           if (bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)') {
-            el.style.setProperty('background-color', bgColor, 'important')
+            styles.push(`background-color: ${bgColor}`)
+          }
+          // 添加代码块特有的样式
+          const borderRadius = computedStyle.getPropertyValue('border-radius')
+          if (borderRadius && borderRadius !== '0px') {
+            styles.push(`border-radius: ${borderRadius}`)
+          }
+          const padding = computedStyle.getPropertyValue('padding')
+          if (padding && padding !== '0px') {
+            styles.push(`padding: ${padding}`)
           }
         }
 
-        // 递归处理所有子元素（包括文本节点）
+        // 特殊处理：代码块内的 span 元素（语法高亮）- 确保颜色被内联
+        if (el.tagName === 'SPAN' && el.closest && el.closest('pre, .hljs')) {
+          const color = computedStyle.getPropertyValue('color')
+          if (color && color !== 'rgb(0, 0, 0)' && color !== '#000000' && color !== '#000') {
+            styles.push(`color: ${color}`)
+          }
+          const fontStyle = computedStyle.getPropertyValue('font-style')
+          if (fontStyle && fontStyle !== 'normal') {
+            styles.push(`font-style: ${fontStyle}`)
+          }
+          const fontWeight = computedStyle.getPropertyValue('font-weight')
+          if (fontWeight && fontWeight !== '400' && fontWeight !== 'normal') {
+            styles.push(`font-weight: ${fontWeight}`)
+          }
+        }
+
+        // 特殊处理：引用块左边框
+        if (el.tagName === 'BLOCKQUOTE') {
+          const borderLeft = computedStyle.getPropertyValue('border-left-width')
+          const borderStyle = computedStyle.getPropertyValue('border-left-style')
+          const borderColor = computedStyle.getPropertyValue('border-left-color')
+          if (borderLeft && borderStyle && borderColor) {
+            styles.push(`border-left: ${borderLeft} ${borderStyle} ${borderColor}`)
+          }
+          const bg = computedStyle.getPropertyValue('background-color')
+          if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+            styles.push(`background-color: ${bg}`)
+          }
+          const padding = computedStyle.getPropertyValue('padding')
+          if (padding && padding !== '0px') {
+            styles.push(`padding: ${padding}`)
+          }
+          const borderRadius = computedStyle.getPropertyValue('border-radius')
+          if (borderRadius && borderRadius !== '0px') {
+            styles.push(`border-radius: ${borderRadius}`)
+          }
+        }
+
+        // 特殊处理：表格
+        if (el.tagName === 'TH' || el.tagName === 'TD') {
+          const bg = computedStyle.getPropertyValue('background-color')
+          if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+            styles.push(`background-color: ${bg}`)
+          }
+        }
+
+        // 设置内联样式
+        if (styles.length > 0) {
+          el.setAttribute('style', styles.join('; ') + ';')
+        }
+
+        // 移除 class 属性（公众号会过滤）
+        el.removeAttribute('class')
+        el.removeAttribute('data-theme')
+
+        // 递归处理所有子元素
         Array.from(el.children).forEach(child => inlineStyles(child))
       }
 
-      // 先设置克隆元素本身的样式
-      const rootStyle = window.getComputedStyle(previewEl)
-      clone.style.cssText = ''
-      importantStyles.forEach(prop => {
-        const value = rootStyle.getPropertyValue(prop)
-        if (value && value !== 'none' && value !== 'normal' && value !== 'auto' &&
-            value !== 'initial' && value !== 'inherit') {
-          clone.style.setProperty(prop, value, 'important')
-        }
-      })
-      clone.style.setProperty('background-color', '#ffffff', 'important')
-      clone.style.setProperty('color', '#1F2937', 'important')
+      // 处理克隆元素本身
+      const rootStyles: string[] = [
+        'background-color: #ffffff',
+        'color: #1F2937',
+        'font-size: 16px',
+        'line-height: 1.8',
+        'padding: 20px'
+      ]
+
+      // 添加字体
+      rootStyles.push("font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif")
+
+      clone.setAttribute('style', rootStyles.join('; ') + ';')
+      clone.removeAttribute('class')
+      clone.removeAttribute('data-theme')
 
       // 内联所有子元素样式
       inlineStyles(clone)
