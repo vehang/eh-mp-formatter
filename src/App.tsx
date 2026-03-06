@@ -541,7 +541,8 @@ function App() {
                   alignItems: 'center', 
                   gap: '6px', 
                   padding: '4px 8px', 
-                  fontSize: '13px'
+                  fontSize: '13px',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:monitor"></span>
@@ -556,7 +557,8 @@ function App() {
                   alignItems: 'center', 
                   gap: '6px', 
                   padding: '4px 8px', 
-                  fontSize: '13px'
+                  fontSize: '13px',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:tablet"></span>
@@ -571,7 +573,8 @@ function App() {
                   alignItems: 'center', 
                   gap: '6px', 
                   padding: '4px 8px', 
-                  fontSize: '13px'
+                  fontSize: '13px',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 <span className="iconify icon-sm" data-icon="lucide:smartphone"></span>
