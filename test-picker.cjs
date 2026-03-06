@@ -8,76 +8,122 @@ async function main() {
   // Navigate to the app
   await page.goto('http://localhost:5173');
   await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(2000); // Wait for React to render
 
   // Take initial screenshot
   await page.screenshot({ path: '/tmp/01_initial.png', fullPage: true });
   console.log('✅ Initial page loaded');
 
-  // Find and click the code style button
-  const codeStyleButton = page.locator('button:has-text("代码样式")').first();
-  await codeStyleButton.click();
-  await page.waitForTimeout(500);
-  console.log('✅ Clicked code style button');
+  // List all buttons to find the code style button
+  const buttons = await page.locator('button').all();
+  console.log(`\nFound ${buttons.length} buttons:`);
+  for (let i = 0; i < buttons.length; i++) {
+    const text = await buttons[i].innerText();
+    console.log(`  ${i + 1}. "${text}"`);
+  }
 
-  // Wait for modal to appear
-  await page.waitForSelector('.theme-picker-modal', { timeout: 5000 });
-  await page.waitForTimeout(500);
+  // Try to find code style button by various selectors
+  let codeStyleButton = null;
 
-  // Take screenshot of the modal
-  await page.screenshot({ path: '/tmp/02_code_style_modal.png', fullPage: true });
-  console.log('✅ Code style modal opened');
+  // Try different selectors
+  const selectors = [
+    'button:has-text("代码样式")',
+    'button:has-text("Code Style")',
+    'button:has-text("style")',
+    '[data-testid="code-style-button"]',
+    'button[aria-label*="style"]',
+    'button[aria-label*="代码"]'
+  ];
 
-  // Get all code style cards
-  const cards = await page.locator('.theme-card').all();
-  console.log(`\n✅ Found ${cards.length} code style cards`);
-
-  // Check each card's preview element
-  for (let i = 0; i < cards.length; i++) {
-    const card = cards[i];
-    const cardName = await card.locator('.theme-card-name').innerText();
-    const preview = card.locator('.code-style-preview');
-
-    // Check if preview has content by checking its innerHTML
-    const previewHTML = await preview.evaluate(el => el.innerHTML);
-    console.log(`\nCard ${i + 1}: ${cardName}`);
-    console.log(`  Preview HTML length: ${previewHTML.length} chars`);
-
-    // Check if shadow root exists and has content
-    const shadowContent = await preview.evaluate(el => {
-      if (el.shadowRoot) {
-        return {
-          hasShadowRoot: true,
-          innerHTML: el.shadowRoot.innerHTML.substring(0, 200)
-        };
-      }
-      return { hasShadowRoot: false };
-    });
-    console.log(`  Has Shadow DOM: ${shadowContent.hasShadowRoot}`);
-    if (shadowContent.hasShadowRoot) {
-      console.log(`  Shadow content preview: ${shadowContent.innerHTML.substring(0, 100)}...`);
+  for (const selector of selectors) {
+    const btn = page.locator(selector).first();
+    if (await btn.count() > 0) {
+      codeStyleButton = btn;
+      console.log(`\n✅ Found code style button with selector: ${selector}`);
+      break;
     }
   }
 
-  // Take a focused screenshot of just the modal
-  const modal = page.locator('.theme-picker-modal');
-  await modal.screenshot({ path: '/tmp/03_modal_focused.png' });
-  console.log('\n✅ Saved focused modal screenshot');
+  if (!codeStyleButton) {
+    // Look for buttons with specific icons
+    console.log('\nLooking for buttons with code-related icons...');
+    const buttonHTMLs = await page.evaluate(() => {
+      const buttons = document.querySelectorAll('button');
+      return Array.from(buttons).map(btn => ({
+        text: btn.innerText,
+        html: btn.innerHTML.substring(0, 200)
+      }));
+    });
 
-  // Close modal with ESC
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-  await page.screenshot({ path: '/tmp/04_after_close.png', fullPage: true });
-  console.log('✅ Modal closed with ESC');
+    for (const btn of buttonHTMLs) {
+      if (btn.html.includes('code') || btn.html.includes('Code')) {
+        console.log(`Potential button: "${btn.text}"`);
+        console.log(`  HTML: ${btn.html}`);
+      }
+    }
+
+    // Take screenshot for debugging
+    await page.screenshot({ path: '/tmp/02_debug.png', fullPage: true });
+    console.log('\n📸 Debug screenshot saved to /tmp/02_debug.png');
+  } else {
+    await codeStyleButton.click();
+    await page.waitForTimeout(500);
+    console.log('✅ Clicked code style button');
+
+    // Wait for modal to appear
+    await page.waitForSelector('.theme-picker-modal', { timeout: 5000 });
+    await page.waitForTimeout(500);
+
+    // Take screenshot of the modal
+    await page.screenshot({ path: '/tmp/02_code_style_modal.png', fullPage: true });
+    console.log('✅ Code style modal opened');
+
+    // Get all code style cards
+    const cards = await page.locator('.theme-card').all();
+    console.log(`\n✅ Found ${cards.length} code style cards`);
+
+    // Check each card's preview element
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      const cardName = await card.locator('.theme-card-name').innerText();
+      const preview = card.locator('.code-style-preview');
+
+      // Check if shadow root exists and has content
+      const shadowInfo = await preview.evaluate(el => {
+        if (el.shadowRoot) {
+          const style = el.shadowRoot.querySelector('style');
+          const pre = el.shadowRoot.querySelector('pre');
+          return {
+            hasShadowRoot: true,
+            hasStyle: !!style,
+            hasPre: !!pre,
+            styleLength: style ? style.textContent.length : 0,
+            preHTML: pre ? pre.innerHTML.substring(0, 100) : ''
+          };
+        }
+        return { hasShadowRoot: false };
+      });
+
+      console.log(`\nCard ${i + 1}: ${cardName}`);
+      console.log(`  Has Shadow DOM: ${shadowInfo.hasShadowRoot}`);
+      if (shadowInfo.hasShadowRoot) {
+        console.log(`  Has <style>: ${shadowInfo.hasStyle}`);
+        console.log(`  Has <pre>: ${shadowInfo.hasPre}`);
+        console.log(`  Style length: ${shadowInfo.styleLength} chars`);
+      }
+    }
+
+    // Take a focused screenshot of just the modal
+    const modal = page.locator('.theme-picker-modal');
+    await modal.screenshot({ path: '/tmp/03_modal_focused.png' });
+    console.log('\n✅ Saved focused modal screenshot');
+  }
 
   await browser.close();
 }
 
 main().then(() => {
-  console.log('\n📸 Screenshots saved to /tmp/:');
-  console.log('  - 01_initial.png');
-  console.log('  - 02_code_style_modal.png');
-  console.log('  - 03_modal_focused.png');
-  console.log('  - 04_after_close.png');
+  console.log('\n📸 Test completed');
 }).catch(err => {
   console.error('Error:', err);
   process.exit(1);
