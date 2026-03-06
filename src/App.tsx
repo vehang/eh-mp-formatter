@@ -7,6 +7,7 @@ import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useAutoSave } from './hooks/useAutoSave'
 import { useUITheme } from './hooks/useUITheme'
+import { useSyncScroll } from './hooks/useSyncScroll'
 import { parseMarkdown } from './utils/markdown'
 import { makeWeChatCompatible, applyInlineStyles } from './lib/wechatCompat'
 import { fetchUrlContent } from './utils/urlFetcher'
@@ -260,8 +261,16 @@ function App() {
   })
   const [previewMode, setPreviewMode] = useState<'mobile' | 'pad' | 'desktop'>('desktop')
   const [codeStyle, setCodeStyle] = useState('github-dark')
+  const [syncScroll, setSyncScroll] = useState(true) // 默认开启同步滚动
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
   const [isFetchingUrl, setIsFetchingUrl] = useState(false)
+
+  // 同步滚动
+  useSyncScroll({
+    enabled: syncScroll,
+    editorSelector: '.codemirror-editor',
+    previewSelector: '.preview-scroll-container',
+  })
 
   const toast = useToast()
   const { savedAt, isSaving } = useAutoSave('markdown-content', markdown, 2000)
@@ -460,6 +469,23 @@ function App() {
               </select>
             </div>
 
+            {/* 同步滚动开关 */}
+            <button
+              onClick={() => setSyncScroll(!syncScroll)}
+              className={`btn btn-ghost btn-icon ${syncScroll ? 'sync-active' : ''}`}
+              title={syncScroll ? '关闭同步滚动' : '开启同步滚动'}
+              style={{
+                padding: '4px 8px',
+                fontSize: '12px',
+                gap: '4px',
+                color: syncScroll ? 'var(--orange-500)' : 'var(--text-muted)',
+                background: syncScroll ? 'var(--color-primary-muted)' : 'transparent',
+              }}
+            >
+              <span className="iconify icon-sm" data-icon={syncScroll ? 'lucide:link' : 'lucide:link-off'}></span>
+              {syncScroll ? '跟随' : '独立'}
+            </button>
+
             <div className="flex-1" />
             
             <button
@@ -568,7 +594,7 @@ function App() {
               }}
             >
               <div
-                className="overflow-auto theme-transition"
+                className="overflow-auto theme-transition preview-scroll-container"
                 style={{
                   padding: 'var(--space-6)',
                   maxHeight: 'calc(100vh - 180px)'
