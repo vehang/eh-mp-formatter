@@ -207,6 +207,7 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
 
     // ⭐ 关键：在 code 元素上设置 overflow-x: auto 和 display: -webkit-box
     // 这是实现横向滚动的正确方式！
+    // white-space: pre 是防止代码换行的关键！
     const docCode = docPre.querySelector('code')
     if (docCode) {
       const codeStyle = `
@@ -216,6 +217,7 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
         background: ${bgColor};
         border-radius: ${borderRadius};
         display: -webkit-box;
+        white-space: pre;
         font-family: ${fontFamily};
         font-size: ${fontSize};
         line-height: ${lineHeight};
