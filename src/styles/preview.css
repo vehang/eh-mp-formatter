@@ -278,7 +278,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 .mp-preview a {
-  color: var(--theme-accent, #4F46E5);
+  color: var(--theme-accent, #4F46E5) !important;
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 0.2s ease;
@@ -321,7 +321,7 @@
 
 .mp-preview em {
   font-style: italic;
-  color: var(--theme-text-light, #64748B);
+  color: var(--theme-text-light, #64748B) !important;
 }
 
 .mp-preview del {
