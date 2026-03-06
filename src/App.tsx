@@ -2,16 +2,18 @@ import { useState, useMemo, useEffect } from 'react'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
 import { BrandLogo } from './components/BrandLogo'
 import { UrlFetchModal } from './components/UrlFetchModal'
+import { ThemePickerModal } from './components/ThemePickerModal'
 import { useToast } from './components/Toast'
 import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useAutoSave } from './hooks/useAutoSave'
 import { useUITheme } from './hooks/useUITheme'
 import { useSyncScroll } from './hooks/useSyncScroll'
+import { useSettings } from './hooks/useSettings'
 import { parseMarkdown } from './utils/markdown'
 import { makeWeChatCompatible, applyInlineStyles } from './lib/wechatCompat'
 import { fetchUrlContent } from './utils/urlFetcher'
-import { themes, applyTheme, defaultTheme } from './themes'
+import { themes, applyTheme, getThemeById } from './themes'
 import type { Theme } from './themes/types'
 import './styles/preview.css'
 import './App.css'
@@ -256,16 +258,20 @@ $$
 function App() {
   const { value: markdown, setValue: setMarkdown, undo, redo, canUndo, canRedo } = useHistory(defaultMarkdown)
   const uiTheme = useUITheme()
+  const settings = useSettings()
+
+  // 从缓存中加载主题
   const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
     const params = new URLSearchParams(window.location.search)
-    const themeId = params.get('theme')
-    return themes.find(t => t.id === themeId) || defaultTheme
+    const themeId = params.get('theme') || settings.themeId
+    return getThemeById(themeId) || themes[0]
   })
-  const [previewMode, setPreviewMode] = useState<'mobile' | 'pad' | 'desktop'>('desktop')
-  const [codeStyle, setCodeStyle] = useState('github-dark')
-  const [syncScroll, setSyncScroll] = useState(true) // 默认开启同步滚动
+  const [previewMode, setPreviewMode] = useState<'mobile' | 'pad' | 'desktop'>(settings.previewMode)
+  const [codeStyle, setCodeStyle] = useState(settings.codeStyle)
+  const [syncScroll, setSyncScroll] = useState(settings.syncScroll)
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
   const [isFetchingUrl, setIsFetchingUrl] = useState(false)
+  const [isThemePickerOpen, setIsThemePickerOpen] = useState(false)
 
   // 同步滚动
   useSyncScroll({
@@ -287,12 +293,19 @@ function App() {
     loadCodeStyle(codeStyle)
   }, [codeStyle])
 
-  const handleThemeChange = (themeId: string) => {
-    const theme = themes.find(t => t.id === themeId)
-    if (theme) {
-      setCurrentTheme(theme)
-      applyTheme(theme)
-    }
+  // 保存预览模式到缓存
+  useEffect(() => {
+    localStorage.setItem('mp-formatter-settings', JSON.stringify({
+      themeId: currentTheme.id,
+      codeStyle,
+      previewMode,
+      syncScroll
+    }))
+  }, [previewMode, syncScroll, codeStyle, currentTheme.id])
+
+  const handleSelectTheme = (theme: Theme) => {
+    setCurrentTheme(theme)
+    applyTheme(theme)
   }
 
   const handleClear = () => {
@@ -441,20 +454,25 @@ function App() {
 
             <div className="toolbar-divider" style={{ margin: '0 4px' }} />
 
-            {/* 主题选择 */}
-            <div className="flex items-center gap-1">
-              <span className="iconify icon-sm" data-icon="lucide:palette" style={{ color: 'var(--text-muted)' }}></span>
-              <select
-                value={currentTheme.id}
-                onChange={(e) => handleThemeChange(e.target.value)}
-                className="select"
-                style={{ minWidth: '90px', fontSize: '12px', padding: '4px 8px' }}
-              >
-                {themes.map(theme => (
-                  <option key={theme.id} value={theme.id}>{theme.name}</option>
-                ))}
-              </select>
-            </div>
+            {/* 主题选择 - 点击打开弹窗 */}
+            <button
+              onClick={() => setIsThemePickerOpen(true)}
+              className="btn btn-ghost"
+              title="选择配色主题"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 10px',
+                fontSize: '12px',
+                background: 'var(--color-primary-muted)',
+                color: 'var(--orange-500)',
+                border: '1px solid var(--orange-500)'
+              }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:palette"></span>
+              {currentTheme.name}
+            </button>
 
             {/* 代码风格 */}
             <div className="flex items-center gap-1">
@@ -670,6 +688,15 @@ function App() {
         onClose={() => setIsUrlModalOpen(false)}
         onFetch={handleFetchUrl}
         isLoading={isFetchingUrl}
+      />
+
+      {/* 主题选择弹窗 */}
+      <ThemePickerModal
+        isOpen={isThemePickerOpen}
+        onClose={() => setIsThemePickerOpen(false)}
+        themes={themes}
+        currentTheme={currentTheme}
+        onSelectTheme={handleSelectTheme}
       />
     </div>
   )
