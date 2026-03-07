@@ -5,6 +5,7 @@ import { UrlFetchModal } from './components/UrlFetchModal'
 import { ThemePickerModal } from './components/ThemePickerModal'
 import { CodeStylePickerModal } from './components/CodeStylePickerModal'
 import { ImageHostConfigModal } from './components/ImageHostConfigModal'
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal'
 import { useToast } from './components/Toast'
 import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
@@ -277,6 +278,7 @@ function App() {
   const [isThemePickerOpen, setIsThemePickerOpen] = useState(false)
   const [isCodeStylePickerOpen, setIsCodeStylePickerOpen] = useState(false)
   const [isImageHostModalOpen, setIsImageHostModalOpen] = useState(false)
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
 
@@ -912,6 +914,25 @@ function App() {
               </>
             )}
 
+            {/* 快捷键按钮 */}
+            <button
+              onClick={() => setIsShortcutsModalOpen(true)}
+              className="btn btn-ghost"
+              title="键盘快捷键"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: isMobile ? '6px' : '4px 10px',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-default)'
+              }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:keyboard"></span>
+              {!isMobile && '快捷键'}
+            </button>
+
             {/* 主题选择 - 手机模式只显示图标 */}
             <button
               onClick={() => setIsThemePickerOpen(true)}
@@ -1308,6 +1329,12 @@ function App() {
         onUpdateConfig={updateHostConfig}
         onSetDefault={setDefaultHost}
         onClearConfig={clearHostConfig}
+      />
+
+      {/* 键盘快捷键弹窗 */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
       />
     </div>
   )
