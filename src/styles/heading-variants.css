@@ -1019,3 +1019,479 @@
   font-size: 10px;
   opacity: 0.6;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   13. nordic - 北欧极简风格（slate/nord 主题）
+   特点：冰雪极简、清冷线条、留白艺术
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-heading-style="nordic"] .mp-preview h1 {
+  font-size: 32px;
+  font-weight: 300;
+  padding: 16px 0;
+  margin: 32px 0 20px;
+  letter-spacing: -0.02em;
+  position: relative;
+}
+
+[data-heading-style="nordic"] .mp-preview h1::before {
+  display: none;
+}
+
+[data-heading-style="nordic"] .mp-preview h1::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 1px;
+  margin-top: 16px;
+  background: var(--theme-primary);
+  opacity: 0.4;
+}
+
+[data-heading-style="nordic"] .mp-preview h2 {
+  font-weight: 400;
+  font-size: 22px;
+  padding-left: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
+}
+
+[data-heading-style="nordic"] .mp-preview h2::before {
+  display: none;
+}
+
+[data-heading-style="nordic"] .mp-preview h2::after {
+  display: none;
+}
+
+[data-heading-style="nordic"] .mp-preview h3 {
+  font-weight: 500;
+  font-size: 18px;
+  padding: 0;
+  background: none;
+  border-left: none;
+  border-radius: 0;
+}
+
+[data-heading-style="nordic"] .mp-preview h4 {
+  font-weight: 500;
+  color: var(--theme-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   14. retro - 复古经典风格（solarized/gruvbox 主题）
+   特点：复古装饰、双线边框、怀旧纹理
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-heading-style="retro"] .mp-preview h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 28px;
+  font-weight: 700;
+  padding: 16px 24px;
+  margin: 32px 0 20px;
+  text-align: center;
+  border: 3px double var(--theme-primary);
+  position: relative;
+}
+
+[data-heading-style="retro"] .mp-preview h1::before {
+  content: '◆';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--theme-secondary);
+  font-size: 14px;
+  opacity: 0.6;
+  width: auto;
+  height: auto;
+  background: none;
+  border-radius: 0;
+}
+
+[data-heading-style="retro"] .mp-preview h1::after {
+  content: '◆';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--theme-secondary);
+  font-size: 14px;
+  opacity: 0.6;
+  margin-top: 0;
+}
+
+[data-heading-style="retro"] .mp-preview h2 {
+  font-family: Georgia, 'Times New Roman', serif;
+  padding-left: 0;
+  padding-bottom: 12px;
+  border-bottom: none;
+  position: relative;
+}
+
+[data-heading-style="retro"] .mp-preview h2::before {
+  display: none;
+}
+
+[data-heading-style="retro"] .mp-preview h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--theme-primary) 0,
+    var(--theme-primary) 8px,
+    transparent 8px,
+    transparent 12px
+  );
+  opacity: 0.4;
+  border-radius: 0;
+}
+
+[data-heading-style="retro"] .mp-preview h3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  padding: 10px 16px 10px 28px;
+  background: color-mix(in srgb, var(--theme-primary) 6%, transparent);
+  border-left: none;
+  border-radius: 0;
+  position: relative;
+}
+
+[data-heading-style="retro"] .mp-preview h3::before {
+  content: '✦';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--theme-accent);
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   15. code - 代码编辑器风格（monokai/one-dark 主题）
+   特点：终端风格、代码高亮感、等宽字体
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-heading-style="code"] .mp-preview h1 {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  padding: 14px 20px 14px 48px;
+  margin: 32px 0 20px;
+  background: color-mix(in srgb, var(--theme-primary) 8%, #1a1a2e);
+  border-left: 4px solid var(--theme-accent);
+  border-radius: 0 8px 8px 0;
+  position: relative;
+}
+
+[data-heading-style="code"] .mp-preview h1::before {
+  content: '>';
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--theme-secondary);
+  font-weight: 700;
+  font-size: 20px;
+  opacity: 0.7;
+  width: auto;
+  height: auto;
+  background: none;
+  border-radius: 0;
+}
+
+[data-heading-style="code"] .mp-preview h1::after {
+  display: none;
+}
+
+[data-heading-style="code"] .mp-preview h2 {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  padding: 10px 16px 10px 40px;
+  border-bottom: none;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--theme-primary) 5%, transparent) 0%,
+    transparent 80%);
+  position: relative;
+}
+
+[data-heading-style="code"] .mp-preview h2::before {
+  content: '//';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--theme-accent);
+  font-size: 14px;
+  opacity: 0.6;
+  width: auto;
+  height: auto;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-heading-style="code"] .mp-preview h2::after {
+  width: 50px;
+  height: 2px;
+  background: var(--theme-primary);
+  opacity: 0.5;
+  border-radius: 1px;
+}
+
+[data-heading-style="code"] .mp-preview h3 {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  padding: 8px 12px 8px 20px;
+  background: color-mix(in srgb, var(--theme-secondary) 6%, transparent);
+  border-left: 3px solid var(--theme-secondary);
+  border-radius: 0 4px 4px 0;
+  position: relative;
+}
+
+[data-heading-style="code"] .mp-preview h3::before {
+  content: 'fn ';
+  color: var(--theme-accent);
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   13. nordic - 北欧极简风格（slate/nord 主题）
+   特点：冰雪极简、清冷线条、留白艺术
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-heading-style="nordic"] .mp-preview h1 {
+  font-size: 32px;
+  font-weight: 300;
+  padding: 16px 0;
+  margin: 32px 0 20px;
+  letter-spacing: -0.02em;
+  position: relative;
+}
+
+[data-heading-style="nordic"] .mp-preview h1::before {
+  display: none;
+}
+
+[data-heading-style="nordic"] .mp-preview h1::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 1px;
+  margin-top: 16px;
+  background: var(--theme-primary);
+  opacity: 0.4;
+}
+
+[data-heading-style="nordic"] .mp-preview h2 {
+  font-weight: 400;
+  font-size: 22px;
+  padding-left: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
+}
+
+[data-heading-style="nordic"] .mp-preview h2::before {
+  display: none;
+}
+
+[data-heading-style="nordic"] .mp-preview h2::after {
+  display: none;
+}
+
+[data-heading-style="nordic"] .mp-preview h3 {
+  font-weight: 500;
+  font-size: 18px;
+  padding: 0;
+  background: none;
+  border-left: none;
+  border-radius: 0;
+}
+
+[data-heading-style="nordic"] .mp-preview h4 {
+  font-weight: 500;
+  color: var(--theme-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   14. retro - 复古经典风格（solarized/gruvbox 主题）
+   特点：复古装饰、双线边框、怀旧纹理
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-heading-style="retro"] .mp-preview h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 28px;
+  font-weight: 700;
+  padding: 16px 24px;
+  margin: 32px 0 20px;
+  text-align: center;
+  border: 3px double var(--theme-primary);
+  position: relative;
+}
+
+[data-heading-style="retro"] .mp-preview h1::before {
+  content: '◆';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--theme-secondary);
+  font-size: 14px;
+  opacity: 0.6;
+  width: auto;
+  height: auto;
+  background: none;
+  border-radius: 0;
+}
+
+[data-heading-style="retro"] .mp-preview h1::after {
+  content: '◆';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--theme-secondary);
+  font-size: 14px;
+  opacity: 0.6;
+  margin-top: 0;
+}
+
+[data-heading-style="retro"] .mp-preview h2 {
+  font-family: Georgia, 'Times New Roman', serif;
+  padding-left: 0;
+  padding-bottom: 12px;
+  border-bottom: none;
+  position: relative;
+}
+
+[data-heading-style="retro"] .mp-preview h2::before {
+  display: none;
+}
+
+[data-heading-style="retro"] .mp-preview h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--theme-primary) 0,
+    var(--theme-primary) 8px,
+    transparent 8px,
+    transparent 12px
+  );
+  opacity: 0.4;
+  border-radius: 0;
+}
+
+[data-heading-style="retro"] .mp-preview h3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  padding: 10px 16px 10px 28px;
+  background: color-mix(in srgb, var(--theme-primary) 6%, transparent);
+  border-left: none;
+  border-radius: 0;
+  position: relative;
+}
+
+[data-heading-style="retro"] .mp-preview h3::before {
+  content: '✦';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--theme-accent);
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   15. code - 代码编辑器风格（monokai/one-dark 主题）
+   特点：终端风格、代码高亮感、等宽字体
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-heading-style="code"] .mp-preview h1 {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  padding: 14px 20px 14px 48px;
+  margin: 32px 0 20px;
+  background: color-mix(in srgb, var(--theme-primary) 8%, #1a1a2e);
+  border-left: 4px solid var(--theme-accent);
+  border-radius: 0 8px 8px 0;
+  position: relative;
+}
+
+[data-heading-style="code"] .mp-preview h1::before {
+  content: '>';
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--theme-secondary);
+  font-weight: 700;
+  font-size: 20px;
+  opacity: 0.7;
+  width: auto;
+  height: auto;
+  background: none;
+  border-radius: 0;
+}
+
+[data-heading-style="code"] .mp-preview h1::after {
+  display: none;
+}
+
+[data-heading-style="code"] .mp-preview h2 {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  padding: 10px 16px 10px 40px;
+  border-bottom: none;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--theme-primary) 5%, transparent) 0%,
+    transparent 80%);
+  position: relative;
+}
+
+[data-heading-style="code"] .mp-preview h2::before {
+  content: '//';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--theme-accent);
+  font-size: 14px;
+  opacity: 0.6;
+  width: auto;
+  height: auto;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-heading-style="code"] .mp-preview h2::after {
+  width: 50px;
+  height: 2px;
+  background: var(--theme-primary);
+  opacity: 0.5;
+  border-radius: 1px;
+}
+
+[data-heading-style="code"] .mp-preview h3 {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  padding: 8px 12px 8px 20px;
+  background: color-mix(in srgb, var(--theme-secondary) 6%, transparent);
+  border-left: 3px solid var(--theme-secondary);
+  border-radius: 0 4px 4px 0;
+  position: relative;
+}
+
+[data-heading-style="code"] .mp-preview h3::before {
+  content: 'fn ';
+  color: var(--theme-accent);
+  font-size: 13px;
+  opacity: 0.7;
+}
