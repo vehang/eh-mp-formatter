@@ -959,26 +959,6 @@ function App() {
               </>
             )}
 
-            {/* 快捷键按钮 */}
-            <button
-              onClick={() => setIsShortcutsModalOpen(true)}
-              className="btn btn-ghost"
-              title="键盘快捷键"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                padding: isNarrow ? '6px' : '4px 10px',
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                border: '1px solid var(--border-default)'
-              }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:keyboard"></span>
-              {!isNarrow && '快捷键'}
-            </button>
-
             {/* 主题选择 - 窄屏幕只显示图标 */}
             <button
               onClick={() => setIsThemePickerOpen(true)}
@@ -1054,6 +1034,26 @@ function App() {
               >
                 <span className="iconify icon-sm" data-icon={syncScroll ? 'lucide:link' : 'lucide:link-off'}></span>
                 {syncScroll ? '跟随开' : '跟随关'}
+              </button>
+            )}
+
+            {/* 快捷键按钮 - 跟随按钮右侧，只显示图标 */}
+            {!isMobile && (
+              <button
+                onClick={() => setIsShortcutsModalOpen(true)}
+                className="btn btn-ghost"
+                title="键盘快捷键"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-default)'
+                }}
+              >
+                <span className="iconify icon-sm" data-icon="lucide:keyboard"></span>
               </button>
             )}
 

@@ -481,8 +481,12 @@ body {
 .panel-header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  align-content: flex-start;
   min-height: 44px;
   padding: 0 var(--space-4);
+  padding-top: 8px;
+  padding-bottom: 8px;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
 }
