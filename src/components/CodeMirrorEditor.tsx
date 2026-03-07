@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { EditorState } from '@codemirror/state'
 import { EditorView, lineNumbers, highlightActiveLine, highlightActiveLineGutter, keymap } from '@codemirror/view'
 import { markdown } from '@codemirror/lang-markdown'
@@ -12,19 +12,33 @@ interface CodeMirrorEditorProps {
   compactMode?: boolean
 }
 
+// 暴露给父组件的方法
+export interface EditorHandle {
+  insertBold: () => void
+  insertItalic: () => void
+  insertLink: () => void
+  insertImage: () => void
+  insertCode: () => void
+  insertCodeBlock: () => void
+  insertHr: () => void
+  insertQuote: () => void
+  insertText: (text: string) => void
+  focus: () => void
+}
+
 /**
  * 包裹选中文本或插入 Markdown 语法
  */
-function wrapSelection(view: EditorView, prefix: string, suffix: string = prefix): boolean {
+function wrapSelection(view: EditorView, prefix: string, suffix: string = prefix, placeholder?: string): boolean {
   const { from, to } = view.state.selection.main
   const selectedText = view.state.sliceDoc(from, to).toString()
 
   if (from === to) {
     // 没有选中文本，插入占位符
-    const placeholder = prefix.replace(/[!*`#\[\]]/g, '')
+    const defaultPlaceholder = placeholder || prefix.replace(/[!*`#\[\]]/g, '') || '文字'
     view.dispatch({
-      changes: { from, to, insert: `${prefix}${placeholder}${suffix}` },
-      selection: { anchor: from + prefix.length, head: from + prefix.length + placeholder.length },
+      changes: { from, to, insert: `${prefix}${defaultPlaceholder}${suffix}` },
+      selection: { anchor: from + prefix.length, head: from + prefix.length + defaultPlaceholder.length },
     })
   } else {
     // 选中文本，包裹
@@ -39,18 +53,16 @@ function wrapSelection(view: EditorView, prefix: string, suffix: string = prefix
 /**
  * 插入链接语法
  */
-function insertLink(view: EditorView): boolean {
+function insertLinkFn(view: EditorView): boolean {
   const { from, to } = view.state.selection.main
   const selectedText = view.state.sliceDoc(from, to).toString()
 
   if (from === to) {
-    // 没有选中文本，插入占位符
     view.dispatch({
       changes: { from, to, insert: `[链接文字](url)` },
       selection: { anchor: from + 1, head: from + 5 },
     })
   } else {
-    // 选中文本作为链接文字
     view.dispatch({
       changes: { from, to, insert: `[${selectedText}](url)` },
       selection: { anchor: from + selectedText.length + 3, head: to + selectedText.length + 6 },
@@ -62,7 +74,7 @@ function insertLink(view: EditorView): boolean {
 /**
  * 插入图片语法
  */
-function insertImage(view: EditorView): boolean {
+function insertImageFn(view: EditorView): boolean {
   const { from, to } = view.state.selection.main
   const selectedText = view.state.sliceDoc(from, to).toString()
 
@@ -83,7 +95,7 @@ function insertImage(view: EditorView): boolean {
 /**
  * 插入代码块
  */
-function insertCodeBlock(view: EditorView): boolean {
+function insertCodeBlockFn(view: EditorView): boolean {
   const { from, to } = view.state.selection.main
   const selectedText = view.state.sliceDoc(from, to).toString()
 
@@ -96,6 +108,39 @@ function insertCodeBlock(view: EditorView): boolean {
     view.dispatch({
       changes: { from, to, insert: '```\n' + selectedText + '\n```' },
       selection: { anchor: from + 4, head: from + 4 },
+    })
+  }
+  return true
+}
+
+/**
+ * 插入分割线
+ */
+function insertHrFn(view: EditorView): boolean {
+  const { from } = view.state.selection.main
+  view.dispatch({
+    changes: { from, to: from, insert: '\n\n---\n' },
+    selection: { anchor: from + 6 },
+  })
+  return true
+}
+
+/**
+ * 插入引用
+ */
+function insertQuoteFn(view: EditorView): boolean {
+  const { from, to } = view.state.selection.main
+  const selectedText = view.state.sliceDoc(from, to).toString()
+
+  if (from === to) {
+    view.dispatch({
+      changes: { from, to, insert: `> 引用文字` },
+      selection: { anchor: from + 2, head: from + 6 },
+    })
+  } else {
+    view.dispatch({
+      changes: { from, to, insert: `> ${selectedText}` },
+      selection: { anchor: from + 2 + selectedText.length },
     })
   }
   return true
@@ -129,11 +174,9 @@ function deleteLine(view: EditorView): boolean {
   const { from, to } = view.state.selection.main
   const doc = view.state.doc
 
-  // 找到当前行
   const fromLine = doc.lineAt(from)
   const toLine = doc.lineAt(to)
 
-  // 删除整行（包括换行符）
   const deleteFrom = fromLine.from
   const deleteTo = toLine.to
 
@@ -160,19 +203,17 @@ function deleteToEndOfLine(view: EditorView): boolean {
 }
 
 /**
- * 缩进（插入 Tab）
+ * 缩进
  */
 function indent(view: EditorView): boolean {
   const { from, to } = view.state.selection.main
 
   if (from === to) {
-    // 没有选中文本，插入 Tab
     view.dispatch({
       changes: { from, to, insert: '  ' },
       selection: { anchor: from + 2 },
     })
   } else {
-    // 选中文本，在每行开头插入 Tab
     const doc = view.state.doc
     const changes: { from: number; to: number; insert: string }[] = []
     let pos = from
@@ -200,7 +241,6 @@ function unindent(view: EditorView): boolean {
   const changes: { from: number; to: number; insert: string }[] = []
   let offset = 0
 
-  // 处理所有选中的行
   const startLine = doc.lineAt(from)
   const endLine = doc.lineAt(to)
 
@@ -208,7 +248,6 @@ function unindent(view: EditorView): boolean {
     const line = doc.line(lineNum)
     const lineText = line.text
 
-    // 移除行首的空格（最多2个）
     let removeCount = 0
     for (let i = 0; i < 2 && i < lineText.length; i++) {
       if (lineText[i] === ' ') {
@@ -238,212 +277,236 @@ function unindent(view: EditorView): boolean {
  */
 function createMarkdownKeymap() {
   return keymap.of([
-    // Ctrl+B: 加粗
     { key: 'Mod-b', run: (view) => wrapSelection(view, '**') },
-    // Ctrl+I: 斜体
     { key: 'Mod-i', run: (view) => wrapSelection(view, '*') },
-    // Ctrl+K: 插入链接
-    { key: 'Mod-k', run: insertLink },
-    // Ctrl+Shift+I: 插入图片
-    { key: 'Mod-Shift-i', run: insertImage },
-    // Ctrl+`: 行内代码
+    { key: 'Mod-k', run: insertLinkFn },
+    { key: 'Mod-Shift-i', run: insertImageFn },
     { key: 'Mod-`', run: (view) => wrapSelection(view, '`') },
-    // Ctrl+Shift+C: 代码块
-    { key: 'Mod-Shift-c', run: insertCodeBlock },
-    // Ctrl+/: 注释
+    { key: 'Mod-Shift-c', run: insertCodeBlockFn },
     { key: 'Mod-/', run: insertComment },
-    // Ctrl+D: 删除当前行
     { key: 'Mod-d', run: deleteLine },
-    // Ctrl+Shift+K: 删除到行尾
     { key: 'Mod-Shift-k', run: deleteToEndOfLine },
-    // Tab: 缩进
     { key: 'Tab', run: indent },
-    // Shift+Tab: 取消缩进
     { key: 'Shift-Tab', run: unindent },
   ])
 }
 
-export function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste, compactMode = false }: CodeMirrorEditorProps) {
-  const editorRef = useRef<HTMLDivElement>(null)
-  const viewRef = useRef<EditorView | null>(null)
+export const CodeMirrorEditor = forwardRef<EditorHandle, CodeMirrorEditorProps>(
+  function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste, compactMode = false }, ref) {
+    const editorRef = useRef<HTMLDivElement>(null)
+    const viewRef = useRef<EditorView | null>(null)
 
-  useEffect(() => {
-    if (!editorRef.current) return
+    // 暴露方法给父组件
+    useImperativeHandle(ref, () => ({
+      insertBold: () => {
+        if (viewRef.current) wrapSelection(viewRef.current, '**', '**', '加粗文字')
+      },
+      insertItalic: () => {
+        if (viewRef.current) wrapSelection(viewRef.current, '*', '*', '斜体文字')
+      },
+      insertLink: () => {
+        if (viewRef.current) insertLinkFn(viewRef.current)
+      },
+      insertImage: () => {
+        if (viewRef.current) insertImageFn(viewRef.current)
+      },
+      insertCode: () => {
+        if (viewRef.current) wrapSelection(viewRef.current, '`', '`', '代码')
+      },
+      insertCodeBlock: () => {
+        if (viewRef.current) insertCodeBlockFn(viewRef.current)
+      },
+      insertHr: () => {
+        if (viewRef.current) insertHrFn(viewRef.current)
+      },
+      insertQuote: () => {
+        if (viewRef.current) insertQuoteFn(viewRef.current)
+      },
+      insertText: (text: string) => {
+        if (viewRef.current) {
+          const { from, to } = viewRef.current.state.selection.main
+          viewRef.current.dispatch({
+            changes: { from, to, insert: text },
+            selection: { anchor: from + text.length },
+          })
+        }
+      },
+      focus: () => {
+        viewRef.current?.focus()
+      },
+    }), [])
 
-    const state = EditorState.create({
-      doc: value,
-      extensions: [
-        lineNumbers(),
-        highlightActiveLine(),
-        highlightActiveLineGutter(),
-        markdown(),
-        createMarkdownKeymap(),
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            onChange(update.state.doc.toString())
-          }
-        }),
-        EditorView.theme({
-          '&': {
-            height: '100%',
-            fontSize: '14px',
-            background: 'var(--bg-surface)',
-          },
-          '.cm-scroller': {
-            overflow: 'auto',
-            fontFamily: "var(--font-mono)",
-          },
-          '.cm-content': {
-            padding: compactMode ? '8px 0' : '16px 0',
-            caretColor: 'var(--orange-500)',
-          },
-          '.cm-line': {
-            padding: compactMode ? '0 8px' : '0 16px',
-            color: 'var(--text-secondary)',
-          },
-          '.cm-gutters': {
-            backgroundColor: 'transparent',
-            border: 'none',
-            color: 'var(--text-muted)',
-          },
-          '.cm-lineNumbers .cm-gutterElement': {
-            padding: compactMode ? '0 4px 0 8px' : '0 8px 0 16px',
-            minWidth: compactMode ? '28px' : '40px',
-            fontSize: compactMode ? '12px' : '13px',
-          },
-          '.cm-activeLine': {
-            background: 'rgba(255, 255, 255, 0.03)',
-          },
-          '.cm-activeLineGutter': {
-            background: 'transparent',
-            color: 'var(--text-tertiary)',
-          },
-          '.cm-selectionBackground': {
-            background: 'rgba(249, 115, 22, 0.2) !important',
-          },
-          '&.cm-focused .cm-selectionBackground': {
-            background: 'rgba(249, 115, 22, 0.25) !important',
-          },
-          '.cm-cursor': {
-            borderLeftColor: 'var(--orange-500)',
-          },
-          // Markdown 语法高亮
-          '.cm-header': {
-            color: 'var(--orange-400)',
-            fontWeight: '600',
-          },
-          '.cm-strong': {
-            fontWeight: '700',
-            color: 'var(--text-primary)',
-          },
-          '.cm-em': {
-            fontStyle: 'italic',
-          },
-          '.cm-link': {
-            color: 'var(--blue-500)',
-          },
-          '.cm-url': {
-            color: 'var(--text-muted)',
-          },
-          '.cm-quote': {
-            color: 'var(--text-muted)',
-            fontStyle: 'italic',
-          },
-          '.cm-list': {
-            color: 'var(--orange-500)',
-          },
-          '.cm-meta': {
-            color: 'var(--text-muted)',
-          },
-        }),
-        EditorView.lineWrapping,
-        placeholder ? EditorView.contentAttributes.of({ 'data-placeholder': placeholder }) : [],
-        // 处理粘贴事件
-        EditorView.domEventHandlers({
-          paste: (event, view) => {
-            const clipboardData = event.clipboardData
-            if (!clipboardData) return
+    useEffect(() => {
+      if (!editorRef.current) return
 
-            // 检查是否有图片文件
-            const items = clipboardData.items
-            for (let i = 0; i < items.length; i++) {
-              const item = items[i]
-              if (item.type.startsWith('image/')) {
-                const file = item.getAsFile()
-                if (file && onImagePaste) {
-                  event.preventDefault()
-                  onImagePaste(file)
-                  return
+      const state = EditorState.create({
+        doc: value,
+        extensions: [
+          lineNumbers(),
+          highlightActiveLine(),
+          highlightActiveLineGutter(),
+          markdown(),
+          createMarkdownKeymap(),
+          EditorView.updateListener.of((update) => {
+            if (update.docChanged) {
+              onChange(update.state.doc.toString())
+            }
+          }),
+          EditorView.theme({
+            '&': {
+              height: '100%',
+              fontSize: '14px',
+              background: 'var(--bg-surface)',
+            },
+            '.cm-scroller': {
+              overflow: 'auto',
+              fontFamily: "var(--font-mono)",
+            },
+            '.cm-content': {
+              padding: compactMode ? '8px 0' : '16px 0',
+              caretColor: 'var(--orange-500)',
+            },
+            '.cm-line': {
+              padding: compactMode ? '0 8px' : '0 16px',
+              color: 'var(--text-secondary)',
+            },
+            '.cm-gutters': {
+              backgroundColor: 'transparent',
+              border: 'none',
+              color: 'var(--text-muted)',
+            },
+            '.cm-lineNumbers .cm-gutterElement': {
+              padding: compactMode ? '0 4px 0 8px' : '0 8px 0 16px',
+              minWidth: compactMode ? '28px' : '40px',
+              fontSize: compactMode ? '12px' : '13px',
+            },
+            '.cm-activeLine': {
+              background: 'rgba(255, 255, 255, 0.03)',
+            },
+            '.cm-activeLineGutter': {
+              background: 'transparent',
+              color: 'var(--text-tertiary)',
+            },
+            '.cm-selectionBackground': {
+              background: 'rgba(249, 115, 22, 0.2) !important',
+            },
+            '&.cm-focused .cm-selectionBackground': {
+              background: 'rgba(249, 115, 22, 0.25) !important',
+            },
+            '.cm-cursor': {
+              borderLeftColor: 'var(--orange-500)',
+            },
+            '.cm-header': {
+              color: 'var(--orange-400)',
+              fontWeight: '600',
+            },
+            '.cm-strong': {
+              fontWeight: '700',
+              color: 'var(--text-primary)',
+            },
+            '.cm-em': {
+              fontStyle: 'italic',
+            },
+            '.cm-link': {
+              color: 'var(--blue-500)',
+            },
+            '.cm-url': {
+              color: 'var(--text-muted)',
+            },
+            '.cm-quote': {
+              color: 'var(--text-muted)',
+              fontStyle: 'italic',
+            },
+            '.cm-list': {
+              color: 'var(--orange-500)',
+            },
+            '.cm-meta': {
+              color: 'var(--text-muted)',
+            },
+          }),
+          EditorView.lineWrapping,
+          placeholder ? EditorView.contentAttributes.of({ 'data-placeholder': placeholder }) : [],
+          EditorView.domEventHandlers({
+            paste: (event, view) => {
+              const clipboardData = event.clipboardData
+              if (!clipboardData) return
+
+              const items = clipboardData.items
+              for (let i = 0; i < items.length; i++) {
+                const item = items[i]
+                if (item.type.startsWith('image/')) {
+                  const file = item.getAsFile()
+                  if (file && onImagePaste) {
+                    event.preventDefault()
+                    onImagePaste(file)
+                    return
+                  }
                 }
               }
-            }
 
-            // 优先检查是否有 HTML 内容
-            const html = clipboardData.getData('text/html')
-            if (html && html.trim()) {
-              event.preventDefault()
+              const html = clipboardData.getData('text/html')
+              if (html && html.trim()) {
+                event.preventDefault()
 
-              try {
-                const markdown = htmlToMarkdown(html)
-                if (markdown) {
-                  // 插入转换后的 Markdown
+                try {
+                  const markdownText = htmlToMarkdown(html)
+                  if (markdownText) {
+                    const { from, to } = view.state.selection.main
+                    view.dispatch({
+                      changes: { from, to, insert: markdownText },
+                      selection: { anchor: from + markdownText.length },
+                    })
+                    return
+                  }
+                } catch (error) {
+                  console.error('Failed to convert HTML to Markdown:', error)
+                }
+
+                const text = clipboardData.getData('text/plain')
+                if (text) {
                   const { from, to } = view.state.selection.main
                   view.dispatch({
-                    changes: { from, to, insert: markdown },
-                    selection: { anchor: from + markdown.length },
+                    changes: { from, to, insert: text },
+                    selection: { anchor: from + text.length },
                   })
-                  return
                 }
-              } catch (error) {
-                console.error('Failed to convert HTML to Markdown:', error)
               }
-
-              // 如果转换失败，回退到纯文本
-              const text = clipboardData.getData('text/plain')
-              if (text) {
-                const { from, to } = view.state.selection.main
-                view.dispatch({
-                  changes: { from, to, insert: text },
-                  selection: { anchor: from + text.length },
-                })
-              }
-            }
-          },
-        }),
-      ],
-    })
-
-    const view = new EditorView({
-      state,
-      parent: editorRef.current,
-    })
-
-    viewRef.current = view
-
-    return () => {
-      view.destroy()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // 同步外部 value 变化
-  useEffect(() => {
-    if (viewRef.current && viewRef.current.state.doc.toString() !== value) {
-      viewRef.current.dispatch({
-        changes: {
-          from: 0,
-          to: viewRef.current.state.doc.length,
-          insert: value,
-        },
+            },
+          }),
+        ],
       })
-    }
-  }, [value])
 
-  return (
-    <div
-      ref={editorRef}
-      className="h-full w-full codemirror-editor"
-      style={{ height: '100%' }}
-    />
-  )
-}
+      const view = new EditorView({
+        state,
+        parent: editorRef.current,
+      })
+
+      viewRef.current = view
+
+      return () => {
+        view.destroy()
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    useEffect(() => {
+      if (viewRef.current && viewRef.current.state.doc.toString() !== value) {
+        viewRef.current.dispatch({
+          changes: {
+            from: 0,
+            to: viewRef.current.state.doc.length,
+            insert: value,
+          },
+        })
+      }
+    }, [value])
+
+    return (
+      <div
+        ref={editorRef}
+        className="h-full w-full codemirror-editor"
+        style={{ height: '100%' }}
+      />
+    )
+  }
+)

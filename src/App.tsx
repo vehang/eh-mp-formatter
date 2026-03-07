@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import html2pdf from 'html2pdf.js'
-import { CodeMirrorEditor } from './components/CodeMirrorEditor'
+import { CodeMirrorEditor, type EditorHandle } from './components/CodeMirrorEditor'
 import { UrlFetchModal } from './components/UrlFetchModal'
 import { ThemePickerModal } from './components/ThemePickerModal'
 import { CodeStylePickerModal } from './components/CodeStylePickerModal'
@@ -281,19 +281,23 @@ function App() {
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
+  const editorRef = useRef<EditorHandle>(null)
 
   // 手机端适配状态
   const [isMobile, setIsMobile] = useState(false)
+  const [isNarrow, setIsNarrow] = useState(false) // 窄屏幕（需要隐藏按钮文字）
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit')
 
-  // 检测手机模式
+  // 检测屏幕模式
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+    const checkScreen = () => {
+      const width = window.innerWidth
+      setIsMobile(width < 768)
+      setIsNarrow(width < 900)
     }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
+    checkScreen()
+    window.addEventListener('resize', checkScreen)
+    return () => window.removeEventListener('resize', checkScreen)
   }, [])
 
   // 图床管理
@@ -779,22 +783,6 @@ function App() {
     }
   }
 
-  // Markdown 格式化插入函数
-  const insertMarkdown = (prefix: string, suffix: string = prefix, placeholder: string = '') => {
-    // 在末尾插入
-    const newContent = markdown + '\n' + prefix + placeholder + suffix
-    setMarkdown(newContent)
-  }
-
-  const insertBold = () => insertMarkdown('**', '**', '加粗文字')
-  const insertItalic = () => insertMarkdown('*', '*', '斜体文字')
-  const insertLink = () => insertMarkdown('[', '](url)', '链接文字')
-  const insertImage = () => insertMarkdown('![', '](url)', '图片描述')
-  const insertCode = () => insertMarkdown('`', '`', '代码')
-  const insertCodeBlock = () => insertMarkdown('```\n', '\n```', '代码块')
-  const insertHr = () => setMarkdown(markdown + '\n\n---\n')
-  const insertQuote = () => insertMarkdown('> ', '', '引用文字')
-
   // 图片文件上传
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -980,17 +968,18 @@ function App() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: isMobile ? '6px' : '4px 10px',
+                gap: '6px',
+                padding: isNarrow ? '6px' : '4px 10px',
                 fontSize: '12px',
                 color: 'var(--text-secondary)',
                 border: '1px solid var(--border-default)'
               }}
             >
               <span className="iconify icon-sm" data-icon="lucide:keyboard"></span>
-              {!isMobile && '快捷键'}
+              {!isNarrow && '快捷键'}
             </button>
 
-            {/* 主题选择 - 手机模式只显示图标 */}
+            {/* 主题选择 - 窄屏幕只显示图标 */}
             <button
               onClick={() => setIsThemePickerOpen(true)}
               className="btn btn-ghost"
@@ -999,17 +988,17 @@ function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: isMobile ? '6px' : '4px 10px',
+                padding: isNarrow ? '6px' : '4px 10px',
                 fontSize: '12px',
                 color: 'var(--text-secondary)',
                 border: '1px solid var(--border-default)'
               }}
             >
               <span className="iconify icon-sm" data-icon="lucide:palette"></span>
-              {!isMobile && currentTheme.name}
+              {!isNarrow && currentTheme.name}
             </button>
 
-            {/* 代码风格 - 手机模式只显示图标 */}
+            {/* 代码风格 - 窄屏幕只显示图标 */}
             <button
               onClick={() => setIsCodeStylePickerOpen(true)}
               className="btn btn-ghost"
@@ -1018,17 +1007,17 @@ function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: isMobile ? '6px' : '4px 10px',
+                padding: isNarrow ? '6px' : '4px 10px',
                 fontSize: '12px',
                 color: 'var(--text-secondary)',
                 border: '1px solid var(--border-default)'
               }}
             >
               <span className="iconify icon-sm" data-icon="lucide:code-2"></span>
-              {!isMobile && (codeStyles.find(s => s.id === codeStyle)?.name || '代码样式')}
+              {!isNarrow && (codeStyles.find(s => s.id === codeStyle)?.name || '代码样式')}
             </button>
 
-            {/* 图床配置 - 手机模式只显示图标 */}
+            {/* 图床配置 - 窄屏幕只显示图标 */}
             <button
               onClick={() => setIsImageHostModalOpen(true)}
               className="btn btn-ghost"
@@ -1037,14 +1026,14 @@ function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: isMobile ? '6px' : '4px 10px',
+                padding: isNarrow ? '6px' : '4px 10px',
                 fontSize: '12px',
                 color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-secondary)',
                 border: '1px solid var(--border-default)'
               }}
             >
               <span className="iconify icon-sm" data-icon="lucide:image-up"></span>
-              {!isMobile && '图床'}
+              {!isNarrow && '图床'}
             </button>
 
             {/* 同步滚动开关 - 手机模式隐藏 */}
@@ -1099,7 +1088,7 @@ function App() {
             }}
           >
             <button
-              onClick={insertBold}
+              onClick={() => editorRef.current?.insertBold()}
               className="btn btn-ghost btn-icon"
               title="加粗 (Ctrl+B)"
               style={{ padding: '4px' }}
@@ -1107,7 +1096,7 @@ function App() {
               <span className="iconify icon-sm" data-icon="lucide:bold" style={{ fontWeight: 700 }}></span>
             </button>
             <button
-              onClick={insertItalic}
+              onClick={() => editorRef.current?.insertItalic()}
               className="btn btn-ghost btn-icon"
               title="斜体 (Ctrl+I)"
               style={{ padding: '4px' }}
@@ -1115,7 +1104,7 @@ function App() {
               <span className="iconify icon-sm" data-icon="lucide:italic"></span>
             </button>
             <button
-              onClick={insertLink}
+              onClick={() => editorRef.current?.insertLink()}
               className="btn btn-ghost btn-icon"
               title="插入链接 (Ctrl+K)"
               style={{ padding: '4px' }}
@@ -1123,7 +1112,7 @@ function App() {
               <span className="iconify icon-sm" data-icon="lucide:link"></span>
             </button>
             <button
-              onClick={insertImage}
+              onClick={() => editorRef.current?.insertImage()}
               className="btn btn-ghost btn-icon"
               title="插入图片 (Ctrl+Shift+I)"
               style={{ padding: '4px' }}
@@ -1131,7 +1120,7 @@ function App() {
               <span className="iconify icon-sm" data-icon="lucide:image"></span>
             </button>
             <button
-              onClick={insertCode}
+              onClick={() => editorRef.current?.insertCode()}
               className="btn btn-ghost btn-icon"
               title="行内代码 (Ctrl+`)"
               style={{ padding: '4px' }}
@@ -1139,7 +1128,7 @@ function App() {
               <span className="iconify icon-sm" data-icon="lucide:code"></span>
             </button>
             <button
-              onClick={insertCodeBlock}
+              onClick={() => editorRef.current?.insertCodeBlock()}
               className="btn btn-ghost btn-icon"
               title="代码块 (Ctrl+Shift+C)"
               style={{ padding: '4px' }}
@@ -1147,7 +1136,7 @@ function App() {
               <span className="iconify icon-sm" data-icon="lucide:file-code"></span>
             </button>
             <button
-              onClick={insertHr}
+              onClick={() => editorRef.current?.insertHr()}
               className="btn btn-ghost btn-icon"
               title="分割线"
               style={{ padding: '4px' }}
@@ -1155,7 +1144,7 @@ function App() {
               <span className="iconify icon-sm" data-icon="lucide:minus"></span>
             </button>
             <button
-              onClick={insertQuote}
+              onClick={() => editorRef.current?.insertQuote()}
               className="btn btn-ghost btn-icon"
               title="引用"
               style={{ padding: '4px' }}
@@ -1187,6 +1176,7 @@ function App() {
 
           <div className="flex-1 min-h-0">
             <CodeMirrorEditor
+              ref={editorRef}
               value={markdown}
               onChange={setMarkdown}
               placeholder="在这里写 Markdown..."
