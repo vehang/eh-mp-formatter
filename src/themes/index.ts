@@ -439,6 +439,72 @@ export const gruvboxTheme: Theme = {
   styles: generateInlineStyles(gruvboxColors)
 }
 
+// 14. Tokyo Night - 东京之夜主题
+const tokyoNightColors: ThemeColor = {
+  primary: '#7AA2F7',
+  secondary: '#BB9AF7',
+  accent: '#7DCFFF',
+  background: '#1A1B26',
+  text: '#C0CAF5',
+  textLight: '#7AA2F7',
+  border: '#292E42',
+  code: {
+    inline: { background: '#292E42', color: '#E0AF68' },
+    block: { background: '#16161E', color: '#C0CAF5' }
+  },
+  blockquote: {
+    background: '#292E42',
+    borderLeft: '#7AA2F7',
+    color: '#A9B1D6'
+  },
+  table: {
+    headerBg: '#292E42',
+    evenRowBg: '#1A1B26',
+    border: '#292E42'
+  }
+}
+
+export const tokyoNightTheme: Theme = {
+  id: 'tokyo-night',
+  name: '东京之夜',
+  description: 'Tokyo Night 深邃紫色主题',
+  colors: tokyoNightColors,
+  styles: generateInlineStyles(tokyoNightColors)
+}
+
+// 15. One Dark - Atom 经典主题
+const oneDarkColors: ThemeColor = {
+  primary: '#61AFEF',
+  secondary: '#C678DD',
+  accent: '#98C379',
+  background: '#282C34',
+  text: '#ABB2BF',
+  textLight: '#61AFEF',
+  border: '#3E4451',
+  code: {
+    inline: { background: '#3E4451', color: '#E5C07B' },
+    block: { background: '#21252B', color: '#ABB2BF' }
+  },
+  blockquote: {
+    background: '#3E4451',
+    borderLeft: '#61AFEF',
+    color: '#ABB2BF'
+  },
+  table: {
+    headerBg: '#3E4451',
+    evenRowBg: '#282C34',
+    border: '#3E4451'
+  }
+}
+
+export const oneDarkTheme: Theme = {
+  id: 'one-dark',
+  name: 'One Dark',
+  description: 'Atom 经典编辑器主题',
+  colors: oneDarkColors,
+  styles: generateInlineStyles(oneDarkColors)
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 导出
 // ═══════════════════════════════════════════════════════════════
@@ -456,7 +522,9 @@ export const themes: Theme[] = [
   draculaTheme,
   solarizedTheme,
   monokaiTheme,
-  gruvboxTheme
+  gruvboxTheme,
+  tokyoNightTheme,
+  oneDarkTheme
 ]
 
 export function applyTheme(theme: Theme): void {
