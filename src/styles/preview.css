@@ -154,7 +154,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* H1 - 霓虹渐变边框 */
-[data-heading-style="gradient"] .mp-preview h1 {
+.mp-preview[data-heading-style="gradient"] h1 {
   font-size: 28px;
   padding: 16px 20px;
   margin: 32px 0 20px;
@@ -165,7 +165,7 @@
   overflow: hidden;
 }
 
-[data-heading-style="gradient"] .mp-preview h1::before {
+.mp-preview[data-heading-style="gradient"] h1::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -179,7 +179,7 @@
 }
 
 /* H2 - 发光效果 */
-[data-heading-style="gradient"] .mp-preview h2 {
+.mp-preview[data-heading-style="gradient"] h2 {
   padding: 12px 16px;
   margin: 28px 0 16px;
   background: color-mix(in srgb, var(--theme-secondary) 8%, transparent);
@@ -188,16 +188,16 @@
   border-radius: 0 8px 8px 0;
 }
 
-[data-heading-style="gradient"] .mp-preview h2::before {
+.mp-preview[data-heading-style="gradient"] h2::before {
   display: none;
 }
 
-[data-heading-style="gradient"] .mp-preview h2::after {
+.mp-preview[data-heading-style="gradient"] h2::after {
   display: none;
 }
 
 /* H3 - 渐变下划线 */
-[data-heading-style="gradient"] .mp-preview h3 {
+.mp-preview[data-heading-style="gradient"] h3 {
   padding-bottom: 8px;
   background: none;
   border-left: none;
@@ -205,7 +205,7 @@
   position: relative;
 }
 
-[data-heading-style="gradient"] .mp-preview h3::after {
+.mp-preview[data-heading-style="gradient"] h3::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -221,7 +221,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* H1 - 圆角背景卡片 */
-[data-heading-style="soft"] .mp-preview h1 {
+.mp-preview[data-heading-style="soft"] h1 {
   font-size: 26px;
   padding: 16px 20px;
   margin: 32px 0 20px;
@@ -230,30 +230,30 @@
   border: none;
 }
 
-[data-heading-style="soft"] .mp-preview h1::before {
+.mp-preview[data-heading-style="soft"] h1::before {
   display: none;
 }
 
-[data-heading-style="soft"] .mp-preview h1::after {
+.mp-preview[data-heading-style="soft"] h1::after {
   display: none;
 }
 
 /* H2 - 柔和圆点装饰 */
-[data-heading-style="soft"] .mp-preview h2 {
+.mp-preview[data-heading-style="soft"] h2 {
   padding-left: 24px;
   border-bottom: none;
   border-radius: 0 12px 12px 0;
   background: linear-gradient(90deg, color-mix(in srgb, var(--theme-secondary) 6%, transparent) 0%, transparent 70%);
 }
 
-[data-heading-style="soft"] .mp-preview h2::before {
+.mp-preview[data-heading-style="soft"] h2::before {
   width: 8px;
   height: 8px;
   background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
   box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
-[data-heading-style="soft"] .mp-preview h2::after {
+.mp-preview[data-heading-style="soft"] h2::after {
   width: 40px;
   height: 3px;
   background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
@@ -261,7 +261,7 @@
 }
 
 /* H3 - 圆角标签 */
-[data-heading-style="soft"] .mp-preview h3 {
+.mp-preview[data-heading-style="soft"] h3 {
   padding: 10px 16px;
   border-radius: 20px;
   background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
@@ -274,7 +274,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* H1 - 终端风格 */
-[data-heading-style="code"] .mp-preview h1 {
+.mp-preview[data-heading-style="code"] h1 {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 24px;
   padding: 12px 16px;
@@ -285,7 +285,7 @@
   position: relative;
 }
 
-[data-heading-style="code"] .mp-preview h1::before {
+.mp-preview[data-heading-style="code"] h1::before {
   content: '>';
   position: absolute;
   left: 12px;
@@ -299,12 +299,12 @@
   border-radius: 0;
 }
 
-[data-heading-style="code"] .mp-preview h1::after {
+.mp-preview[data-heading-style="code"] h1::after {
   display: none;
 }
 
 /* H2 - 代码注释风格 */
-[data-heading-style="code"] .mp-preview h2 {
+.mp-preview[data-heading-style="code"] h2 {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   padding: 10px 16px 10px 40px;
   border-bottom: none;
@@ -317,7 +317,7 @@
   );
 }
 
-[data-heading-style="code"] .mp-preview h2::before {
+.mp-preview[data-heading-style="code"] h2::before {
   content: '//';
   width: auto;
   height: auto;
@@ -333,12 +333,12 @@
   box-shadow: none;
 }
 
-[data-heading-style="code"] .mp-preview h2::after {
+.mp-preview[data-heading-style="code"] h2::after {
   display: none;
 }
 
 /* H3 - 函数名风格 */
-[data-heading-style="code"] .mp-preview h3 {
+.mp-preview[data-heading-style="code"] h3 {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   padding: 8px 16px;
   border-left: none;
@@ -347,7 +347,7 @@
   position: relative;
 }
 
-[data-heading-style="code"] .mp-preview h3::before {
+.mp-preview[data-heading-style="code"] h3::before {
   content: 'function ';
   color: var(--theme-secondary);
   font-weight: 400;
@@ -359,7 +359,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* H1 - 复古双线框 */
-[data-heading-style="retro"] .mp-preview h1 {
+.mp-preview[data-heading-style="retro"] h1 {
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 26px;
   padding: 16px 20px;
@@ -370,7 +370,7 @@
   position: relative;
 }
 
-[data-heading-style="retro"] .mp-preview h1::before {
+.mp-preview[data-heading-style="retro"] h1::before {
   content: '§';
   position: absolute;
   left: 12px;
@@ -383,7 +383,7 @@
   background: none;
 }
 
-[data-heading-style="retro"] .mp-preview h1::after {
+.mp-preview[data-heading-style="retro"] h1::after {
   content: '§';
   position: absolute;
   right: 12px;
@@ -398,17 +398,17 @@
 }
 
 /* H2 - 复古波浪线 */
-[data-heading-style="retro"] .mp-preview h2 {
+.mp-preview[data-heading-style="retro"] h2 {
   font-family: Georgia, 'Times New Roman', serif;
   padding-left: 0;
   border-bottom: none;
 }
 
-[data-heading-style="retro"] .mp-preview h2::before {
+.mp-preview[data-heading-style="retro"] h2::before {
   display: none;
 }
 
-[data-heading-style="retro"] .mp-preview h2::after {
+.mp-preview[data-heading-style="retro"] h2::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -420,7 +420,7 @@
 }
 
 /* H3 - 复古菱形装饰 */
-[data-heading-style="retro"] .mp-preview h3 {
+.mp-preview[data-heading-style="retro"] h3 {
   font-family: Georgia, 'Times New Roman', serif;
   padding: 8px 12px 8px 24px;
   border-left: none;
@@ -429,7 +429,7 @@
   position: relative;
 }
 
-[data-heading-style="retro"] .mp-preview h3::before {
+.mp-preview[data-heading-style="retro"] h3::before {
   content: '◆';
   position: absolute;
   left: 0;
@@ -447,38 +447,38 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* H1 - 极简大字 */
-[data-heading-style="nordic"] .mp-preview h1 {
+.mp-preview[data-heading-style="nordic"] h1 {
   font-size: 32px;
   font-weight: 300;
   padding-left: 0;
   letter-spacing: -0.03em;
 }
 
-[data-heading-style="nordic"] .mp-preview h1::before {
+.mp-preview[data-heading-style="nordic"] h1::before {
   display: none;
 }
 
-[data-heading-style="nordic"] .mp-preview h1::after {
+.mp-preview[data-heading-style="nordic"] h1::after {
   display: none;
 }
 
 /* H2 - 极简线条 */
-[data-heading-style="nordic"] .mp-preview h2 {
+.mp-preview[data-heading-style="nordic"] h2 {
   font-weight: 400;
   padding-left: 0;
   border-bottom: 1px solid var(--theme-border);
 }
 
-[data-heading-style="nordic"] .mp-preview h2::before {
+.mp-preview[data-heading-style="nordic"] h2::before {
   display: none;
 }
 
-[data-heading-style="nordic"] .mp-preview h2::after {
+.mp-preview[data-heading-style="nordic"] h2::after {
   display: none;
 }
 
 /* H3 - 极简 */
-[data-heading-style="nordic"] .mp-preview h3 {
+.mp-preview[data-heading-style="nordic"] h3 {
   font-weight: 500;
   padding: 0;
   background: none;
@@ -491,7 +491,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* H1 - 粗犷黑条 */
-[data-heading-style="brutalist"] .mp-preview h1 {
+.mp-preview[data-heading-style="brutalist"] h1 {
   font-size: 28px;
   font-weight: 900;
   text-transform: uppercase;
@@ -502,31 +502,31 @@
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
 }
 
-[data-heading-style="brutalist"] .mp-preview h1::before {
+.mp-preview[data-heading-style="brutalist"] h1::before {
   display: none;
 }
 
-[data-heading-style="brutalist"] .mp-preview h1::after {
+.mp-preview[data-heading-style="brutalist"] h1::after {
   display: none;
 }
 
 /* H2 - 粗线条 */
-[data-heading-style="brutalist"] .mp-preview h2 {
+.mp-preview[data-heading-style="brutalist"] h2 {
   font-weight: 800;
   padding-left: 0;
   border-bottom: 4px solid var(--theme-primary);
 }
 
-[data-heading-style="brutalist"] .mp-preview h2::before {
+.mp-preview[data-heading-style="brutalist"] h2::before {
   display: none;
 }
 
-[data-heading-style="brutalist"] .mp-preview h2::after {
+.mp-preview[data-heading-style="brutalist"] h2::after {
   display: none;
 }
 
 /* H3 - 粗边框 */
-[data-heading-style="brutalist"] .mp-preview h3 {
+.mp-preview[data-heading-style="brutalist"] h3 {
   font-weight: 700;
   padding: 8px 12px;
   border-left: 6px solid var(--theme-primary);
@@ -538,31 +538,31 @@
    极简单色风格 - 无装饰
    ═══════════════════════════════════════════════════════════ */
 
-[data-heading-style="minimal"] .mp-preview h1 {
+.mp-preview[data-heading-style="minimal"] h1 {
   font-size: 28px;
   font-weight: 600;
   padding-left: 0;
   border-bottom: none;
 }
 
-[data-heading-style="minimal"] .mp-preview h1::before,
-[data-heading-style="minimal"] .mp-preview h1::after {
+.mp-preview[data-heading-style="minimal"] h1::before,
+.mp-preview[data-heading-style="minimal"] h1::after {
   display: none;
 }
 
-[data-heading-style="minimal"] .mp-preview h2 {
+.mp-preview[data-heading-style="minimal"] h2 {
   font-size: 22px;
   font-weight: 600;
   padding-left: 0;
   border-bottom: none;
 }
 
-[data-heading-style="minimal"] .mp-preview h2::before,
-[data-heading-style="minimal"] .mp-preview h2::after {
+.mp-preview[data-heading-style="minimal"] h2::before,
+.mp-preview[data-heading-style="minimal"] h2::after {
   display: none;
 }
 
-[data-heading-style="minimal"] .mp-preview h3 {
+.mp-preview[data-heading-style="minimal"] h3 {
   font-size: 18px;
   font-weight: 600;
   padding: 0;
@@ -571,12 +571,12 @@
   border-radius: 0;
 }
 
-[data-heading-style="minimal"] .mp-preview h4 {
+.mp-preview[data-heading-style="minimal"] h4 {
   font-size: 16px;
   font-weight: 600;
 }
 
-[data-heading-style="minimal"] .mp-preview h4::after {
+.mp-preview[data-heading-style="minimal"] h4::after {
   display: none;
 }
 

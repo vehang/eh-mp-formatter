@@ -8,7 +8,7 @@
    特点：阳光光晕、落叶飘零、温暖渐变
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="warm-sun"] .mp-preview h1 {
+.mp-preview[data-heading-style="warm-sun"] h1 {
   font-size: 28px;
   font-weight: 700;
   padding: 20px 24px;
@@ -21,7 +21,7 @@
   overflow: hidden;
 }
 
-[data-heading-style="warm-sun"] .mp-preview h1::before {
+.mp-preview[data-heading-style="warm-sun"] h1::before {
   content: '☀';
   position: absolute;
   right: 16px;
@@ -31,7 +31,7 @@
   opacity: 0.15;
 }
 
-[data-heading-style="warm-sun"] .mp-preview h1::after {
+.mp-preview[data-heading-style="warm-sun"] h1::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -45,13 +45,13 @@
   border-radius: 0 0 16px 16px;
 }
 
-[data-heading-style="warm-sun"] .mp-preview h2 {
+.mp-preview[data-heading-style="warm-sun"] h2 {
   padding-left: 28px;
   padding-bottom: 14px;
   border-bottom: 2px dashed color-mix(in srgb, var(--theme-secondary) 30%, transparent);
 }
 
-[data-heading-style="warm-sun"] .mp-preview h2::before {
+.mp-preview[data-heading-style="warm-sun"] h2::before {
   content: '🍂';
   position: absolute;
   left: 0;
@@ -64,14 +64,14 @@
   box-shadow: none;
 }
 
-[data-heading-style="warm-sun"] .mp-preview h2::after {
+.mp-preview[data-heading-style="warm-sun"] h2::after {
   width: 80px;
   height: 3px;
   background: linear-gradient(90deg, var(--theme-secondary), var(--theme-primary));
   border-radius: 2px;
 }
 
-[data-heading-style="warm-sun"] .mp-preview h3 {
+.mp-preview[data-heading-style="warm-sun"] h3 {
   padding: 10px 16px 10px 20px;
   background: linear-gradient(90deg,
     color-mix(in srgb, var(--theme-secondary) 15%, transparent) 0%,
@@ -85,7 +85,7 @@
    特点：代码行号、终端光标、科技边框
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="tech"] .mp-preview h1 {
+.mp-preview[data-heading-style="tech"] h1 {
   font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
   font-size: 26px;
   font-weight: 700;
@@ -99,7 +99,7 @@
   position: relative;
 }
 
-[data-heading-style="tech"] .mp-preview h1::before {
+.mp-preview[data-heading-style="tech"] h1::before {
   content: '#';
   position: absolute;
   left: 16px;
@@ -115,18 +115,18 @@
   border-radius: 0;
 }
 
-[data-heading-style="tech"] .mp-preview h1::after {
+.mp-preview[data-heading-style="tech"] h1::after {
   display: none;
 }
 
-[data-heading-style="tech"] .mp-preview h2 {
+.mp-preview[data-heading-style="tech"] h2 {
   font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
   padding-left: 44px;
   padding-bottom: 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 15%, transparent);
 }
 
-[data-heading-style="tech"] .mp-preview h2::before {
+.mp-preview[data-heading-style="tech"] h2::before {
   content: '01';
   position: absolute;
   left: 0;
@@ -142,14 +142,14 @@
   box-shadow: none;
 }
 
-[data-heading-style="tech"] .mp-preview h2::after {
+.mp-preview[data-heading-style="tech"] h2::after {
   width: 60px;
   height: 2px;
   background: var(--theme-primary);
   border-radius: 1px;
 }
 
-[data-heading-style="tech"] .mp-preview h3 {
+.mp-preview[data-heading-style="tech"] h3 {
   font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
   padding: 8px 12px 8px 20px;
   background: color-mix(in srgb, var(--theme-primary) 6%, transparent);
@@ -158,7 +158,7 @@
   position: relative;
 }
 
-[data-heading-style="tech"] .mp-preview h3::before {
+.mp-preview[data-heading-style="tech"] h3::before {
   content: '▋';
   position: absolute;
   left: 6px;
@@ -179,7 +179,7 @@
    特点：叶子装饰、藤蔓波浪、自然纹理
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="nature"] .mp-preview h1 {
+.mp-preview[data-heading-style="nature"] h1 {
   font-size: 28px;
   font-weight: 700;
   padding: 18px 20px 18px 52px;
@@ -190,7 +190,7 @@
   position: relative;
 }
 
-[data-heading-style="nature"] .mp-preview h1::before {
+.mp-preview[data-heading-style="nature"] h1::before {
   content: '🌿';
   position: absolute;
   left: 16px;
@@ -203,7 +203,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="nature"] .mp-preview h1::after {
+.mp-preview[data-heading-style="nature"] h1::after {
   content: '';
   display: block;
   width: 100%;
@@ -213,13 +213,13 @@
   background-size: 50px 8px;
 }
 
-[data-heading-style="nature"] .mp-preview h2 {
+.mp-preview[data-heading-style="nature"] h2 {
   padding-left: 32px;
   padding-bottom: 12px;
   border-bottom: 2px dotted color-mix(in srgb, var(--theme-secondary) 40%, transparent);
 }
 
-[data-heading-style="nature"] .mp-preview h2::before {
+.mp-preview[data-heading-style="nature"] h2::before {
   content: '🍃';
   position: absolute;
   left: 0;
@@ -232,14 +232,14 @@
   box-shadow: none;
 }
 
-[data-heading-style="nature"] .mp-preview h2::after {
+.mp-preview[data-heading-style="nature"] h2::after {
   width: 70px;
   height: 3px;
   background: linear-gradient(90deg, var(--theme-secondary), var(--theme-primary));
   border-radius: 2px;
 }
 
-[data-heading-style="nature"] .mp-preview h3 {
+.mp-preview[data-heading-style="nature"] h3 {
   padding: 10px 14px 10px 32px;
   background: linear-gradient(90deg,
     color-mix(in srgb, var(--theme-secondary) 10%, transparent) 0%,
@@ -249,7 +249,7 @@
   position: relative;
 }
 
-[data-heading-style="nature"] .mp-preview h3::before {
+.mp-preview[data-heading-style="nature"] h3::before {
   content: '🌱';
   position: absolute;
   left: 8px;
@@ -263,7 +263,7 @@
    特点：花朵装饰、花边波浪、优雅居中
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="elegant"] .mp-preview h1 {
+.mp-preview[data-heading-style="elegant"] h1 {
   font-size: 28px;
   font-weight: 600;
   padding: 20px 40px;
@@ -276,7 +276,7 @@
   position: relative;
 }
 
-[data-heading-style="elegant"] .mp-preview h1::before {
+.mp-preview[data-heading-style="elegant"] h1::before {
   content: '✿';
   position: absolute;
   left: 16px;
@@ -291,7 +291,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="elegant"] .mp-preview h1::after {
+.mp-preview[data-heading-style="elegant"] h1::after {
   content: '✿';
   position: absolute;
   right: 16px;
@@ -303,14 +303,14 @@
   margin-top: 0;
 }
 
-[data-heading-style="elegant"] .mp-preview h2 {
+.mp-preview[data-heading-style="elegant"] h2 {
   padding-left: 28px;
   padding-bottom: 14px;
   border-bottom: none;
   position: relative;
 }
 
-[data-heading-style="elegant"] .mp-preview h2::before {
+.mp-preview[data-heading-style="elegant"] h2::before {
   content: '❀';
   position: absolute;
   left: 0;
@@ -324,7 +324,7 @@
   box-shadow: none;
 }
 
-[data-heading-style="elegant"] .mp-preview h2::after {
+.mp-preview[data-heading-style="elegant"] h2::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -336,7 +336,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="elegant"] .mp-preview h3 {
+.mp-preview[data-heading-style="elegant"] h3 {
   padding: 10px 20px;
   background: color-mix(in srgb, var(--theme-primary) 8%, transparent);
   border-left: none;
@@ -345,7 +345,7 @@
   position: relative;
 }
 
-[data-heading-style="elegant"] .mp-preview h3::before {
+.mp-preview[data-heading-style="elegant"] h3::before {
   content: '🌸';
   margin-right: 8px;
 }
@@ -355,7 +355,7 @@
    特点：波浪装饰、气泡点缀、深海渐变
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="ocean"] .mp-preview h1 {
+.mp-preview[data-heading-style="ocean"] h1 {
   font-size: 28px;
   font-weight: 700;
   padding: 18px 24px;
@@ -369,7 +369,7 @@
   overflow: hidden;
 }
 
-[data-heading-style="ocean"] .mp-preview h1::before {
+.mp-preview[data-heading-style="ocean"] h1::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -382,7 +382,7 @@
   pointer-events: none;
 }
 
-[data-heading-style="ocean"] .mp-preview h1::after {
+.mp-preview[data-heading-style="ocean"] h1::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -394,7 +394,7 @@
   margin-top: 0;
 }
 
-[data-heading-style="ocean"] .mp-preview h2 {
+.mp-preview[data-heading-style="ocean"] h2 {
   padding: 12px 16px;
   margin: 28px 0 16px;
   background: color-mix(in srgb, var(--theme-secondary) 8%, transparent);
@@ -404,7 +404,7 @@
   border-bottom: none;
 }
 
-[data-heading-style="ocean"] .mp-preview h2::before {
+.mp-preview[data-heading-style="ocean"] h2::before {
   content: '∘';
   position: absolute;
   left: -6px;
@@ -419,11 +419,11 @@
   box-shadow: none;
 }
 
-[data-heading-style="ocean"] .mp-preview h2::after {
+.mp-preview[data-heading-style="ocean"] h2::after {
   display: none;
 }
 
-[data-heading-style="ocean"] .mp-preview h3 {
+.mp-preview[data-heading-style="ocean"] h3 {
   padding-bottom: 8px;
   background: none;
   border-left: none;
@@ -431,13 +431,13 @@
   position: relative;
 }
 
-[data-heading-style="ocean"] .mp-preview h3::before {
+.mp-preview[data-heading-style="ocean"] h3::before {
   content: '○ ';
   color: var(--theme-accent);
   opacity: 0.6;
 }
 
-[data-heading-style="ocean"] .mp-preview h3::after {
+.mp-preview[data-heading-style="ocean"] h3::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -453,7 +453,7 @@
    特点：萤火虫光点、星星装饰、夜晚氛围
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="night-forest"] .mp-preview h1 {
+.mp-preview[data-heading-style="night-forest"] h1 {
   font-size: 28px;
   font-weight: 700;
   padding: 20px 24px;
@@ -466,7 +466,7 @@
   overflow: hidden;
 }
 
-[data-heading-style="night-forest"] .mp-preview h1::before {
+.mp-preview[data-heading-style="night-forest"] h1::before {
   content: '✨';
   position: absolute;
   left: 16px;
@@ -485,7 +485,7 @@
   50% { opacity: 0.5; transform: translateY(-50%) scale(0.8); }
 }
 
-[data-heading-style="night-forest"] .mp-preview h1::after {
+.mp-preview[data-heading-style="night-forest"] h1::after {
   content: '🌙';
   position: absolute;
   right: 16px;
@@ -496,13 +496,13 @@
   margin-top: 0;
 }
 
-[data-heading-style="night-forest"] .mp-preview h2 {
+.mp-preview[data-heading-style="night-forest"] h2 {
   padding-left: 32px;
   padding-bottom: 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
 }
 
-[data-heading-style="night-forest"] .mp-preview h2::before {
+.mp-preview[data-heading-style="night-forest"] h2::before {
   content: '⋆';
   position: absolute;
   left: 8px;
@@ -517,7 +517,7 @@
   text-shadow: 0 0 8px var(--theme-accent);
 }
 
-[data-heading-style="night-forest"] .mp-preview h2::after {
+.mp-preview[data-heading-style="night-forest"] h2::after {
   width: 60px;
   height: 2px;
   background: var(--theme-secondary);
@@ -525,7 +525,7 @@
   box-shadow: 0 0 6px var(--theme-secondary);
 }
 
-[data-heading-style="night-forest"] .mp-preview h3 {
+.mp-preview[data-heading-style="night-forest"] h3 {
   padding: 10px 16px 10px 28px;
   background: color-mix(in srgb, var(--theme-primary) 8%, transparent);
   border-left: 3px solid var(--theme-secondary);
@@ -533,7 +533,7 @@
   position: relative;
 }
 
-[data-heading-style="night-forest"] .mp-preview h3::before {
+.mp-preview[data-heading-style="night-forest"] h3::before {
   content: '·';
   position: absolute;
   left: 8px;
@@ -549,7 +549,7 @@
    特点：松树装饰、柔和渐变、优雅曲线
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="rose-pine"] .mp-preview h1 {
+.mp-preview[data-heading-style="rose-pine"] h1 {
   font-size: 28px;
   font-weight: 700;
   padding: 18px 24px 18px 48px;
@@ -561,7 +561,7 @@
   position: relative;
 }
 
-[data-heading-style="rose-pine"] .mp-preview h1::before {
+.mp-preview[data-heading-style="rose-pine"] h1::before {
   content: '🌲';
   position: absolute;
   left: 16px;
@@ -575,11 +575,11 @@
   border-radius: 0;
 }
 
-[data-heading-style="rose-pine"] .mp-preview h1::after {
+.mp-preview[data-heading-style="rose-pine"] h1::after {
   display: none;
 }
 
-[data-heading-style="rose-pine"] .mp-preview h2 {
+.mp-preview[data-heading-style="rose-pine"] h2 {
   padding: 12px 16px 12px 28px;
   border-bottom: none;
   background: linear-gradient(90deg,
@@ -588,7 +588,7 @@
   border-radius: 0 12px 12px 0;
 }
 
-[data-heading-style="rose-pine"] .mp-preview h2::before {
+.mp-preview[data-heading-style="rose-pine"] h2::before {
   content: '•';
   position: absolute;
   left: 8px;
@@ -603,14 +603,14 @@
   box-shadow: none;
 }
 
-[data-heading-style="rose-pine"] .mp-preview h2::after {
+.mp-preview[data-heading-style="rose-pine"] h2::after {
   width: 50px;
   height: 3px;
   background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
   border-radius: 2px;
 }
 
-[data-heading-style="rose-pine"] .mp-preview h3 {
+.mp-preview[data-heading-style="rose-pine"] h3 {
   padding: 10px 18px;
   background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
   border-left: none;
@@ -623,7 +623,7 @@
    特点：蝙蝠装饰、尖角边框、暗黑氛围
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="gothic"] .mp-preview h1 {
+.mp-preview[data-heading-style="gothic"] h1 {
   font-size: 28px;
   font-weight: 700;
   padding: 18px 24px 18px 48px;
@@ -635,7 +635,7 @@
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
 }
 
-[data-heading-style="gothic"] .mp-preview h1::before {
+.mp-preview[data-heading-style="gothic"] h1::before {
   content: '🦇';
   position: absolute;
   left: 16px;
@@ -649,18 +649,18 @@
   border-radius: 0;
 }
 
-[data-heading-style="gothic"] .mp-preview h1::after {
+.mp-preview[data-heading-style="gothic"] h1::after {
   display: none;
 }
 
-[data-heading-style="gothic"] .mp-preview h2 {
+.mp-preview[data-heading-style="gothic"] h2 {
   padding-left: 32px;
   padding-bottom: 14px;
   border-bottom: 2px solid color-mix(in srgb, var(--theme-primary) 30%, transparent);
   position: relative;
 }
 
-[data-heading-style="gothic"] .mp-preview h2::before {
+.mp-preview[data-heading-style="gothic"] h2::before {
   content: '◆';
   position: absolute;
   left: 8px;
@@ -674,7 +674,7 @@
   box-shadow: none;
 }
 
-[data-heading-style="gothic"] .mp-preview h2::after {
+.mp-preview[data-heading-style="gothic"] h2::after {
   width: 50px;
   height: 2px;
   background: var(--theme-primary);
@@ -682,7 +682,7 @@
   clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
 }
 
-[data-heading-style="gothic"] .mp-preview h3 {
+.mp-preview[data-heading-style="gothic"] h3 {
   padding: 10px 16px 10px 32px;
   background: color-mix(in srgb, var(--theme-secondary) 10%, transparent);
   border-left: 4px solid var(--theme-primary);
@@ -690,7 +690,7 @@
   position: relative;
 }
 
-[data-heading-style="gothic"] .mp-preview h3::before {
+.mp-preview[data-heading-style="gothic"] h3::before {
   content: '✝';
   position: absolute;
   left: 10px;
@@ -706,7 +706,7 @@
    特点：霓虹发光、城市天际线、电路装饰
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="neon"] .mp-preview h1 {
+.mp-preview[data-heading-style="neon"] h1 {
   font-size: 28px;
   font-weight: 700;
   padding: 18px 24px;
@@ -720,7 +720,7 @@
               inset 0 0 15px color-mix(in srgb, var(--theme-primary) 10%, transparent);
 }
 
-[data-heading-style="neon"] .mp-preview h1::before {
+.mp-preview[data-heading-style="neon"] h1::before {
   content: '◈';
   position: absolute;
   left: 12px;
@@ -735,11 +735,11 @@
   border-radius: 0;
 }
 
-[data-heading-style="neon"] .mp-preview h1::after {
+.mp-preview[data-heading-style="neon"] h1::after {
   display: none;
 }
 
-[data-heading-style="neon"] .mp-preview h2 {
+.mp-preview[data-heading-style="neon"] h2 {
   padding: 12px 16px 12px 28px;
   border-bottom: none;
   background: linear-gradient(90deg,
@@ -748,7 +748,7 @@
   position: relative;
 }
 
-[data-heading-style="neon"] .mp-preview h2::before {
+.mp-preview[data-heading-style="neon"] h2::before {
   content: '◉';
   position: absolute;
   left: 8px;
@@ -764,7 +764,7 @@
   box-shadow: none;
 }
 
-[data-heading-style="neon"] .mp-preview h2::after {
+.mp-preview[data-heading-style="neon"] h2::after {
   width: 100%;
   height: 1px;
   background: linear-gradient(90deg, var(--theme-primary), transparent);
@@ -772,7 +772,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="neon"] .mp-preview h3 {
+.mp-preview[data-heading-style="neon"] h3 {
   padding: 10px 16px;
   background: color-mix(in srgb, var(--theme-primary) 8%, transparent);
   border-left: none;
@@ -782,7 +782,7 @@
   position: relative;
 }
 
-[data-heading-style="neon"] .mp-preview h3::before {
+.mp-preview[data-heading-style="neon"] h3::before {
   content: '◇ ';
   color: var(--theme-secondary);
   text-shadow: 0 0 4px var(--theme-secondary);
@@ -793,7 +793,7 @@
    特点：卡片阴影、涟漪效果、彩色底边
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="material"] .mp-preview h1 {
+.mp-preview[data-heading-style="material"] h1 {
   font-size: 28px;
   font-weight: 500;
   padding: 20px 24px;
@@ -806,7 +806,7 @@
   overflow: hidden;
 }
 
-[data-heading-style="material"] .mp-preview h1::before {
+.mp-preview[data-heading-style="material"] h1::before {
   content: '';
   position: absolute;
   left: 0;
@@ -821,21 +821,21 @@
   border-radius: 0;
 }
 
-[data-heading-style="material"] .mp-preview h1::after {
+.mp-preview[data-heading-style="material"] h1::after {
   display: none;
 }
 
-[data-heading-style="material"] .mp-preview h2 {
+.mp-preview[data-heading-style="material"] h2 {
   padding: 12px 16px 12px 0;
   border-bottom: none;
   position: relative;
 }
 
-[data-heading-style="material"] .mp-preview h2::before {
+.mp-preview[data-heading-style="material"] h2::before {
   display: none;
 }
 
-[data-heading-style="material"] .mp-preview h2::after {
+.mp-preview[data-heading-style="material"] h2::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -846,7 +846,7 @@
   border-radius: 2px 2px 0 0;
 }
 
-[data-heading-style="material"] .mp-preview h3 {
+.mp-preview[data-heading-style="material"] h3 {
   padding: 8px 16px;
   background: transparent;
   border-left: none;
@@ -860,7 +860,7 @@
    特点：圆润形状、熊猫爪印、竹叶点缀
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="cute"] .mp-preview h1 {
+.mp-preview[data-heading-style="cute"] h1 {
   font-size: 28px;
   font-weight: 700;
   padding: 18px 24px 18px 52px;
@@ -872,7 +872,7 @@
   position: relative;
 }
 
-[data-heading-style="cute"] .mp-preview h1::before {
+.mp-preview[data-heading-style="cute"] h1::before {
   content: '🐾';
   position: absolute;
   left: 18px;
@@ -885,11 +885,11 @@
   border-radius: 0;
 }
 
-[data-heading-style="cute"] .mp-preview h1::after {
+.mp-preview[data-heading-style="cute"] h1::after {
   display: none;
 }
 
-[data-heading-style="cute"] .mp-preview h2 {
+.mp-preview[data-heading-style="cute"] h2 {
   padding: 10px 16px 10px 32px;
   border-bottom: 2px dotted color-mix(in srgb, var(--theme-primary) 30%, transparent);
   background: linear-gradient(90deg,
@@ -898,7 +898,7 @@
   border-radius: 0 16px 0 0;
 }
 
-[data-heading-style="cute"] .mp-preview h2::before {
+.mp-preview[data-heading-style="cute"] h2::before {
   content: '🎋';
   position: absolute;
   left: 6px;
@@ -912,14 +912,14 @@
   box-shadow: none;
 }
 
-[data-heading-style="cute"] .mp-preview h2::after {
+.mp-preview[data-heading-style="cute"] h2::after {
   width: 40px;
   height: 3px;
   background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
   border-radius: 2px;
 }
 
-[data-heading-style="cute"] .mp-preview h3 {
+.mp-preview[data-heading-style="cute"] h3 {
   padding: 10px 20px;
   background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
   border-left: none;
@@ -928,7 +928,7 @@
   position: relative;
 }
 
-[data-heading-style="cute"] .mp-preview h3::before {
+.mp-preview[data-heading-style="cute"] h3::before {
   content: '♡ ';
   color: var(--theme-primary);
 }
@@ -938,7 +938,7 @@
    特点：樱花装饰、青海波、极简优雅
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="japanese"] .mp-preview h1 {
+.mp-preview[data-heading-style="japanese"] h1 {
   font-size: 28px;
   font-weight: 700;
   padding: 18px 24px;
@@ -951,7 +951,7 @@
   position: relative;
 }
 
-[data-heading-style="japanese"] .mp-preview h1::before {
+.mp-preview[data-heading-style="japanese"] h1::before {
   content: '❀';
   position: absolute;
   left: 16px;
@@ -966,7 +966,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="japanese"] .mp-preview h1::after {
+.mp-preview[data-heading-style="japanese"] h1::after {
   content: '❀';
   position: absolute;
   right: 16px;
@@ -978,18 +978,18 @@
   margin-top: 0;
 }
 
-[data-heading-style="japanese"] .mp-preview h2 {
+.mp-preview[data-heading-style="japanese"] h2 {
   padding-left: 0;
   padding-bottom: 14px;
   border-bottom: none;
   position: relative;
 }
 
-[data-heading-style="japanese"] .mp-preview h2::before {
+.mp-preview[data-heading-style="japanese"] h2::before {
   display: none;
 }
 
-[data-heading-style="japanese"] .mp-preview h2::after {
+.mp-preview[data-heading-style="japanese"] h2::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -1001,7 +1001,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="japanese"] .mp-preview h3 {
+.mp-preview[data-heading-style="japanese"] h3 {
   padding: 10px 16px 10px 24px;
   background: color-mix(in srgb, var(--theme-primary) 6%, transparent);
   border-left: 3px solid var(--theme-primary);
@@ -1009,7 +1009,7 @@
   position: relative;
 }
 
-[data-heading-style="japanese"] .mp-preview h3::before {
+.mp-preview[data-heading-style="japanese"] h3::before {
   content: '◈';
   position: absolute;
   left: 6px;
@@ -1025,7 +1025,7 @@
    特点：冰雪极简、清冷线条、留白艺术
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="nordic"] .mp-preview h1 {
+.mp-preview[data-heading-style="nordic"] h1 {
   font-size: 32px;
   font-weight: 300;
   padding: 16px 0;
@@ -1034,11 +1034,11 @@
   position: relative;
 }
 
-[data-heading-style="nordic"] .mp-preview h1::before {
+.mp-preview[data-heading-style="nordic"] h1::before {
   display: none;
 }
 
-[data-heading-style="nordic"] .mp-preview h1::after {
+.mp-preview[data-heading-style="nordic"] h1::after {
   content: '';
   display: block;
   width: 40px;
@@ -1048,7 +1048,7 @@
   opacity: 0.4;
 }
 
-[data-heading-style="nordic"] .mp-preview h2 {
+.mp-preview[data-heading-style="nordic"] h2 {
   font-weight: 400;
   font-size: 22px;
   padding-left: 0;
@@ -1056,15 +1056,15 @@
   border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
 }
 
-[data-heading-style="nordic"] .mp-preview h2::before {
+.mp-preview[data-heading-style="nordic"] h2::before {
   display: none;
 }
 
-[data-heading-style="nordic"] .mp-preview h2::after {
+.mp-preview[data-heading-style="nordic"] h2::after {
   display: none;
 }
 
-[data-heading-style="nordic"] .mp-preview h3 {
+.mp-preview[data-heading-style="nordic"] h3 {
   font-weight: 500;
   font-size: 18px;
   padding: 0;
@@ -1073,7 +1073,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="nordic"] .mp-preview h4 {
+.mp-preview[data-heading-style="nordic"] h4 {
   font-weight: 500;
   color: var(--theme-secondary);
 }
@@ -1083,7 +1083,7 @@
    特点：复古装饰、双线边框、怀旧纹理
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="retro"] .mp-preview h1 {
+.mp-preview[data-heading-style="retro"] h1 {
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 28px;
   font-weight: 700;
@@ -1094,7 +1094,7 @@
   position: relative;
 }
 
-[data-heading-style="retro"] .mp-preview h1::before {
+.mp-preview[data-heading-style="retro"] h1::before {
   content: '◆';
   position: absolute;
   left: 12px;
@@ -1109,7 +1109,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="retro"] .mp-preview h1::after {
+.mp-preview[data-heading-style="retro"] h1::after {
   content: '◆';
   position: absolute;
   right: 12px;
@@ -1121,7 +1121,7 @@
   margin-top: 0;
 }
 
-[data-heading-style="retro"] .mp-preview h2 {
+.mp-preview[data-heading-style="retro"] h2 {
   font-family: Georgia, 'Times New Roman', serif;
   padding-left: 0;
   padding-bottom: 12px;
@@ -1129,11 +1129,11 @@
   position: relative;
 }
 
-[data-heading-style="retro"] .mp-preview h2::before {
+.mp-preview[data-heading-style="retro"] h2::before {
   display: none;
 }
 
-[data-heading-style="retro"] .mp-preview h2::after {
+.mp-preview[data-heading-style="retro"] h2::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -1151,7 +1151,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="retro"] .mp-preview h3 {
+.mp-preview[data-heading-style="retro"] h3 {
   font-family: Georgia, 'Times New Roman', serif;
   padding: 10px 16px 10px 28px;
   background: color-mix(in srgb, var(--theme-primary) 6%, transparent);
@@ -1160,7 +1160,7 @@
   position: relative;
 }
 
-[data-heading-style="retro"] .mp-preview h3::before {
+.mp-preview[data-heading-style="retro"] h3::before {
   content: '✦';
   position: absolute;
   left: 8px;
@@ -1176,7 +1176,7 @@
    特点：终端风格、代码高亮感、等宽字体
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="code"] .mp-preview h1 {
+.mp-preview[data-heading-style="code"] h1 {
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
   font-size: 26px;
   font-weight: 700;
@@ -1188,7 +1188,7 @@
   position: relative;
 }
 
-[data-heading-style="code"] .mp-preview h1::before {
+.mp-preview[data-heading-style="code"] h1::before {
   content: '>';
   position: absolute;
   left: 16px;
@@ -1204,11 +1204,11 @@
   border-radius: 0;
 }
 
-[data-heading-style="code"] .mp-preview h1::after {
+.mp-preview[data-heading-style="code"] h1::after {
   display: none;
 }
 
-[data-heading-style="code"] .mp-preview h2 {
+.mp-preview[data-heading-style="code"] h2 {
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
   padding: 10px 16px 10px 40px;
   border-bottom: none;
@@ -1218,7 +1218,7 @@
   position: relative;
 }
 
-[data-heading-style="code"] .mp-preview h2::before {
+.mp-preview[data-heading-style="code"] h2::before {
   content: '//';
   position: absolute;
   left: 12px;
@@ -1234,7 +1234,7 @@
   box-shadow: none;
 }
 
-[data-heading-style="code"] .mp-preview h2::after {
+.mp-preview[data-heading-style="code"] h2::after {
   width: 50px;
   height: 2px;
   background: var(--theme-primary);
@@ -1242,7 +1242,7 @@
   border-radius: 1px;
 }
 
-[data-heading-style="code"] .mp-preview h3 {
+.mp-preview[data-heading-style="code"] h3 {
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
   padding: 8px 12px 8px 20px;
   background: color-mix(in srgb, var(--theme-secondary) 6%, transparent);
@@ -1251,7 +1251,7 @@
   position: relative;
 }
 
-[data-heading-style="code"] .mp-preview h3::before {
+.mp-preview[data-heading-style="code"] h3::before {
   content: 'fn ';
   color: var(--theme-accent);
   font-size: 13px;
@@ -1263,7 +1263,7 @@
    特点：冰雪极简、清冷线条、留白艺术
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="nordic"] .mp-preview h1 {
+.mp-preview[data-heading-style="nordic"] h1 {
   font-size: 32px;
   font-weight: 300;
   padding: 16px 0;
@@ -1272,11 +1272,11 @@
   position: relative;
 }
 
-[data-heading-style="nordic"] .mp-preview h1::before {
+.mp-preview[data-heading-style="nordic"] h1::before {
   display: none;
 }
 
-[data-heading-style="nordic"] .mp-preview h1::after {
+.mp-preview[data-heading-style="nordic"] h1::after {
   content: '';
   display: block;
   width: 40px;
@@ -1286,7 +1286,7 @@
   opacity: 0.4;
 }
 
-[data-heading-style="nordic"] .mp-preview h2 {
+.mp-preview[data-heading-style="nordic"] h2 {
   font-weight: 400;
   font-size: 22px;
   padding-left: 0;
@@ -1294,15 +1294,15 @@
   border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
 }
 
-[data-heading-style="nordic"] .mp-preview h2::before {
+.mp-preview[data-heading-style="nordic"] h2::before {
   display: none;
 }
 
-[data-heading-style="nordic"] .mp-preview h2::after {
+.mp-preview[data-heading-style="nordic"] h2::after {
   display: none;
 }
 
-[data-heading-style="nordic"] .mp-preview h3 {
+.mp-preview[data-heading-style="nordic"] h3 {
   font-weight: 500;
   font-size: 18px;
   padding: 0;
@@ -1311,7 +1311,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="nordic"] .mp-preview h4 {
+.mp-preview[data-heading-style="nordic"] h4 {
   font-weight: 500;
   color: var(--theme-secondary);
 }
@@ -1321,7 +1321,7 @@
    特点：复古装饰、双线边框、怀旧纹理
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="retro"] .mp-preview h1 {
+.mp-preview[data-heading-style="retro"] h1 {
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 28px;
   font-weight: 700;
@@ -1332,7 +1332,7 @@
   position: relative;
 }
 
-[data-heading-style="retro"] .mp-preview h1::before {
+.mp-preview[data-heading-style="retro"] h1::before {
   content: '◆';
   position: absolute;
   left: 12px;
@@ -1347,7 +1347,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="retro"] .mp-preview h1::after {
+.mp-preview[data-heading-style="retro"] h1::after {
   content: '◆';
   position: absolute;
   right: 12px;
@@ -1359,7 +1359,7 @@
   margin-top: 0;
 }
 
-[data-heading-style="retro"] .mp-preview h2 {
+.mp-preview[data-heading-style="retro"] h2 {
   font-family: Georgia, 'Times New Roman', serif;
   padding-left: 0;
   padding-bottom: 12px;
@@ -1367,11 +1367,11 @@
   position: relative;
 }
 
-[data-heading-style="retro"] .mp-preview h2::before {
+.mp-preview[data-heading-style="retro"] h2::before {
   display: none;
 }
 
-[data-heading-style="retro"] .mp-preview h2::after {
+.mp-preview[data-heading-style="retro"] h2::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -1389,7 +1389,7 @@
   border-radius: 0;
 }
 
-[data-heading-style="retro"] .mp-preview h3 {
+.mp-preview[data-heading-style="retro"] h3 {
   font-family: Georgia, 'Times New Roman', serif;
   padding: 10px 16px 10px 28px;
   background: color-mix(in srgb, var(--theme-primary) 6%, transparent);
@@ -1398,7 +1398,7 @@
   position: relative;
 }
 
-[data-heading-style="retro"] .mp-preview h3::before {
+.mp-preview[data-heading-style="retro"] h3::before {
   content: '✦';
   position: absolute;
   left: 8px;
@@ -1414,7 +1414,7 @@
    特点：终端风格、代码高亮感、等宽字体
    ═══════════════════════════════════════════════════════════════════════════ */
 
-[data-heading-style="code"] .mp-preview h1 {
+.mp-preview[data-heading-style="code"] h1 {
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
   font-size: 26px;
   font-weight: 700;
@@ -1426,7 +1426,7 @@
   position: relative;
 }
 
-[data-heading-style="code"] .mp-preview h1::before {
+.mp-preview[data-heading-style="code"] h1::before {
   content: '>';
   position: absolute;
   left: 16px;
@@ -1442,11 +1442,11 @@
   border-radius: 0;
 }
 
-[data-heading-style="code"] .mp-preview h1::after {
+.mp-preview[data-heading-style="code"] h1::after {
   display: none;
 }
 
-[data-heading-style="code"] .mp-preview h2 {
+.mp-preview[data-heading-style="code"] h2 {
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
   padding: 10px 16px 10px 40px;
   border-bottom: none;
@@ -1456,7 +1456,7 @@
   position: relative;
 }
 
-[data-heading-style="code"] .mp-preview h2::before {
+.mp-preview[data-heading-style="code"] h2::before {
   content: '//';
   position: absolute;
   left: 12px;
@@ -1472,7 +1472,7 @@
   box-shadow: none;
 }
 
-[data-heading-style="code"] .mp-preview h2::after {
+.mp-preview[data-heading-style="code"] h2::after {
   width: 50px;
   height: 2px;
   background: var(--theme-primary);
@@ -1480,7 +1480,7 @@
   border-radius: 1px;
 }
 
-[data-heading-style="code"] .mp-preview h3 {
+.mp-preview[data-heading-style="code"] h3 {
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
   padding: 8px 12px 8px 20px;
   background: color-mix(in srgb, var(--theme-secondary) 6%, transparent);
@@ -1489,7 +1489,7 @@
   position: relative;
 }
 
-[data-heading-style="code"] .mp-preview h3::before {
+.mp-preview[data-heading-style="code"] h3::before {
   content: 'fn ';
   color: var(--theme-accent);
   font-size: 13px;
