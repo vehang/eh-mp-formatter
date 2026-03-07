@@ -13,42 +13,136 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   标题系统 - 清晰的层级关系
+   标题系统 - 专业设计版
    ═══════════════════════════════════════════════════════════ */
 
+/* H1 - 最醒目：左侧装饰条 + 底部渐变线 */
 .mp-preview h1 {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
-  margin: 28px 0 16px;
+  margin: 32px 0 18px;
+  padding-left: 16px;
   line-height: 1.35;
   color: var(--theme-primary);
   letter-spacing: -0.02em;
+  position: relative;
 }
 
+.mp-preview h1::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 5px;
+  background: linear-gradient(180deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
+  border-radius: 3px;
+}
+
+.mp-preview h1::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 2px;
+  margin-top: 12px;
+  background: linear-gradient(90deg, var(--theme-primary) 0%, var(--theme-secondary) 50%, transparent 100%);
+  opacity: 0.3;
+}
+
+/* H2 - 次级：左侧圆点 + 底部装饰线 */
 .mp-preview h2 {
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 600;
-  margin: 24px 0 12px;
+  margin: 28px 0 14px;
+  padding-left: 20px;
+  padding-bottom: 12px;
   line-height: 1.4;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--theme-border, #E5E7EB);
   color: var(--theme-primary);
   letter-spacing: -0.01em;
+  position: relative;
+  border-bottom: 1px solid var(--theme-border, #E5E7EB);
 }
 
+.mp-preview h2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  background: var(--theme-secondary);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-secondary) 20%, transparent);
+}
+
+.mp-preview h2::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: var(--theme-primary);
+  border-radius: 1px;
+}
+
+/* H3 - 三级：左侧色块 + 编号感 */
 .mp-preview h3 {
   font-size: 18px;
   font-weight: 600;
-  margin: 20px 0 10px;
+  margin: 24px 0 12px;
+  padding: 8px 12px 8px 16px;
   line-height: 1.45;
   color: var(--theme-primary);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--theme-primary) 8%, transparent) 0%, transparent 100%);
+  border-left: 4px solid var(--theme-accent, var(--theme-primary));
+  border-radius: 0 8px 8px 0;
 }
 
+/* H4 - 四级：简洁横线装饰 */
 .mp-preview h4 {
   font-size: 16px;
   font-weight: 600;
-  margin: 16px 0 8px;
+  margin: 20px 0 10px;
+  padding-bottom: 6px;
   color: var(--theme-primary);
+  position: relative;
+  display: inline-block;
+}
+
+.mp-preview h4::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--theme-secondary) 0,
+    var(--theme-secondary) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  opacity: 0.5;
+}
+
+/* H5/H6 - 更轻量的装饰 */
+.mp-preview h5 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 16px 0 8px;
+  color: var(--theme-secondary);
+  letter-spacing: 0.02em;
+}
+
+.mp-preview h6 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 14px 0 6px;
+  color: var(--theme-text-light, var(--theme-secondary));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* 首个标题不需要上边距 */
