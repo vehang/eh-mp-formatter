@@ -10,65 +10,56 @@ interface ThemePickerModalProps {
 }
 
 /**
- * 主题颜色预览组件 - 展示主题的配色方案
+ * 主题颜色预览组件 - 展示主题的配色方案（紧凑版）
  */
 function ColorPreview({ colors }: { colors: ThemeColor }) {
   return (
-    <div className="theme-color-preview">
-      {/* 主要颜色行 */}
-      <div className="color-row">
+    <div className="theme-color-preview-compact">
+      {/* 第一行：主要颜色 */}
+      <div className="color-row-compact">
         <div
-          className="color-swatch primary"
+          className="color-swatch-small"
           style={{ backgroundColor: colors.primary }}
           title={`主色: ${colors.primary}`}
         />
         <div
-          className="color-swatch secondary"
+          className="color-swatch-small"
           style={{ backgroundColor: colors.secondary }}
           title={`辅助色: ${colors.secondary}`}
         />
         <div
-          className="color-swatch accent"
+          className="color-swatch-small"
           style={{ backgroundColor: colors.accent }}
           title={`强调色: ${colors.accent}`}
         />
-      </div>
-
-      {/* 文字颜色行 */}
-      <div className="color-row">
         <div
-          className="color-swatch"
+          className="color-swatch-small"
           style={{ backgroundColor: colors.text }}
           title={`文字色: ${colors.text}`}
         />
+      </div>
+      
+      {/* 第二行：次要颜色 */}
+      <div className="color-row-compact">
         <div
-          className="color-swatch"
+          className="color-swatch-small"
           style={{ backgroundColor: colors.textLight }}
           title={`浅色文字: ${colors.textLight}`}
         />
         <div
-          className="color-swatch"
+          className="color-swatch-small"
           style={{ backgroundColor: colors.border }}
           title={`边框色: ${colors.border}`}
         />
-      </div>
-
-      {/* 代码和引用块颜色 */}
-      <div className="color-row">
         <div
-          className="color-swatch code"
+          className="color-swatch-small"
           style={{ backgroundColor: colors.code.inline.background }}
-          title={`行内代码背景: ${colors.code.inline.background}`}
+          title={`代码背景: ${colors.code.inline.background}`}
         />
         <div
-          className="color-swatch blockquote"
+          className="color-swatch-small"
           style={{ backgroundColor: colors.blockquote.background }}
-          title={`引用块背景: ${colors.blockquote.background}`}
-        />
-        <div
-          className="color-swatch table"
-          style={{ backgroundColor: colors.table.headerBg }}
-          title={`表格表头: ${colors.table.headerBg}`}
+          title={`引用背景: ${colors.blockquote.background}`}
         />
       </div>
     </div>
@@ -99,10 +90,10 @@ function MiniPreview({ colors }: { colors: ThemeColor }) {
         className="mini-text"
         style={{ color: colors.text }}
       >
-        正文文字
+        正文文字效果
       </div>
-      {/* 行内代码预览 */}
-      <span
+      {/* 代码预览 */}
+      <div
         className="mini-code"
         style={{
           backgroundColor: colors.code.inline.background,
@@ -110,7 +101,7 @@ function MiniPreview({ colors }: { colors: ThemeColor }) {
         }}
       >
         code
-      </span>
+      </div>
     </div>
   )
 }
@@ -124,7 +115,6 @@ export function ThemePickerModal({
 }: ThemePickerModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
 
-  // 点击背景关闭
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose()
@@ -212,17 +202,20 @@ export function ThemePickerModal({
                   </div>
                 )}
 
-                {/* 迷你预览 */}
-                <MiniPreview colors={theme.colors} />
+                {/* 上半部分：预览和颜色块并排 */}
+                <div className="theme-card-top">
+                  {/* 迷你预览 */}
+                  <MiniPreview colors={theme.colors} />
+                  
+                  {/* 颜色预览 */}
+                  <ColorPreview colors={theme.colors} />
+                </div>
 
-                {/* 主题信息 */}
+                {/* 下半部分：主题信息 */}
                 <div className="theme-card-info">
                   <span className="theme-card-name">{theme.name}</span>
                   <span className="theme-card-desc">{theme.description}</span>
                 </div>
-
-                {/* 颜色预览 */}
-                <ColorPreview colors={theme.colors} />
               </button>
             )
           })}

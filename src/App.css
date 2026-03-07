@@ -911,31 +911,38 @@ body {
 
 /* 迷你预览区域 */
 .theme-mini-preview {
-  padding: var(--space-3);
+  padding: var(--space-2);
   border-radius: var(--radius-md);
   border: 1px solid;
-  margin-bottom: var(--space-2);
-  min-height: 60px;
+  flex: 1;
+  min-height: 50px;
 }
 
 .mini-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .mini-text {
-  font-size: 12px;
-  margin-bottom: 6px;
+  font-size: 11px;
+  margin-bottom: 4px;
   opacity: 0.8;
 }
 
 .mini-code {
   display: inline-block;
-  padding: 2px 6px;
+  padding: 1px 4px;
   border-radius: 3px;
-  font-size: 11px;
+  font-size: 10px;
   font-family: var(--font-mono);
+}
+
+/* 主题卡片上半部分（预览和颜色块并排） */
+.theme-card-top {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
 /* 主题信息 */
@@ -943,11 +950,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-bottom: var(--space-2);
 }
 
 .theme-card-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -957,7 +963,32 @@ body {
   color: var(--text-muted);
 }
 
-/* 颜色预览 */
+/* 颜色预览（紧凑版） */
+.theme-color-preview-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.color-row-compact {
+  display: flex;
+  gap: 3px;
+}
+
+.color-swatch-small {
+  flex: 1;
+  height: 14px;
+  border-radius: 3px;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.color-swatch-small:hover {
+  transform: scale(1.1);
+}
+
+/* 旧版颜色预览（兼容） */
 .theme-color-preview {
   display: flex;
   flex-direction: column;
