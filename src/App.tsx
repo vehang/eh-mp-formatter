@@ -927,7 +927,7 @@ function App() {
                 border: '1px solid var(--border-default)'
               }}
             >
-              <span className="iconify icon-sm" data-icon={syncScroll ? 'lucide:link' : 'lucide:link-off'}></span>
+              <span className="iconify icon-sm" data-icon={syncScroll ? 'lucide:plug-zap' : 'lucide:plug'}></span>
               {syncScroll ? '跟随开' : '跟随关'}
             </button>
 
