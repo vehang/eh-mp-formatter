@@ -5,27 +5,41 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>排版助手 - 公众号 Markdown 排版工具</title>
-    <!-- 缓存版本检查和主题初始化 -->
+    <!-- 清除 Iconify 缓存 + 应用缓存版本检查 + 主题初始化 -->
     <script>
       (function() {
-        var CACHE_VERSION = '2.0';
-        
         try {
-          // 检查缓存版本
+          // 【重要】每次都清除 Iconify 缓存，避免版本冲突
+          // Iconify 3.x 检测到 iconify2 的缓存时会尝试加载不兼容的数据
+          var iconifyKeys = [];
+          for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            if (key && (
+              key === 'iconify-version' ||
+              key.startsWith('iconify-') ||
+              key.includes('iconify')
+            )) {
+              iconifyKeys.push(key);
+            }
+          }
+          if (iconifyKeys.length > 0) {
+            console.log('[Iconify] Clearing old cache:', iconifyKeys);
+            iconifyKeys.forEach(function(key) {
+              localStorage.removeItem(key);
+            });
+          }
+          
+          // 检查应用缓存版本
+          var CACHE_VERSION = '2.0';
           var versionKey = 'mp-formatter-cache-version';
           var currentVersion = localStorage.getItem(versionKey);
           
           if (currentVersion !== CACHE_VERSION) {
-            // 版本不匹配，清除所有相关缓存
-            console.log('[Cache] Version mismatch, clearing all cache');
+            console.log('[Cache] Version mismatch, clearing app cache');
             var keysToRemove = [];
             for (var i = 0; i < localStorage.length; i++) {
               var key = localStorage.key(i);
-              if (key && (
-                key.startsWith('mp-formatter-') ||
-                key.startsWith('iconify') ||
-                key.includes('iconify')
-              )) {
+              if (key && key.startsWith('mp-formatter-')) {
                 keysToRemove.push(key);
               }
             }
@@ -33,7 +47,6 @@
               localStorage.removeItem(key);
               console.log('[Cache] Removed:', key);
             });
-            // 设置新版本号
             localStorage.setItem(versionKey, CACHE_VERSION);
             console.log('[Cache] Updated to version', CACHE_VERSION);
           }
@@ -50,7 +63,7 @@
           }
           document.documentElement.setAttribute('data-theme', theme);
         } catch (e) {
-          console.error('[Cache] Error:', e);
+          console.error('[Init] Error:', e);
           document.documentElement.setAttribute('data-theme', 'dark');
         }
       })();
