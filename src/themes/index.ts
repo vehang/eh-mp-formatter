@@ -505,6 +505,39 @@ export const oneDarkTheme: Theme = {
   styles: generateInlineStyles(oneDarkColors)
 }
 
+// 16. Material - Material Design 主题
+const materialColors: ThemeColor = {
+  primary: '#80CBC4',
+  secondary: '#C3E88D',
+  accent: '#FFCB6B',
+  background: '#263238',
+  text: '#EEFFFF',
+  textLight: '#80CBC4',
+  border: '#314549',
+  code: {
+    inline: { background: '#314549', color: '#F78C6C' },
+    block: { background: '#1E272C', color: '#EEFFFF' }
+  },
+  blockquote: {
+    background: '#314549',
+    borderLeft: '#80CBC4',
+    color: '#B2CCD6'
+  },
+  table: {
+    headerBg: '#314549',
+    evenRowBg: '#263238',
+    border: '#314549'
+  }
+}
+
+export const materialTheme: Theme = {
+  id: 'material',
+  name: 'Material',
+  description: 'Material Design 主题',
+  colors: materialColors,
+  styles: generateInlineStyles(materialColors)
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 导出
 // ═══════════════════════════════════════════════════════════════
@@ -524,7 +557,8 @@ export const themes: Theme[] = [
   monokaiTheme,
   gruvboxTheme,
   tokyoNightTheme,
-  oneDarkTheme
+  oneDarkTheme,
+  materialTheme
 ]
 
 export function applyTheme(theme: Theme): void {
