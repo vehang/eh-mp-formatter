@@ -395,21 +395,27 @@ function App() {
         return
       }
 
-      // 克隆元素以避免影响原预览
-      const clone = previewEl.cloneNode(true) as HTMLElement
+      // ═══════════════════════════════════════════════════════════════
+      // 关键修复：使用 applyInlineStyles 内联样式
+      // 不使用 cloneNode，因为会丢失 CSS 计算后的样式
+      // ═══════════════════════════════════════════════════════════════
+      const htmlWithInlineStyles = applyInlineStyles(previewEl, currentTheme)
 
-      // 创建临时容器
+      // 创建临时容器（必须在视口内，html2canvas 才能正确渲染）
       const container = document.createElement('div')
       container.style.cssText = `
-        position: absolute;
-        left: -9999px;
+        position: fixed;
+        left: 0;
         top: 0;
         width: 800px;
         padding: 40px;
         background: #fff;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        z-index: -9999;
+        opacity: 0;
+        pointer-events: none;
       `
-      container.appendChild(clone)
+      container.innerHTML = htmlWithInlineStyles
       document.body.appendChild(container)
 
       // 生成 PDF
@@ -421,7 +427,8 @@ function App() {
           scale: 2,
           useCORS: true,
           logging: false,
-          letterRendering: true
+          letterRendering: true,
+          windowWidth: 900
         },
         jsPDF: {
           unit: 'mm' as const,
@@ -728,7 +735,7 @@ function App() {
 
             <div className="flex-1" />
 
-            {/* 下载 PDF 按钮 */}
+            {/* 下载 PDF 按钮 - 响应式：手机只显示图标，宽屏/PAD显示文字 */}
             <button
               className="btn btn-ghost"
               onClick={handleDownloadPDF}
@@ -738,7 +745,7 @@ function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '4px 10px',
+                padding: previewMode === 'mobile' ? '4px 8px' : '4px 10px',
                 fontSize: '13px',
                 color: isDownloading ? 'var(--text-muted)' : 'var(--text-secondary)',
                 border: '1px solid var(--border-default)',
@@ -750,7 +757,7 @@ function App() {
               ) : (
                 <span className="iconify icon-sm" data-icon="lucide:download"></span>
               )}
-              下载 PDF
+              {previewMode !== 'mobile' && '下载 PDF'}
             </button>
 
             {/* 复制排版按钮 */}
