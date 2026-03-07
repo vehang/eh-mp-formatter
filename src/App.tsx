@@ -915,18 +915,20 @@ function App() {
             {/* 同步滚动开关 */}
             <button
               onClick={() => setSyncScroll(!syncScroll)}
-              className={`btn btn-ghost btn-icon ${syncScroll ? 'sync-active' : ''}`}
+              className="btn btn-ghost"
               title={syncScroll ? '关闭同步滚动' : '开启同步滚动'}
               style={{
-                padding: '4px 8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 10px',
                 fontSize: '12px',
-                gap: '4px',
                 color: syncScroll ? 'var(--orange-500)' : 'var(--text-muted)',
-                background: syncScroll ? 'var(--color-primary-muted)' : 'transparent',
+                border: '1px solid var(--border-default)'
               }}
             >
               <span className="iconify icon-sm" data-icon={syncScroll ? 'lucide:link' : 'lucide:link-off'}></span>
-              跟随
+              {syncScroll ? '跟随开' : '跟随关'}
             </button>
 
             <div className="flex-1" />
