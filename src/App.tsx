@@ -990,8 +990,7 @@ function App() {
               )}
               {/* 保存状态 */}
               {isSaving ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
-                  <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
+                <span style={{ color: 'var(--text-muted)' }}>
                   保存中...
                 </span>
               ) : (
