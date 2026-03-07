@@ -1012,10 +1012,12 @@ function App() {
               onChange={setMarkdown}
               placeholder="在这里写 Markdown..."
               onImagePaste={handleImagePaste}
+              showLineNumbers={!isMobile}
             />
           </div>
 
-          {/* 底部状态栏 - 只显示在左侧编辑器下方 */}
+          {/* 底部状态栏 - 只显示在左侧编辑器下方，手机模式隐藏 */}
+          {!isMobile && (
           <div
             className="flex items-center justify-between"
             style={{
@@ -1063,6 +1065,7 @@ function App() {
               )}
             </div>
           </div>
+          )}
         </div>
 
         {/* 右侧预览 - 手机模式下根据 Tab 显示/隐藏 */}
@@ -1166,10 +1169,10 @@ function App() {
             <button
               className="btn btn-primary"
               onClick={handleCopyHTML}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: isMobile ? '6px 12px' : '4px 10px', fontSize: '13px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: isMobile ? '4px 10px' : '4px 10px', fontSize: '13px' }}
             >
               <span className="iconify icon-sm" data-icon="lucide:copy"></span>
-              {isMobile ? '复制' : '复制排版'}
+              复制排版
             </button>
 
             {/* 手机模式时隐藏尺寸显示 */}
@@ -1182,7 +1185,7 @@ function App() {
           <div
             className="flex-1 overflow-auto flex justify-center"
             style={{
-              padding: 'var(--space-6)',
+              padding: isMobile ? '0' : 'var(--space-6)',
               background: 'var(--bg-base)'
             }}
           >
@@ -1199,8 +1202,8 @@ function App() {
               <div
                 className="overflow-auto theme-transition preview-scroll-container"
                 style={{
-                  padding: 'var(--space-6)',
-                  maxHeight: 'calc(100vh - 180px)'
+                  padding: isMobile ? 'var(--space-4)' : 'var(--space-6)',
+                  maxHeight: isMobile ? 'calc(100vh - 120px)' : 'calc(100vh - 180px)'
                 }}
               >
                 <div

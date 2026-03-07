@@ -9,9 +9,10 @@ interface CodeMirrorEditorProps {
   onChange: (value: string) => void
   placeholder?: string
   onImagePaste?: (file: File) => void
+  showLineNumbers?: boolean
 }
 
-export function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste }: CodeMirrorEditorProps) {
+export function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste, showLineNumbers = true }: CodeMirrorEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
 
@@ -21,7 +22,7 @@ export function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste }:
     const state = EditorState.create({
       doc: value,
       extensions: [
-        lineNumbers(),
+        showLineNumbers ? lineNumbers() : [],
         highlightActiveLine(),
         highlightActiveLineGutter(),
         markdown(),
@@ -52,6 +53,7 @@ export function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste }:
             backgroundColor: 'transparent',
             border: 'none',
             color: 'var(--text-muted)',
+            display: showLineNumbers ? 'block' : 'none',
           },
           '.cm-lineNumbers .cm-gutterElement': {
             padding: '0 8px 0 16px',
