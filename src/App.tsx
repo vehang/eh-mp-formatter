@@ -971,85 +971,6 @@ function App() {
               </>
             )}
 
-            {/* Markdown 格式化按钮 */}
-            <button
-              onClick={insertBold}
-              className="btn btn-ghost btn-icon"
-              title="加粗 (Ctrl+B)"
-            >
-              <span className="iconify icon-sm" data-icon="lucide:bold" style={{ fontWeight: 700 }}></span>
-            </button>
-            <button
-              onClick={insertItalic}
-              className="btn btn-ghost btn-icon"
-              title="斜体 (Ctrl+I)"
-            >
-              <span className="iconify icon-sm" data-icon="lucide:italic"></span>
-            </button>
-            <button
-              onClick={insertLink}
-              className="btn btn-ghost btn-icon"
-              title="插入链接 (Ctrl+K)"
-            >
-              <span className="iconify icon-sm" data-icon="lucide:link"></span>
-            </button>
-            <button
-              onClick={insertImage}
-              className="btn btn-ghost btn-icon"
-              title="插入图片 (Ctrl+Shift+I)"
-            >
-              <span className="iconify icon-sm" data-icon="lucide:image"></span>
-            </button>
-            <button
-              onClick={insertCode}
-              className="btn btn-ghost btn-icon"
-              title="行内代码 (Ctrl+`)"
-            >
-              <span className="iconify icon-sm" data-icon="lucide:code"></span>
-            </button>
-            <button
-              onClick={insertCodeBlock}
-              className="btn btn-ghost btn-icon"
-              title="代码块 (Ctrl+Shift+C)"
-            >
-              <span className="iconify icon-sm" data-icon="lucide:file-code"></span>
-            </button>
-            <button
-              onClick={insertHr}
-              className="btn btn-ghost btn-icon"
-              title="分割线"
-            >
-              <span className="iconify icon-sm" data-icon="lucide:minus"></span>
-            </button>
-            <button
-              onClick={insertQuote}
-              className="btn btn-ghost btn-icon"
-              title="引用"
-            >
-              <span className="iconify icon-sm" data-icon="lucide:quote"></span>
-            </button>
-
-            {/* 上传图片按钮 */}
-            <label
-              className="btn btn-ghost btn-icon"
-              title="上传图片"
-              style={{ cursor: 'pointer' }}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                style={{ display: 'none' }}
-              />
-              <span
-                className="iconify icon-sm"
-                data-icon="lucide:upload"
-                style={{ color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-muted)' }}
-              ></span>
-            </label>
-
-            <div className="toolbar-divider" style={{ margin: '0 4px' }} />
-
             {/* 快捷键按钮 */}
             <button
               onClick={() => setIsShortcutsModalOpen(true)}
@@ -1163,6 +1084,107 @@ function App() {
             )}
             <span className="panel-meta" style={{ marginLeft: isMobile ? '0' : '8px', fontSize: '12px' }}>{markdown.length} 字</span>
           </div>
+
+          {/* Markdown 格式化工具栏 - 第二行 */}
+          <div
+            className="formatting-toolbar"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '2px',
+              padding: isMobile ? '6px 12px' : '6px 16px',
+              background: 'var(--bg-muted)',
+              borderBottom: '1px solid var(--border-subtle)',
+              flexWrap: 'wrap'
+            }}
+          >
+            <button
+              onClick={insertBold}
+              className="btn btn-ghost btn-icon"
+              title="加粗 (Ctrl+B)"
+              style={{ padding: '4px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:bold" style={{ fontWeight: 700 }}></span>
+            </button>
+            <button
+              onClick={insertItalic}
+              className="btn btn-ghost btn-icon"
+              title="斜体 (Ctrl+I)"
+              style={{ padding: '4px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:italic"></span>
+            </button>
+            <button
+              onClick={insertLink}
+              className="btn btn-ghost btn-icon"
+              title="插入链接 (Ctrl+K)"
+              style={{ padding: '4px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:link"></span>
+            </button>
+            <button
+              onClick={insertImage}
+              className="btn btn-ghost btn-icon"
+              title="插入图片 (Ctrl+Shift+I)"
+              style={{ padding: '4px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:image"></span>
+            </button>
+            <button
+              onClick={insertCode}
+              className="btn btn-ghost btn-icon"
+              title="行内代码 (Ctrl+`)"
+              style={{ padding: '4px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:code"></span>
+            </button>
+            <button
+              onClick={insertCodeBlock}
+              className="btn btn-ghost btn-icon"
+              title="代码块 (Ctrl+Shift+C)"
+              style={{ padding: '4px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:file-code"></span>
+            </button>
+            <button
+              onClick={insertHr}
+              className="btn btn-ghost btn-icon"
+              title="分割线"
+              style={{ padding: '4px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:minus"></span>
+            </button>
+            <button
+              onClick={insertQuote}
+              className="btn btn-ghost btn-icon"
+              title="引用"
+              style={{ padding: '4px' }}
+            >
+              <span className="iconify icon-sm" data-icon="lucide:quote"></span>
+            </button>
+
+            <div className="toolbar-divider" style={{ margin: '0 4px', height: '16px' }} />
+
+            {/* 上传图片按钮 */}
+            <label
+              className="btn btn-ghost btn-icon"
+              title={hasConfiguredHost ? '上传图片到图床' : '上传图片（Base64）'}
+              style={{ cursor: 'pointer', padding: '4px' }}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
+              />
+              <span
+                className="iconify icon-sm"
+                data-icon="lucide:upload"
+                style={{ color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-muted)' }}
+              ></span>
+            </label>
+          </div>
+
           <div className="flex-1 min-h-0">
             <CodeMirrorEditor
               value={markdown}
