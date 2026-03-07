@@ -986,14 +986,14 @@ function App() {
               {isSaving ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
                   <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
-                  保存中<span style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>...</span>
+                  保存中...
                 </span>
-              ) : savedAt ? (
+              ) : (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--green-500)' }}>
                   <span className="iconify icon-sm" data-icon="lucide:check-circle"></span>
                   已保存
                 </span>
-              ) : null}
+              )}
             </div>
           </div>
         </div>
