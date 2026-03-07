@@ -22,6 +22,19 @@ export interface ThemeColor {
   }
 }
 
+// 标题样式变体类型
+export type HeadingStyleVariant = 
+  | 'modern'        // 现代简约 - 简洁线条装饰
+  | 'gradient'      // 渐变科技 - 渐变色装饰条
+  | 'soft'          // 柔和圆润 - 圆角背景
+  | 'retro'         // 复古经典 - 复古装饰
+  | 'code'          // 代码风格 - 类似终端
+  | 'nature'        // 自然清新 - 叶片装饰
+  | 'nordic'        // 北欧极简 - 极简线条
+  | 'elegant'       // 优雅浪漫 - 精致装饰
+  | 'brutalist'     // 粗犷工业 - 粗线条
+  | 'minimal'       // 极简单色 - 无装饰
+
 // 内联样式映射 - 用于公众号复制
 export interface ThemeStyles {
   container: string
@@ -53,12 +66,14 @@ export interface Theme {
   description: string
   colors: ThemeColor
   styles: ThemeStyles
+  headingStyle?: HeadingStyleVariant  // 标题样式变体，默认 'modern'
 }
 
 export function generateThemeStyles(theme: Theme): string {
   const c = theme.colors
+  const headingStyle = theme.headingStyle || 'modern'
   return `
-.mp-preview {
+.mp-preview[data-theme-style="${theme.id}"] {
   --theme-primary: ${c.primary};
   --theme-secondary: ${c.secondary};
   --theme-accent: ${c.accent};
@@ -76,27 +91,29 @@ export function generateThemeStyles(theme: Theme): string {
   --theme-table-header-bg: ${c.table.headerBg};
   --theme-table-even-bg: ${c.table.evenRowBg};
   --theme-table-border: ${c.table.border};
+  --theme-heading-style: ${headingStyle};
 }
 
-.mp-preview h1 { color: var(--theme-primary); }
-.mp-preview h2 { color: var(--theme-primary); border-bottom-color: var(--theme-border); }
-.mp-preview h3 { color: var(--theme-primary); }
-.mp-preview h4 { color: var(--theme-primary); }
-.mp-preview p { color: var(--theme-text); }
-.mp-preview li { color: var(--theme-text); }
-.mp-preview blockquote { background: var(--theme-blockquote-bg); border-left-color: var(--theme-blockquote-border); color: var(--theme-blockquote-color); }
+.mp-preview[data-theme-style="${theme.id}"] h1,
+.mp-preview[data-theme-style="${theme.id}"] h2,
+.mp-preview[data-theme-style="${theme.id}"] h3,
+.mp-preview[data-theme-style="${theme.id}"] h4 { color: var(--theme-primary); }
+.mp-preview[data-theme-style="${theme.id}"] h2 { border-bottom-color: var(--theme-border); }
+.mp-preview[data-theme-style="${theme.id}"] p,
+.mp-preview[data-theme-style="${theme.id}"] li { color: var(--theme-text); }
+.mp-preview[data-theme-style="${theme.id}"] blockquote { background: var(--theme-blockquote-bg); border-left-color: var(--theme-blockquote-border); color: var(--theme-blockquote-color); }
 
 /* 行内代码：受预览主题影响 */
-.mp-preview code { background: var(--theme-code-inline-bg); color: var(--theme-code-inline-color); }
+.mp-preview[data-theme-style="${theme.id}"] code { background: var(--theme-code-inline-bg); color: var(--theme-code-inline-color); }
 
 /* 代码块内的 code：不受预览主题影响，由代码主题控制 */
-.mp-preview pre code { background: transparent !important; color: inherit !important; }
+.mp-preview[data-theme-style="${theme.id}"] pre code { background: transparent !important; color: inherit !important; }
 
-.mp-preview th { background: var(--theme-table-header-bg); border-color: var(--theme-table-border); }
-.mp-preview td { border-color: var(--theme-table-border); }
-.mp-preview tr:nth-child(even) { background: var(--theme-table-even-bg); }
-.mp-preview a { color: var(--theme-accent); }
-.mp-preview hr { border-top-color: var(--theme-border); }
+.mp-preview[data-theme-style="${theme.id}"] th { background: var(--theme-table-header-bg); border-color: var(--theme-table-border); }
+.mp-preview[data-theme-style="${theme.id}"] td { border-color: var(--theme-table-border); }
+.mp-preview[data-theme-style="${theme.id}"] tr:nth-child(even) { background: var(--theme-table-even-bg); }
+.mp-preview[data-theme-style="${theme.id}"] a { color: var(--theme-accent); }
+.mp-preview[data-theme-style="${theme.id}"] hr { border-top-color: var(--theme-border); }
   `.trim()
 }
 

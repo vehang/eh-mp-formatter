@@ -36,7 +36,8 @@ export const indigoTheme: Theme = {
   name: '靛青',
   description: '专业商务风格',
   colors: indigoColors,
-  styles: generateInlineStyles(indigoColors)
+  styles: generateInlineStyles(indigoColors),
+  headingStyle: 'modern'
 }
 
 // 2. 森林 - 自然清新（升级版）
@@ -69,7 +70,8 @@ export const forestTheme: Theme = {
   name: '森林',
   description: '自然清新风格',
   colors: forestColors,
-  styles: generateInlineStyles(forestColors)
+  styles: generateInlineStyles(forestColors),
+  headingStyle: 'nature'
 }
 
 // 3. 玫瑰 - 温柔浪漫（升级版）
@@ -102,7 +104,8 @@ export const roseTheme: Theme = {
   name: '玫瑰',
   description: '温柔浪漫风格',
   colors: roseColors,
-  styles: generateInlineStyles(roseColors)
+  styles: generateInlineStyles(roseColors),
+  headingStyle: 'soft'
 }
 
 // 4. 琥珀 - 温暖活力（升级版）
@@ -135,7 +138,8 @@ export const amberTheme: Theme = {
   name: '琥珀',
   description: '温暖活力风格',
   colors: amberColors,
-  styles: generateInlineStyles(amberColors)
+  styles: generateInlineStyles(amberColors),
+  headingStyle: 'modern'
 }
 
 // 5. 石板 - 极简专业（升级版）
@@ -168,7 +172,8 @@ export const slateTheme: Theme = {
   name: '石板',
   description: '极简专业风格',
   colors: slateColors,
-  styles: generateInlineStyles(slateColors)
+  styles: generateInlineStyles(slateColors),
+  headingStyle: 'nordic'
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -205,7 +210,8 @@ export const oceanDeepTheme: Theme = {
   name: '深海蓝',
   description: 'Linear 风格深色主题',
   colors: oceanDeepColors,
-  styles: generateInlineStyles(oceanDeepColors)
+  styles: generateInlineStyles(oceanDeepColors),
+  headingStyle: 'gradient'
 }
 
 // 7. Forest Night - 森林之夜主题
@@ -238,7 +244,8 @@ export const forestNightTheme: Theme = {
   name: '森林之夜',
   description: '暗色森林绿主题',
   colors: forestNightColors,
-  styles: generateInlineStyles(forestNightColors)
+  styles: generateInlineStyles(forestNightColors),
+  headingStyle: 'nature'
 }
 
 // 8. Rosé Pine - 优雅玫瑰松主题
@@ -271,7 +278,8 @@ export const rosePineTheme: Theme = {
   name: '玫瑰松',
   description: 'Rosé Pine 暗色主题',
   colors: rosePineColors,
-  styles: generateInlineStyles(rosePineColors)
+  styles: generateInlineStyles(rosePineColors),
+  headingStyle: 'soft'
 }
 
 // 9. Nord - 北欧冷调主题
@@ -304,7 +312,8 @@ export const nordTheme: Theme = {
   name: '北欧',
   description: 'Nord 冷色调主题',
   colors: nordColors,
-  styles: generateInlineStyles(nordColors)
+  styles: generateInlineStyles(nordColors),
+  headingStyle: 'nordic'
 }
 
 // 10. Dracula - 经典德古拉主题
@@ -337,7 +346,8 @@ export const draculaTheme: Theme = {
   name: '德古拉',
   description: 'Dracula 经典暗色主题',
   colors: draculaColors,
-  styles: generateInlineStyles(draculaColors)
+  styles: generateInlineStyles(draculaColors),
+  headingStyle: 'code'
 }
 
 // 11. Solarized - 太阳能主题
@@ -370,7 +380,8 @@ export const solarizedTheme: Theme = {
   name: '太阳能',
   description: 'Solarized 经典亮色主题',
   colors: solarizedColors,
-  styles: generateInlineStyles(solarizedColors)
+  styles: generateInlineStyles(solarizedColors),
+  headingStyle: 'retro'
 }
 
 // 12. Monokai - 经典编辑器主题
@@ -403,7 +414,8 @@ export const monokaiTheme: Theme = {
   name: 'Monokai',
   description: '经典编辑器主题',
   colors: monokaiColors,
-  styles: generateInlineStyles(monokaiColors)
+  styles: generateInlineStyles(monokaiColors),
+  headingStyle: 'code'
 }
 
 // 13. Gruvbox - 复古温暖主题
@@ -436,7 +448,8 @@ export const gruvboxTheme: Theme = {
   name: 'Gruvbox',
   description: '复古温暖暗色主题',
   colors: gruvboxColors,
-  styles: generateInlineStyles(gruvboxColors)
+  styles: generateInlineStyles(gruvboxColors),
+  headingStyle: 'retro'
 }
 
 // 14. Tokyo Night - 东京之夜主题
@@ -469,7 +482,8 @@ export const tokyoNightTheme: Theme = {
   name: '东京之夜',
   description: 'Tokyo Night 深邃紫色主题',
   colors: tokyoNightColors,
-  styles: generateInlineStyles(tokyoNightColors)
+  styles: generateInlineStyles(tokyoNightColors),
+  headingStyle: 'gradient'
 }
 
 // 15. One Dark - Atom 经典主题
@@ -502,7 +516,8 @@ export const oneDarkTheme: Theme = {
   name: 'One Dark',
   description: 'Atom 经典编辑器主题',
   colors: oneDarkColors,
-  styles: generateInlineStyles(oneDarkColors)
+  styles: generateInlineStyles(oneDarkColors),
+  headingStyle: 'code'
 }
 
 // 16. Material - Material Design 主题
@@ -535,7 +550,8 @@ export const materialTheme: Theme = {
   name: 'Material',
   description: 'Material Design 主题',
   colors: materialColors,
-  styles: generateInlineStyles(materialColors)
+  styles: generateInlineStyles(materialColors),
+  headingStyle: 'modern'
 }
 
 // 17. Panda - 熊猫主题
@@ -568,7 +584,8 @@ export const pandaTheme: Theme = {
   name: 'Panda',
   description: '熊猫粉红主题',
   colors: pandaColors,
-  styles: generateInlineStyles(pandaColors)
+  styles: generateInlineStyles(pandaColors),
+  headingStyle: 'soft'
 }
 
 // 18. Ayu - 阿尤主题
@@ -601,7 +618,8 @@ export const ayuTheme: Theme = {
   name: 'Ayu',
   description: 'Ayu 温暖暗色主题',
   colors: ayuColors,
-  styles: generateInlineStyles(ayuColors)
+  styles: generateInlineStyles(ayuColors),
+  headingStyle: 'retro'
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -640,6 +658,13 @@ export function applyTheme(theme: Theme): void {
   }
 
   styleEl.textContent = generateThemeStyles(theme)
+
+  // 设置预览区域的 data 属性
+  const previewEl = document.querySelector('.mp-preview')
+  if (previewEl) {
+    previewEl.setAttribute('data-theme-style', theme.id)
+    previewEl.setAttribute('data-heading-style', theme.headingStyle || 'modern')
+  }
 }
 
 export function getThemeById(id: string): Theme | undefined {
