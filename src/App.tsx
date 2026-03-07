@@ -300,7 +300,7 @@ function App() {
   })
 
   const toast = useToast()
-  const { savedAt, isSaving } = useAutoSave('markdown-content', markdown, 2000)
+  const { isSaving } = useAutoSave('markdown-content', markdown, 2000)
 
   const html = useMemo(() => parseMarkdown(markdown), [markdown])
 
