@@ -1093,7 +1093,7 @@ function App() {
               alignItems: 'center',
               gap: '2px',
               padding: isMobile ? '6px 12px' : '6px 16px',
-              background: 'var(--bg-muted)',
+              background: 'var(--bg-surface)',
               borderBottom: '1px solid var(--border-subtle)',
               flexWrap: 'wrap'
             }}
