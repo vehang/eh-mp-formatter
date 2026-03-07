@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- 橙色圆角背景 -->
+  <rect width="32" height="32" rx="6" fill="#F97316"/>
+  <!-- 简洁的编辑笔图标 -->
+  <g transform="translate(6, 6)">
+    <path d="M14.5 2.5L17.5 5.5L6 17H3V14L14.5 2.5Z" fill="white"/>
+    <path d="M16 1L19 4L17.5 5.5L14.5 2.5L16 1Z" fill="white"/>
+  </g>
+</svg>
