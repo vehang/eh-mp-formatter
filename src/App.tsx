@@ -28,11 +28,13 @@ import atomOneDark from 'highlight.js/styles/atom-one-dark.css?inline'
 import monokai from 'highlight.js/styles/monokai.css?inline'
 import github from 'highlight.js/styles/github.css?inline'
 import atomOneLight from 'highlight.js/styles/atom-one-light.css?inline'
+import tokyoNightDark from 'highlight.js/styles/tokyo-night-dark.css?inline'
 
 const codeStyles = [
   { id: 'github-dark', name: 'GitHub Dark', css: githubDark },
   { id: 'atom-one-dark', name: 'OneDark', css: atomOneDark },
   { id: 'monokai', name: 'Monokai', css: monokai },
+  { id: 'tokyo-night', name: 'Tokyo Night', css: tokyoNightDark },
   { id: 'github', name: 'GitHub Light', css: github },
   { id: 'atom-one-light', name: 'OneLight', css: atomOneLight },
 ]

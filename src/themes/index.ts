@@ -538,6 +538,72 @@ export const materialTheme: Theme = {
   styles: generateInlineStyles(materialColors)
 }
 
+// 17. Panda - 熊猫主题
+const pandaColors: ThemeColor = {
+  primary: '#FF75B5',
+  secondary: '#B6FCBD',
+  accent: '#FF9F43',
+  background: '#1F1F1F',
+  text: '#E6E6E6',
+  textLight: '#FF75B5',
+  border: '#3A3A3A',
+  code: {
+    inline: { background: '#2A2A2A', color: '#FFCC95' },
+    block: { background: '#141414', color: '#E6E6E6' }
+  },
+  blockquote: {
+    background: '#2A2A2A',
+    borderLeft: '#FF75B5',
+    color: '#B0B0B0'
+  },
+  table: {
+    headerBg: '#2A2A2A',
+    evenRowBg: '#1F1F1F',
+    border: '#3A3A3A'
+  }
+}
+
+export const pandaTheme: Theme = {
+  id: 'panda',
+  name: 'Panda',
+  description: '熊猫粉红主题',
+  colors: pandaColors,
+  styles: generateInlineStyles(pandaColors)
+}
+
+// 18. Ayu - 阿尤主题
+const ayuColors: ThemeColor = {
+  primary: '#FF9940',
+  secondary: '#F07178',
+  accent: '#95E6CB',
+  background: '#0D1017',
+  text: '#B3B1AD',
+  textLight: '#FF9940',
+  border: '#1F2430',
+  code: {
+    inline: { background: '#1F2430', color: '#FFB454' },
+    block: { background: '#0A0E14', color: '#B3B1AD' }
+  },
+  blockquote: {
+    background: '#1F2430',
+    borderLeft: '#FF9940',
+    color: '#8A9199'
+  },
+  table: {
+    headerBg: '#1F2430',
+    evenRowBg: '#0D1017',
+    border: '#1F2430'
+  }
+}
+
+export const ayuTheme: Theme = {
+  id: 'ayu',
+  name: 'Ayu',
+  description: 'Ayu 温暖暗色主题',
+  colors: ayuColors,
+  styles: generateInlineStyles(ayuColors)
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 导出
 // ═══════════════════════════════════════════════════════════════
@@ -558,7 +624,9 @@ export const themes: Theme[] = [
   gruvboxTheme,
   tokyoNightTheme,
   oneDarkTheme,
-  materialTheme
+  materialTheme,
+  pandaTheme,
+  ayuTheme
 ]
 
 export function applyTheme(theme: Theme): void {
