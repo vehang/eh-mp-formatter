@@ -9,10 +9,10 @@ interface CodeMirrorEditorProps {
   onChange: (value: string) => void
   placeholder?: string
   onImagePaste?: (file: File) => void
-  showLineNumbers?: boolean
+  compactMode?: boolean
 }
 
-export function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste, showLineNumbers = true }: CodeMirrorEditorProps) {
+export function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste, compactMode = false }: CodeMirrorEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
 
@@ -22,7 +22,7 @@ export function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste, s
     const state = EditorState.create({
       doc: value,
       extensions: [
-        showLineNumbers ? lineNumbers() : [],
+        lineNumbers(),
         highlightActiveLine(),
         highlightActiveLineGutter(),
         markdown(),
@@ -42,22 +42,22 @@ export function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste, s
             fontFamily: "var(--font-mono)",
           },
           '.cm-content': {
-            padding: '16px 0',
+            padding: compactMode ? '8px 0' : '16px 0',
             caretColor: 'var(--orange-500)',
           },
           '.cm-line': {
-            padding: '0 16px',
+            padding: compactMode ? '0 8px' : '0 16px',
             color: 'var(--text-secondary)',
           },
           '.cm-gutters': {
             backgroundColor: 'transparent',
             border: 'none',
             color: 'var(--text-muted)',
-            display: showLineNumbers ? 'block' : 'none',
           },
           '.cm-lineNumbers .cm-gutterElement': {
-            padding: '0 8px 0 16px',
-            minWidth: '40px',
+            padding: compactMode ? '0 4px 0 8px' : '0 8px 0 16px',
+            minWidth: compactMode ? '28px' : '40px',
+            fontSize: compactMode ? '12px' : '13px',
           },
           '.cm-activeLine': {
             background: 'rgba(255, 255, 255, 0.03)',

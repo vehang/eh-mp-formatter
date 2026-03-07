@@ -1012,7 +1012,7 @@ function App() {
               onChange={setMarkdown}
               placeholder="在这里写 Markdown..."
               onImagePaste={handleImagePaste}
-              showLineNumbers={!isMobile}
+              compactMode={isMobile}
             />
           </div>
 
