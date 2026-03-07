@@ -965,9 +965,15 @@ function App() {
             }}
           >
             {/* 左侧提示文字 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}>
-              <span className="iconify icon-sm" data-icon="lucide:clipboard-paste"></span>
-              <span>支持直接粘贴公众号、飞书、Word等富文本，会自动转换为Markdown</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '12px' }}>
+              <span className="iconify icon-sm" data-icon="lucide:clipboard-paste" style={{ color: 'var(--text-muted)' }}></span>
+              <span>支持直接粘贴</span>
+              <span style={{ color: '#07C160', fontWeight: 500 }}>公众号</span>
+              <span>、</span>
+              <span style={{ color: '#3370FF', fontWeight: 500 }}>飞书</span>
+              <span>、</span>
+              <span style={{ color: '#2B579A', fontWeight: 500 }}>Word</span>
+              <span>等富文本，自动转为Markdown</span>
             </div>
 
             {/* 右侧状态 */}
