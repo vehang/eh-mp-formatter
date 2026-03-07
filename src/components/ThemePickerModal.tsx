@@ -10,12 +10,12 @@ interface ThemePickerModalProps {
 }
 
 /**
- * 主题颜色预览组件 - 展示主题的配色方案（紧凑版）
+ * 主题颜色预览组件 - 展示主题的配色方案（紧凑版 5行2列）
  */
 function ColorPreview({ colors }: { colors: ThemeColor }) {
   return (
     <div className="theme-color-preview-compact">
-      {/* 第一行：主要颜色 */}
+      {/* 第1行：主色 + 辅助色 */}
       <div className="color-row-compact">
         <div
           className="color-swatch-small"
@@ -27,6 +27,10 @@ function ColorPreview({ colors }: { colors: ThemeColor }) {
           style={{ backgroundColor: colors.secondary }}
           title={`辅助色: ${colors.secondary}`}
         />
+      </div>
+      
+      {/* 第2行：强调色 + 文字色 */}
+      <div className="color-row-compact">
         <div
           className="color-swatch-small"
           style={{ backgroundColor: colors.accent }}
@@ -39,7 +43,7 @@ function ColorPreview({ colors }: { colors: ThemeColor }) {
         />
       </div>
       
-      {/* 第二行：次要颜色 */}
+      {/* 第3行：浅色文字 + 边框色 */}
       <div className="color-row-compact">
         <div
           className="color-swatch-small"
@@ -51,6 +55,10 @@ function ColorPreview({ colors }: { colors: ThemeColor }) {
           style={{ backgroundColor: colors.border }}
           title={`边框色: ${colors.border}`}
         />
+      </div>
+      
+      {/* 第4行：代码背景 + 引用背景 */}
+      <div className="color-row-compact">
         <div
           className="color-swatch-small"
           style={{ backgroundColor: colors.code.inline.background }}
@@ -60,6 +68,20 @@ function ColorPreview({ colors }: { colors: ThemeColor }) {
           className="color-swatch-small"
           style={{ backgroundColor: colors.blockquote.background }}
           title={`引用背景: ${colors.blockquote.background}`}
+        />
+      </div>
+      
+      {/* 第5行：表格表头 + 背景 */}
+      <div className="color-row-compact">
+        <div
+          className="color-swatch-small"
+          style={{ backgroundColor: colors.table.headerBg }}
+          title={`表格表头: ${colors.table.headerBg}`}
+        />
+        <div
+          className="color-swatch-small"
+          style={{ backgroundColor: colors.background }}
+          title={`背景色: ${colors.background}`}
         />
       </div>
     </div>

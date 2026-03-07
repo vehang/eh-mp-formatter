@@ -963,23 +963,23 @@ body {
   color: var(--text-muted);
 }
 
-/* 颜色预览（紧凑版） */
+/* 颜色预览（紧凑版 5行2列） */
 .theme-color-preview-compact {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  width: 80px;
+  gap: 4px;
+  width: 70px;
   flex-shrink: 0;
 }
 
 .color-row-compact {
   display: flex;
-  gap: 3px;
+  gap: 4px;
 }
 
 .color-swatch-small {
   flex: 1;
-  height: 14px;
+  height: 12px;
   border-radius: 3px;
   transition: transform var(--duration-fast) var(--ease-out);
 }
