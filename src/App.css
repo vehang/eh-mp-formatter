@@ -1058,3 +1058,156 @@ body {
 [data-theme="light"] .upload-progress-bar {
   background: var(--zinc-200);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   手机端适配 - 弹窗
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  /* 弹窗容器 - 全屏宽度，圆角调整 */
+  .theme-picker-modal {
+    width: 95%;
+    max-width: none;
+    max-height: 90vh;
+    border-radius: var(--radius-lg);
+    margin: var(--space-2);
+  }
+
+  /* 弹窗头部 - 更紧凑 */
+  .theme-picker-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .theme-picker-title {
+    font-size: 15px;
+  }
+
+  .theme-picker-close {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* 主题卡片网格 - 单列布局 */
+  .theme-picker-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* 主题卡片 - 横向布局 */
+  .theme-card {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .theme-card-info {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  /* 迷你预览 - 更小 */
+  .theme-mini-preview {
+    min-width: 80px;
+    min-height: 50px;
+    padding: var(--space-2);
+    margin-bottom: 0;
+  }
+
+  .mini-title {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+
+  .mini-text {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+
+  .mini-code {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+
+  /* 颜色预览 - 隐藏以节省空间 */
+  .theme-color-preview {
+    display: none;
+  }
+
+  /* 选中标记 - 更小 */
+  .theme-card-selected-badge {
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    top: 6px;
+    right: 6px;
+  }
+
+  /* 底部提示 - 更紧凑 */
+  .theme-picker-footer {
+    padding: var(--space-2) var(--space-4);
+    font-size: 11px;
+  }
+
+  /* 图床配置弹窗 - Tab 按钮 */
+  .theme-picker-modal .toggle-group {
+    flex-wrap: wrap;
+  }
+
+  .theme-picker-modal .toggle-btn {
+    font-size: 13px;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  /* UrlFetchModal 适配 */
+  .modal-content {
+    width: 95% !important;
+    max-width: none !important;
+    padding: var(--space-4) !important;
+  }
+
+  .modal-content h3 {
+    font-size: 15px !important;
+  }
+
+  .modal-content p {
+    font-size: 12px !important;
+  }
+
+  .modal-content input {
+    font-size: 16px !important; /* 防止 iOS 自动缩放 */
+  }
+
+  .modal-content button {
+    font-size: 14px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   手机端底部 Tab 栏
+   ═══════════════════════════════════════════════════════════ */
+
+.mobile-bottom-tabs {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-tab-btn {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-tab-btn:active {
+  opacity: 0.7;
+}
+
+/* 手机端主内容区适配 */
+@media (max-width: 767px) {
+  main {
+    padding-bottom: 56px; /* 为底部 Tab 留出空间 */
+  }
+}

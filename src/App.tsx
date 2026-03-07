@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import html2pdf from 'html2pdf.js'
 import { CodeMirrorEditor } from './components/CodeMirrorEditor'
-import { BrandLogo } from './components/BrandLogo'
 import { UrlFetchModal } from './components/UrlFetchModal'
 import { ThemePickerModal } from './components/ThemePickerModal'
 import { CodeStylePickerModal } from './components/CodeStylePickerModal'
@@ -280,6 +279,20 @@ function App() {
   const [isImageHostModalOpen, setIsImageHostModalOpen] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
+
+  // 手机端适配状态
+  const [isMobile, setIsMobile] = useState(false)
+  const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit')
+
+  // 检测手机模式
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // 图床管理
   const {
@@ -784,15 +797,52 @@ function App() {
       <header
         className="flex items-center justify-between"
         style={{
-          height: '52px',
-          padding: '0 var(--space-5)',
+          height: isMobile ? '48px' : '52px',
+          padding: '0 var(--space-4)',
           background: 'var(--bg-surface)',
           borderBottom: '1px solid var(--border-subtle)'
         }}
       >
-        <BrandLogo />
-        
-        {/* UI 主题切换 - 右上角 */}
+        {/* 左侧 Logo */}
+        <div className="flex items-center gap-2">
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: isMobile ? '32px' : '36px',
+              height: isMobile ? '32px' : '36px',
+              borderRadius: 'var(--radius-lg)',
+              background: 'var(--orange-500)',
+              boxShadow: '0 2px 8px rgba(249, 115, 22, 0.3)'
+            }}
+          >
+            <span
+              className="iconify"
+              data-icon="lucide:pen-tool"
+              style={{ fontSize: isMobile ? '18px' : '20px', color: 'white' }}
+            ></span>
+          </div>
+          {isMobile ? (
+            <div className="flex flex-col">
+              <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.2 }}>
+                排版助手
+              </span>
+              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                公众号 Markdown 排版
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.2 }}>
+                排版助手
+              </span>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                公众号 Markdown 排版
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* 右侧主题切换 */}
         <button
           onClick={uiTheme.toggleTheme}
           className="theme-toggle-btn"
@@ -800,10 +850,10 @@ function App() {
         >
           <div className="theme-icon-wrapper">
             <span className="theme-icon-sun">
-              <span className="iconify" data-icon="lucide:sun" style={{ fontSize: '18px' }}></span>
+              <span className="iconify" data-icon="lucide:sun" style={{ fontSize: isMobile ? '20px' : '18px' }}></span>
             </span>
             <span className="theme-icon-moon">
-              <span className="iconify" data-icon="lucide:moon" style={{ fontSize: '18px' }}></span>
+              <span className="iconify" data-icon="lucide:moon" style={{ fontSize: isMobile ? '20px' : '18px' }}></span>
             </span>
           </div>
         </button>
@@ -818,44 +868,51 @@ function App() {
           className="flex-1 flex flex-col"
           style={{
             background: 'var(--bg-surface)',
-            borderRight: '1px solid var(--border-subtle)'
+            borderRight: isMobile ? 'none' : '1px solid var(--border-subtle)',
+            display: isMobile && mobileTab !== 'edit' ? 'none' : 'flex'
           }}
         >
-          <div className="panel-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
-            <span className="iconify icon-sm" data-icon="lucide:file-text" style={{ marginRight: '4px', color: 'var(--text-muted)' }}></span>
-            <span className="panel-title">Markdown</span>
-            
-            <div className="toolbar-divider" style={{ margin: '0 4px' }} />
-            
-            {/* 撤销/重做/清空 */}
-            <button
-              onClick={undo}
-              disabled={!canUndo}
-              className="btn btn-ghost btn-icon"
-              title="撤销 (Ctrl+Z)"
-            >
-              <span className="iconify icon-sm" data-icon="lucide:undo-2"></span>
-            </button>
-            <button
-              onClick={redo}
-              disabled={!canRedo}
-              className="btn btn-ghost btn-icon"
-              title="重做 (Ctrl+Shift+Z)"
-            >
-              <span className="iconify icon-sm" data-icon="lucide:redo-2"></span>
-            </button>
-            <button
-              onClick={handleClear}
-              className="btn btn-ghost btn-icon"
-              title="清空内容"
-              style={{ color: 'var(--red-500)' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:trash-2"></span>
-            </button>
+          <div className="panel-header" style={{ flexWrap: 'wrap', gap: isMobile ? '6px' : '8px', padding: isMobile ? '8px 12px' : undefined }}>
+            {!isMobile && (
+              <>
+                <span className="iconify icon-sm" data-icon="lucide:file-text" style={{ marginRight: '4px', color: 'var(--text-muted)' }}></span>
+                <span className="panel-title">Markdown</span>
+                <div className="toolbar-divider" style={{ margin: '0 4px' }} />
+              </>
+            )}
 
-            <div className="toolbar-divider" style={{ margin: '0 4px' }} />
+            {/* 撤销/重做/清空 - 手机模式隐藏 */}
+            {!isMobile && (
+              <>
+                <button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  className="btn btn-ghost btn-icon"
+                  title="撤销 (Ctrl+Z)"
+                >
+                  <span className="iconify icon-sm" data-icon="lucide:undo-2"></span>
+                </button>
+                <button
+                  onClick={redo}
+                  disabled={!canRedo}
+                  className="btn btn-ghost btn-icon"
+                  title="重做 (Ctrl+Shift+Z)"
+                >
+                  <span className="iconify icon-sm" data-icon="lucide:redo-2"></span>
+                </button>
+                <button
+                  onClick={handleClear}
+                  className="btn btn-ghost btn-icon"
+                  title="清空内容"
+                  style={{ color: 'var(--red-500)' }}
+                >
+                  <span className="iconify icon-sm" data-icon="lucide:trash-2"></span>
+                </button>
+                <div className="toolbar-divider" style={{ margin: '0 4px' }} />
+              </>
+            )}
 
-            {/* 主题选择 - 点击打开弹窗 */}
+            {/* 主题选择 - 手机模式只显示图标 */}
             <button
               onClick={() => setIsThemePickerOpen(true)}
               className="btn btn-ghost"
@@ -864,17 +921,17 @@ function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '4px 10px',
+                padding: isMobile ? '6px' : '4px 10px',
                 fontSize: '12px',
                 color: 'var(--text-secondary)',
                 border: '1px solid var(--border-default)'
               }}
             >
               <span className="iconify icon-sm" data-icon="lucide:palette"></span>
-              {currentTheme.name}
+              {!isMobile && currentTheme.name}
             </button>
 
-            {/* 代码风格 - 点击打开弹窗 */}
+            {/* 代码风格 - 手机模式只显示图标 */}
             <button
               onClick={() => setIsCodeStylePickerOpen(true)}
               className="btn btn-ghost"
@@ -883,17 +940,17 @@ function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '4px 10px',
+                padding: isMobile ? '6px' : '4px 10px',
                 fontSize: '12px',
                 color: 'var(--text-secondary)',
                 border: '1px solid var(--border-default)'
               }}
             >
               <span className="iconify icon-sm" data-icon="lucide:code-2"></span>
-              {codeStyles.find(s => s.id === codeStyle)?.name || '代码样式'}
+              {!isMobile && (codeStyles.find(s => s.id === codeStyle)?.name || '代码样式')}
             </button>
 
-            {/* 图床配置 - 点击打开弹窗 */}
+            {/* 图床配置 - 手机模式只显示图标 */}
             <button
               onClick={() => setIsImageHostModalOpen(true)}
               className="btn btn-ghost"
@@ -902,47 +959,52 @@ function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '4px 10px',
+                padding: isMobile ? '6px' : '4px 10px',
                 fontSize: '12px',
                 color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-secondary)',
                 border: '1px solid var(--border-default)'
               }}
             >
               <span className="iconify icon-sm" data-icon="lucide:image-up"></span>
-              图床
+              {!isMobile && '图床'}
             </button>
 
-            {/* 同步滚动开关 */}
-            <button
-              onClick={() => setSyncScroll(!syncScroll)}
-              className="btn btn-ghost"
-              title={syncScroll ? '关闭同步滚动' : '开启同步滚动'}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '4px 10px',
-                fontSize: '12px',
-                color: syncScroll ? 'var(--orange-500)' : 'var(--text-muted)',
-                border: '1px solid var(--border-default)'
-              }}
-            >
-              <span className="iconify icon-sm" data-icon={syncScroll ? 'lucide:link' : 'lucide:link-off'}></span>
-              {syncScroll ? '跟随开' : '跟随关'}
-            </button>
+            {/* 同步滚动开关 - 手机模式隐藏 */}
+            {!isMobile && (
+              <button
+                onClick={() => setSyncScroll(!syncScroll)}
+                className="btn btn-ghost"
+                title={syncScroll ? '关闭同步滚动' : '开启同步滚动'}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  fontSize: '12px',
+                  color: syncScroll ? 'var(--orange-500)' : 'var(--text-muted)',
+                  border: '1px solid var(--border-default)'
+                }}
+              >
+                <span className="iconify icon-sm" data-icon={syncScroll ? 'lucide:link' : 'lucide:link-off'}></span>
+                {syncScroll ? '跟随开' : '跟随关'}
+              </button>
+            )}
 
             <div className="flex-1" />
-            
-            <button
-              className="btn btn-ghost"
-              onClick={() => setIsUrlModalOpen(true)}
-              title="抓取网页内容"
-              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', fontSize: '12px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:link"></span>
-              抓取链接
-            </button>
-            <span className="panel-meta" style={{ marginLeft: '8px', fontSize: '12px' }}>{markdown.length} 字</span>
+
+            {/* 抓取链接 - 手机模式隐藏 */}
+            {!isMobile && (
+              <button
+                className="btn btn-ghost"
+                onClick={() => setIsUrlModalOpen(true)}
+                title="抓取网页内容"
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', fontSize: '12px' }}
+              >
+                <span className="iconify icon-sm" data-icon="lucide:link"></span>
+                抓取链接
+              </button>
+            )}
+            <span className="panel-meta" style={{ marginLeft: isMobile ? '0' : '8px', fontSize: '12px' }}>{markdown.length} 字</span>
           </div>
           <div className="flex-1 min-h-0">
             <CodeMirrorEditor
@@ -1003,30 +1065,34 @@ function App() {
           </div>
         </div>
 
-        {/* 右侧预览 */}
+        {/* 右侧预览 - 手机模式下根据 Tab 显示/隐藏 */}
         <div
           className="flex flex-col"
-          style={{ 
+          style={{
             background: 'var(--bg-muted)',
             flexShrink: 0,
-            width: previewMode === 'desktop' ? '50%' 
-                 : previewMode === 'pad' ? '820px' 
-                 : '415px',
-            transition: 'width 0.3s ease-in-out'
+            width: isMobile ? '100%' : previewMode === 'desktop' ? '50%' : previewMode === 'pad' ? '820px' : '415px',
+            transition: 'width 0.3s ease-in-out',
+            display: isMobile && mobileTab !== 'preview' ? 'none' : 'flex'
           }}
         >
-          <div className="panel-header">
-            <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
-            {previewMode !== 'mobile' && (
-              <span className="panel-title">预览</span>
+          <div className="panel-header" style={{ padding: isMobile ? '8px 12px' : undefined }}>
+            {!isMobile && (
+              <>
+                <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
+                {previewMode !== 'mobile' && (
+                  <span className="panel-title">预览</span>
+                )}
+                <span className="panel-badge">{currentTheme.name}</span>
+              </>
             )}
-            <span className="panel-badge">{currentTheme.name}</span>
-            
-            {/* 预览模式切换 - 三个尺寸 */}
-            <div className="toggle-group" style={{ 
-              marginLeft: '12px',
-              transition: 'all 0.2s ease-in-out'
-            }}>
+
+            {/* 预览模式切换 - 手机模式隐藏 */}
+            {!isMobile && (
+              <div className="toggle-group" style={{
+                marginLeft: '12px',
+                transition: 'all 0.2s ease-in-out'
+              }}>
               <button
                 onClick={() => setPreviewMode('desktop')}
                 className={`toggle-btn ${previewMode === 'desktop' ? 'active' : ''}`}
@@ -1076,37 +1142,38 @@ function App() {
                 {previewMode !== 'mobile' && '手机'}
               </button>
             </div>
+            )}
 
             <div className="flex-1" />
 
-            {/* 下载 PDF 按钮 - 响应式：手机只显示图标，宽屏/PAD显示文字 */}
+            {/* 下载 PDF 按钮 - 手机模式只显示图标 */}
             <button
               className="btn btn-ghost"
               onClick={handleDownloadPDF}
               disabled={isDownloading}
               title="下载 PDF"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px', marginRight: '8px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: isMobile ? '6px' : '4px 10px', fontSize: '13px', marginRight: '8px' }}
             >
               {isDownloading ? (
                 <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
               ) : (
                 <span className="iconify icon-sm" data-icon="lucide:download"></span>
               )}
-              {previewMode !== 'mobile' && '下载 PDF'}
+              {!isMobile && previewMode !== 'mobile' && '下载 PDF'}
             </button>
 
             {/* 复制排版按钮 */}
             <button
               className="btn btn-primary"
               onClick={handleCopyHTML}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: isMobile ? '6px 12px' : '4px 10px', fontSize: '13px' }}
             >
               <span className="iconify icon-sm" data-icon="lucide:copy"></span>
-              复制排版
+              {isMobile ? '复制' : '复制排版'}
             </button>
 
             {/* 手机模式时隐藏尺寸显示 */}
-            {previewMode !== 'mobile' && (
+            {!isMobile && previewMode !== 'mobile' && (
               <span className="panel-meta" style={{ marginLeft: '12px' }}>
                 {previewMode === 'pad' ? '768px' : '自适应'}
               </span>
@@ -1146,6 +1213,63 @@ function App() {
           </div>
         </div>
       </main>
+
+      {/* 手机端底部 Tab 切换 */}
+      {isMobile && (
+        <div
+          className="mobile-bottom-tabs"
+          style={{
+            display: 'flex',
+            height: '56px',
+            background: 'var(--bg-surface)',
+            borderTop: '1px solid var(--border-subtle)',
+            padding: '0 var(--space-4)'
+          }}
+        >
+          <button
+            onClick={() => setMobileTab('edit')}
+            className="mobile-tab-btn"
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              background: 'transparent',
+              border: 'none',
+              color: mobileTab === 'edit' ? 'var(--orange-500)' : 'var(--text-muted)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              transition: 'color 0.2s ease'
+            }}
+          >
+            <span className="iconify" data-icon="lucide:file-edit" style={{ fontSize: '20px' }}></span>
+            <span>编辑</span>
+          </button>
+          <button
+            onClick={() => setMobileTab('preview')}
+            className="mobile-tab-btn"
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              background: 'transparent',
+              border: 'none',
+              color: mobileTab === 'preview' ? 'var(--orange-500)' : 'var(--text-muted)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              transition: 'color 0.2s ease'
+            }}
+          >
+            <span className="iconify" data-icon="lucide:eye" style={{ fontSize: '20px' }}></span>
+            <span>预览</span>
+          </button>
+        </div>
+      )}
 
       {/* URL 抓取弹窗 */}
       <UrlFetchModal
