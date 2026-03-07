@@ -5,23 +5,45 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>排版助手 - 公众号 Markdown 排版工具</title>
-    <!-- 防止主题闪烁：在 CSS 加载前设置 data-theme -->
+    <!-- 缓存版本检查和主题初始化 -->
     <script>
       (function() {
+        var CACHE_VERSION = '1.0';
+        
         try {
+          // 检查缓存版本
+          var versionKey = 'mp-formatter-cache-version';
+          var currentVersion = localStorage.getItem(versionKey);
+          
+          if (currentVersion !== CACHE_VERSION) {
+            // 版本不匹配，清除所有缓存
+            console.log('[Cache] Version mismatch, clearing all cache');
+            var keysToRemove = [];
+            for (var i = 0; i < localStorage.length; i++) {
+              var key = localStorage.key(i);
+              if (key && key.startsWith('mp-formatter-')) {
+                keysToRemove.push(key);
+              }
+            }
+            keysToRemove.forEach(function(key) {
+              localStorage.removeItem(key);
+            });
+            // 设置新版本号
+            localStorage.setItem(versionKey, CACHE_VERSION);
+          }
+          
+          // 设置主题
           var stored = localStorage.getItem('mp-formatter-ui-theme');
-          var theme = 'dark'; // 默认深色
+          var theme = 'dark';
           if (stored === 'light') {
             theme = 'light';
           } else if (stored === 'dark') {
             theme = 'dark';
           } else if (stored === 'system' || !stored) {
-            // 跟随系统
             theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           }
           document.documentElement.setAttribute('data-theme', theme);
         } catch (e) {
-          // localStorage 不可用时使用默认深色主题
           document.documentElement.setAttribute('data-theme', 'dark');
         }
       })();

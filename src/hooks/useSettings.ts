@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react'
 
 // 设置存储的 key
 const SETTINGS_KEY = 'mp-formatter-settings'
+const SETTINGS_VERSION = '1.0' // 缓存版本号
 
 // 设置项类型定义
 export interface AppSettings {
@@ -35,11 +36,21 @@ function loadSettings(): AppSettings {
     const stored = localStorage.getItem(SETTINGS_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
+      
+      // 检查版本号，如果不匹配则清除缓存
+      if (parsed._version !== SETTINGS_VERSION) {
+        console.log('[Settings] Version mismatch, clearing cache')
+        localStorage.removeItem(SETTINGS_KEY)
+        return { ...defaultSettings }
+      }
+      
       // 合并默认值，确保新增字段有默认值
-      return { ...defaultSettings, ...parsed }
+      const { _version, ...settings } = parsed
+      return { ...defaultSettings, ...settings }
     }
   } catch (e) {
-    console.warn('Failed to load settings:', e)
+    console.warn('[Settings] Failed to load, clearing cache:', e)
+    localStorage.removeItem(SETTINGS_KEY)
   }
   return { ...defaultSettings }
 }
@@ -47,9 +58,11 @@ function loadSettings(): AppSettings {
 // 保存设置到 localStorage
 function saveSettings(settings: AppSettings): void {
   try {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+    // 添加版本号
+    const dataToSave = { ...settings, _version: SETTINGS_VERSION }
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(dataToSave))
   } catch (e) {
-    console.warn('Failed to save settings:', e)
+    console.warn('[Settings] Failed to save:', e)
   }
 }
 
