@@ -128,16 +128,10 @@ export function ImageHostConfigModal({
 
   // 保存配置
   const handleSave = async () => {
-    // 闪电图床直接保存（不需要 token 和验证）
-    if (!HOST_REQUIRES_TOKEN[activeTab]) {
-      onUpdateConfig(activeTab, {})
-      return
-    }
-
-    // 其他图床需要先验证
+    // 所有图床都需要先验证 API 是否可用
     const isValid = await validateConfig()
     if (isValid) {
-      onUpdateConfig(activeTab, { token: token.trim() })
+      onUpdateConfig(activeTab, { token: token.trim() || undefined })
     }
   }
 
@@ -150,8 +144,21 @@ export function ImageHostConfigModal({
     onClearConfig(activeTab)
   }
 
-  // 设为默认
-  const handleSetDefault = () => {
+  // 设为默认（需要先验证 API 是否可用）
+  const handleSetDefault = async () => {
+    // 如果是闪电图床且未验证过，先验证
+    if (!HOST_REQUIRES_TOKEN[activeTab]) {
+      const isValid = await validateConfig()
+      if (!isValid) {
+        return
+      }
+    } else if (validationStatus !== 'success') {
+      // 其他图床如果未验证过，先验证
+      const isValid = await validateConfig()
+      if (!isValid) {
+        return
+      }
+    }
     onSetDefault(activeTab)
   }
 
