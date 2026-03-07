@@ -37,7 +37,7 @@ export const indigoTheme: Theme = {
   description: '专业商务风格',
   colors: indigoColors,
   styles: generateInlineStyles(indigoColors),
-  headingStyle: 'modern'
+  headingStyle: 'tech'
 }
 
 // 2. 森林 - 自然清新（升级版）
@@ -105,7 +105,7 @@ export const roseTheme: Theme = {
   description: '温柔浪漫风格',
   colors: roseColors,
   styles: generateInlineStyles(roseColors),
-  headingStyle: 'soft'
+  headingStyle: 'elegant'
 }
 
 // 4. 琥珀 - 温暖活力（升级版）
@@ -139,7 +139,7 @@ export const amberTheme: Theme = {
   description: '温暖活力风格',
   colors: amberColors,
   styles: generateInlineStyles(amberColors),
-  headingStyle: 'modern'
+  headingStyle: 'warm-sun'
 }
 
 // 5. 石板 - 极简专业（升级版）
@@ -211,7 +211,7 @@ export const oceanDeepTheme: Theme = {
   description: 'Linear 风格深色主题',
   colors: oceanDeepColors,
   styles: generateInlineStyles(oceanDeepColors),
-  headingStyle: 'gradient'
+  headingStyle: 'ocean'
 }
 
 // 7. Forest Night - 森林之夜主题
@@ -245,7 +245,7 @@ export const forestNightTheme: Theme = {
   description: '暗色森林绿主题',
   colors: forestNightColors,
   styles: generateInlineStyles(forestNightColors),
-  headingStyle: 'nature'
+  headingStyle: 'night-forest'
 }
 
 // 8. Rosé Pine - 优雅玫瑰松主题
@@ -279,7 +279,7 @@ export const rosePineTheme: Theme = {
   description: 'Rosé Pine 暗色主题',
   colors: rosePineColors,
   styles: generateInlineStyles(rosePineColors),
-  headingStyle: 'soft'
+  headingStyle: 'rose-pine'
 }
 
 // 9. Nord - 北欧冷调主题
@@ -347,7 +347,7 @@ export const draculaTheme: Theme = {
   description: 'Dracula 经典暗色主题',
   colors: draculaColors,
   styles: generateInlineStyles(draculaColors),
-  headingStyle: 'code'
+  headingStyle: 'gothic'
 }
 
 // 11. Solarized - 太阳能主题
@@ -483,7 +483,7 @@ export const tokyoNightTheme: Theme = {
   description: 'Tokyo Night 深邃紫色主题',
   colors: tokyoNightColors,
   styles: generateInlineStyles(tokyoNightColors),
-  headingStyle: 'gradient'
+  headingStyle: 'neon'
 }
 
 // 15. One Dark - Atom 经典主题
@@ -551,7 +551,7 @@ export const materialTheme: Theme = {
   description: 'Material Design 主题',
   colors: materialColors,
   styles: generateInlineStyles(materialColors),
-  headingStyle: 'modern'
+  headingStyle: 'material'
 }
 
 // 17. Panda - 熊猫主题
@@ -585,7 +585,7 @@ export const pandaTheme: Theme = {
   description: '熊猫粉红主题',
   colors: pandaColors,
   styles: generateInlineStyles(pandaColors),
-  headingStyle: 'soft'
+  headingStyle: 'cute'
 }
 
 // 18. Ayu - 阿尤主题
@@ -619,7 +619,7 @@ export const ayuTheme: Theme = {
   description: 'Ayu 温暖暗色主题',
   colors: ayuColors,
   styles: generateInlineStyles(ayuColors),
-  headingStyle: 'retro'
+  headingStyle: 'japanese'
 }
 
 // ═══════════════════════════════════════════════════════════════

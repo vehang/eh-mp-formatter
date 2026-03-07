@@ -22,18 +22,26 @@ export interface ThemeColor {
   }
 }
 
-// 标题样式变体类型
-export type HeadingStyleVariant = 
+// 标题样式变体类型 - 每个主题独特的视觉语言
+export type HeadingStyleVariant =
   | 'modern'        // 现代简约 - 简洁线条装饰
   | 'gradient'      // 渐变科技 - 渐变色装饰条
   | 'soft'          // 柔和圆润 - 圆角背景
   | 'retro'         // 复古经典 - 复古装饰
   | 'code'          // 代码风格 - 类似终端
-  | 'nature'        // 自然清新 - 叶片装饰
   | 'nordic'        // 北欧极简 - 极简线条
-  | 'elegant'       // 优雅浪漫 - 精致装饰
-  | 'brutalist'     // 粗犷工业 - 粗线条
-  | 'minimal'       // 极简单色 - 无装饰
+  | 'warm-sun'      // 温暖阳光 - 阳光光晕效果（amber）
+  | 'tech'          // 科技感 - 代码行号风格（indigo）
+  | 'nature'        // 自然清新 - 叶片装饰（forest）
+  | 'elegant'       // 优雅浪漫 - 花朵装饰（rose）
+  | 'ocean'         // 海洋风格 - 波浪气泡（ocean-deep）
+  | 'night-forest'  // 森林之夜 - 萤火虫光点（forest-night）
+  | 'rose-pine'     // 玫瑰松 - 松树装饰（rose-pine）
+  | 'gothic'        // 哥特暗黑 - 蝙蝠装饰（dracula）
+  | 'neon'          // 霓虹灯 - 发光效果（tokyo-night）
+  | 'material'      // Material Design - 卡片阴影（material）
+  | 'cute'          // 可爱风格 - 熊猫爪印（panda）
+  | 'japanese'      // 日式风格 - 樱花装饰（ayu）
 
 // 内联样式映射 - 用于公众号复制
 export interface ThemeStyles {
