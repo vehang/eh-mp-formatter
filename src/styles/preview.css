@@ -286,7 +286,7 @@
 }
 
 .mp-preview[data-heading-style="code"] h1::before {
-  content: '>';
+  content: '▸';
   position: absolute;
   left: 12px;
   top: 50%;
@@ -318,7 +318,7 @@
 }
 
 .mp-preview[data-heading-style="code"] h2::before {
-  content: '//';
+  content: '◇';
   width: auto;
   height: auto;
   background: none;
@@ -348,7 +348,7 @@
 }
 
 .mp-preview[data-heading-style="code"] h3::before {
-  content: 'function ';
+  content: '◆ ';
   color: var(--theme-secondary);
   font-weight: 400;
   font-size: 14px;

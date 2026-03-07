@@ -100,14 +100,14 @@
 }
 
 .mp-preview[data-heading-style="tech"] h1::before {
-  content: '#';
+  content: '◆';
   position: absolute;
   left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--theme-secondary);
   font-weight: 600;
-  font-size: 22px;
+  font-size: 18px;
   opacity: 0.6;
   width: auto;
   height: auto;
@@ -127,14 +127,14 @@
 }
 
 .mp-preview[data-heading-style="tech"] h2::before {
-  content: '01';
+  content: '▸';
   position: absolute;
   left: 0;
   top: 4px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--theme-accent);
   font-weight: 500;
-  opacity: 0.5;
+  opacity: 0.6;
   width: auto;
   height: auto;
   background: none;
@@ -1189,7 +1189,7 @@
 }
 
 .mp-preview[data-heading-style="code"] h1::before {
-  content: '>';
+  content: '▸';
   position: absolute;
   left: 16px;
   top: 50%;
@@ -1219,7 +1219,7 @@
 }
 
 .mp-preview[data-heading-style="code"] h2::before {
-  content: '//';
+  content: '◇';
   position: absolute;
   left: 12px;
   top: 50%;
@@ -1252,7 +1252,7 @@
 }
 
 .mp-preview[data-heading-style="code"] h3::before {
-  content: 'fn ';
+  content: '◆ ';
   color: var(--theme-accent);
   font-size: 13px;
   opacity: 0.7;
@@ -1427,7 +1427,7 @@
 }
 
 .mp-preview[data-heading-style="code"] h1::before {
-  content: '>';
+  content: '▸';
   position: absolute;
   left: 16px;
   top: 50%;
@@ -1457,7 +1457,7 @@
 }
 
 .mp-preview[data-heading-style="code"] h2::before {
-  content: '//';
+  content: '◇';
   position: absolute;
   left: 12px;
   top: 50%;
@@ -1490,7 +1490,7 @@
 }
 
 .mp-preview[data-heading-style="code"] h3::before {
-  content: 'fn ';
+  content: '◆ ';
   color: var(--theme-accent);
   font-size: 13px;
   opacity: 0.7;
