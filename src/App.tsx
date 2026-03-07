@@ -952,6 +952,50 @@ function App() {
               onImagePaste={handleImagePaste}
             />
           </div>
+
+          {/* 底部状态栏 - 只显示在左侧编辑器下方 */}
+          <div
+            className="flex items-center justify-between"
+            style={{
+              height: '32px',
+              padding: '0 var(--space-4)',
+              background: 'var(--bg-surface)',
+              borderTop: '1px solid var(--border-subtle)',
+              fontSize: '12px'
+            }}
+          >
+            {/* 左侧提示文字 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}>
+              <span className="iconify icon-sm" data-icon="lucide:clipboard-paste"></span>
+              <span>支持直接粘贴公众号、飞书、Word等富文本，会自动转换为Markdown</span>
+            </div>
+
+            {/* 右侧状态 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* 上传进度 */}
+              {uploadProgress.isUploading && (
+                <div className="upload-progress-bar">
+                  <div
+                    className="upload-progress-fill"
+                    style={{ width: `${uploadProgress.progress}%` }}
+                  />
+                  <span className="upload-progress-text">{uploadProgress.statusText}</span>
+                </div>
+              )}
+              {/* 保存状态 */}
+              {isSaving ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
+                  <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
+                  保存中<span style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>...</span>
+                </span>
+              ) : savedAt ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--green-500)' }}>
+                  <span className="iconify icon-sm" data-icon="lucide:check-circle"></span>
+                  已保存
+                </span>
+              ) : null}
+            </div>
+          </div>
         </div>
 
         {/* 右侧预览 */}
@@ -1097,43 +1141,6 @@ function App() {
           </div>
         </div>
       </main>
-
-      {/* ═══════════════════════════════════════════════
-          底部状态栏
-          ═══════════════════════════════════════════════ */}
-      <footer
-        className="flex items-center justify-end"
-        style={{
-          height: '36px',
-          padding: '0 var(--space-5)',
-          background: 'var(--bg-surface)',
-          borderTop: '1px solid var(--border-subtle)'
-        }}
-      >
-        <div className="flex items-center gap-3" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-          {/* 上传进度 */}
-          {uploadProgress.isUploading && (
-            <div className="upload-progress-bar">
-              <div
-                className="upload-progress-fill"
-                style={{ width: `${uploadProgress.progress}%` }}
-              />
-              <span className="upload-progress-text">{uploadProgress.statusText}</span>
-            </div>
-          )}
-          {isSaving ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
-              保存中
-            </span>
-          ) : savedAt ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="iconify icon-sm" data-icon="lucide:check" style={{ color: 'var(--green-500)' }}></span>
-              已保存
-            </span>
-          ) : null}
-        </div>
-      </footer>
 
       {/* URL 抓取弹窗 */}
       <UrlFetchModal
