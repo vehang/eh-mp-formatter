@@ -1034,17 +1034,7 @@ function App() {
               onClick={handleDownloadPDF}
               disabled={isDownloading}
               title="下载 PDF"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: previewMode === 'mobile' ? '4px 8px' : '4px 10px',
-                fontSize: '13px',
-                color: isDownloading ? 'var(--text-muted)' : 'var(--text-secondary)',
-                border: '1px solid var(--border-default)',
-                opacity: isDownloading ? 0.6 : 1,
-                marginRight: '8px'
-              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', fontSize: '13px', marginRight: '8px' }}
             >
               {isDownloading ? (
                 <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
