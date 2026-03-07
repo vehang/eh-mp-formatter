@@ -46,12 +46,12 @@ export function useUITheme() {
     }
   }, [])
 
-  // 初始化主题（不添加过渡效果，因为 index.html 已经设置了）
+  // 初始化主题 - 不需要再次设置，因为 index.html 已经设置了
+  // 只需要同步状态
   useEffect(() => {
     const theme = mode === 'system' ? getSystemTheme() : mode
     setResolvedTheme(theme)
-    // 初始化时不启用过渡效果
-    applyTheme(theme, false)
+    // 不再调用 applyTheme，因为 index.html 已经设置了主题
   }, [])
 
   // 监听系统主题变化
