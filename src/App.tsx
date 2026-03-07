@@ -414,10 +414,10 @@ function App() {
       container.id = 'pdf-temp-container'
       container.style.cssText = `
         position: fixed;
-        left: 0;
+        left: 50px;
         top: 0;
         width: 210mm;
-        padding: 20mm;
+        padding: 20mm 25mm;
         background: #ffffff;
         color: #1F2937;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', sans-serif;
@@ -673,28 +673,31 @@ function App() {
 
       // 使用 html2canvas + jsPDF 方案
       const opt = {
-        margin: [10, 10, 10, 10] as [number, number, number, number],
+        margin: [15, 15, 15, 20] as [number, number, number, number], // 上、右、下、左 - 增加左边距
         filename: `markdown-formatter-${Date.now()}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.95 },
         html2canvas: {
           scale: 2,
           useCORS: true,
           allowTaint: true,
-          logging: true, // 开启日志调试
+          logging: false, // 关闭调试日志
           letterRendering: true,
           width: container.offsetWidth,
           height: container.scrollHeight,
           windowWidth: container.offsetWidth + 100,
           windowHeight: container.scrollHeight + 100,
           backgroundColor: '#ffffff',
+          x: 0,
+          y: 0,
+          scrollX: 0,
+          scrollY: 0,
           onclone: (clonedDoc: Document) => {
-            console.log('[PDF Debug] html2canvas onclone 触发')
             const clonedContainer = clonedDoc.getElementById('pdf-temp-container')
             if (clonedContainer) {
-              console.log('[PDF Debug] 克隆容器找到', {
-                width: clonedContainer.offsetWidth,
-                height: clonedContainer.offsetHeight
-              })
+              // 确保克隆的容器也有正确的左边距
+              clonedContainer.style.left = '50px'
+              clonedContainer.style.paddingLeft = '25mm'
+              clonedContainer.style.paddingRight = '25mm'
             }
           }
         },
