@@ -396,12 +396,16 @@ function App() {
       }
 
       // ═══════════════════════════════════════════════════════════════
-      // 关键修复：使用 applyInlineStyles 内联样式
-      // 不使用 cloneNode，因为会丢失 CSS 计算后的样式
+      // PDF 生成关键修复：
+      // 1. html2canvas 需要元素在视口内且可见才能正确渲染
+      // 2. 使用 visibility: hidden 而不是 opacity: 0（opacity 会导致空白）
+      // 3. 等待 DOM 渲染完成后再生成 PDF
       // ═══════════════════════════════════════════════════════════════
-      const htmlWithInlineStyles = applyInlineStyles(previewEl, currentTheme)
 
-      // 创建临时容器（必须在视口内，html2canvas 才能正确渲染）
+      // 克隆预览元素并内联样式
+      const clone = previewEl.cloneNode(true) as HTMLElement
+
+      // 创建临时容器
       const container = document.createElement('div')
       container.style.cssText = `
         position: fixed;
@@ -410,13 +414,159 @@ function App() {
         width: 800px;
         padding: 40px;
         background: #fff;
+        color: #1F2937;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        z-index: -9999;
-        opacity: 0;
-        pointer-events: none;
+        font-size: 16px;
+        line-height: 1.8;
+        visibility: hidden;
+        z-index: 9999;
       `
-      container.innerHTML = htmlWithInlineStyles
+      container.appendChild(clone)
       document.body.appendChild(container)
+
+      // 内联样式到克隆的元素（必须在 DOM 中才能获取计算样式）
+      const innerDiv = container.querySelector('.mp-preview') as HTMLElement
+      if (innerDiv) {
+        // 复制主题样式到容器
+        const themeStyles = currentTheme.styles
+
+        // 处理标题
+        innerDiv.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          const computed = window.getComputedStyle(previewEl.querySelector(el.tagName) || el)
+          htmlEl.style.color = computed.color
+          htmlEl.style.fontWeight = computed.fontWeight
+          htmlEl.style.fontSize = computed.fontSize
+          htmlEl.style.margin = computed.margin
+          htmlEl.style.lineHeight = computed.lineHeight
+        })
+
+        // 处理段落
+        innerDiv.querySelectorAll('p').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.color = themeStyles.p?.match(/color:\s*[^;]+/)?.[0]?.replace('color: ', '') || '#1F2937'
+          htmlEl.style.margin = '16px 0'
+          htmlEl.style.lineHeight = '1.8'
+        })
+
+        // 处理列表
+        innerDiv.querySelectorAll('li').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.color = themeStyles.p?.match(/color:\s*[^;]+/)?.[0]?.replace('color: ', '') || '#1F2937'
+          htmlEl.style.margin = '6px 0'
+          htmlEl.style.lineHeight = '1.75'
+        })
+
+        // 处理引用块
+        innerDiv.querySelectorAll('blockquote').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.background = '#F5F3FF'
+          htmlEl.style.borderLeft = '4px solid #6366F1'
+          htmlEl.style.borderRadius = '0 12px 12px 0'
+          htmlEl.style.padding = '16px 20px'
+          htmlEl.style.margin = '20px 0'
+          htmlEl.style.color = '#4B5563'
+        })
+
+        // 处理代码块 - 复制计算后的样式
+        innerDiv.querySelectorAll('pre.hljs').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          const originalPre = previewEl.querySelectorAll('pre.hljs')[Array.from(innerDiv.querySelectorAll('pre.hljs')).indexOf(el)]
+          if (originalPre) {
+            const computed = window.getComputedStyle(originalPre)
+            htmlEl.style.backgroundColor = computed.backgroundColor
+            htmlEl.style.borderRadius = computed.borderRadius
+            htmlEl.style.padding = computed.padding
+            htmlEl.style.margin = computed.margin
+            htmlEl.style.color = computed.color
+          }
+        })
+
+        // 处理行内代码
+        innerDiv.querySelectorAll('code:not(pre code)').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.background = '#EEF2FF'
+          htmlEl.style.color = '#4338CA'
+          htmlEl.style.padding = '3px 7px'
+          htmlEl.style.borderRadius = '5px'
+          htmlEl.style.fontFamily = "'SF Mono', 'JetBrains Mono', Consolas, monospace"
+          htmlEl.style.fontSize = '0.875em'
+        })
+
+        // 处理链接
+        innerDiv.querySelectorAll('a').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.color = '#4F46E5'
+          htmlEl.style.textDecoration = 'none'
+        })
+
+        // 处理表格
+        innerDiv.querySelectorAll('table').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.width = '100%'
+          htmlEl.style.borderCollapse = 'collapse'
+          htmlEl.style.margin = '20px 0'
+        })
+
+        innerDiv.querySelectorAll('th, td').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.padding = '12px 16px'
+          htmlEl.style.border = '1px solid #E5E7EB'
+          htmlEl.style.textAlign = 'left'
+        })
+
+        innerDiv.querySelectorAll('th').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.background = '#F5F3FF'
+          htmlEl.style.fontWeight = '600'
+        })
+
+        // 处理图片
+        innerDiv.querySelectorAll('img').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.maxWidth = '100%'
+          htmlEl.style.height = 'auto'
+          htmlEl.style.borderRadius = '8px'
+          htmlEl.style.margin = '16px auto'
+          htmlEl.style.display = 'block'
+        })
+
+        // 处理分割线
+        innerDiv.querySelectorAll('hr').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.border = 'none'
+          htmlEl.style.borderTop = '1px solid #E5E7EB'
+          htmlEl.style.margin = '24px 0'
+        })
+
+        // 处理强调
+        innerDiv.querySelectorAll('strong').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.fontWeight = '600'
+        })
+
+        innerDiv.querySelectorAll('em').forEach((el) => {
+          const htmlEl = el as HTMLElement
+          htmlEl.style.fontStyle = 'italic'
+          htmlEl.style.color = '#64748B'
+        })
+      }
+
+      // 等待 DOM 更新和图片加载
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // 等待图片加载完成
+      const images = container.querySelectorAll('img')
+      await Promise.all(
+        Array.from(images).map(img => {
+          if (img.complete) return Promise.resolve()
+          return new Promise(resolve => {
+            img.onload = resolve
+            img.onerror = resolve // 即使加载失败也继续
+            setTimeout(resolve, 2000) // 超时保护
+          })
+        })
+      )
 
       // 生成 PDF
       const opt = {
@@ -426,9 +576,11 @@ function App() {
         html2canvas: {
           scale: 2,
           useCORS: true,
+          allowTaint: true,
           logging: false,
           letterRendering: true,
-          windowWidth: 900
+          windowWidth: 900,
+          backgroundColor: '#ffffff'
         },
         jsPDF: {
           unit: 'mm' as const,
@@ -443,7 +595,8 @@ function App() {
       document.body.removeChild(container)
 
       toast.showToast('PDF 下载成功', 'success')
-    } catch {
+    } catch (error) {
+      console.error('PDF generation error:', error)
       toast.showToast('PDF 生成失败，请重试', 'error')
     } finally {
       setIsDownloading(false)
@@ -749,7 +902,8 @@ function App() {
                 fontSize: '13px',
                 color: isDownloading ? 'var(--text-muted)' : 'var(--text-secondary)',
                 border: '1px solid var(--border-default)',
-                opacity: isDownloading ? 0.6 : 1
+                opacity: isDownloading ? 0.6 : 1,
+                marginRight: '8px'
               }}
             >
               {isDownloading ? (
