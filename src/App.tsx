@@ -779,6 +779,63 @@ function App() {
     }
   }
 
+  // Markdown 格式化插入函数
+  const insertMarkdown = (prefix: string, suffix: string = prefix, placeholder: string = '') => {
+    // 在末尾插入
+    const newContent = markdown + '\n' + prefix + placeholder + suffix
+    setMarkdown(newContent)
+  }
+
+  const insertBold = () => insertMarkdown('**', '**', '加粗文字')
+  const insertItalic = () => insertMarkdown('*', '*', '斜体文字')
+  const insertLink = () => insertMarkdown('[', '](url)', '链接文字')
+  const insertImage = () => insertMarkdown('![', '](url)', '图片描述')
+  const insertCode = () => insertMarkdown('`', '`', '代码')
+  const insertCodeBlock = () => insertMarkdown('```\n', '\n```', '代码块')
+  const insertHr = () => setMarkdown(markdown + '\n\n---\n')
+  const insertQuote = () => insertMarkdown('> ', '', '引用文字')
+
+  // 图片文件上传
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // 清空 input 以便重复选择同一文件
+    event.target.value = ''
+
+    if (!file.type.startsWith('image/')) {
+      toast.showToast('请选择图片文件', 'error')
+      return
+    }
+
+    if (hasConfiguredHost) {
+      // 使用图床上传
+      const result = await handleUpload(file)
+      if (result.success && result.url) {
+        const imageMarkdown = `![${file.name}](${result.url})`
+        setMarkdown(markdown + '\n' + imageMarkdown)
+        toast.showToast('图片上传成功', 'success')
+      } else {
+        toast.showToast(result.error || '上传失败', 'error')
+      }
+    } else {
+      // 转换为 base64
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string
+        if (base64) {
+          const imageMarkdown = `![${file.name}](${base64})`
+          setMarkdown(markdown + '\n' + imageMarkdown)
+          toast.showToast('图片已插入（Base64）', 'success')
+        }
+      }
+      reader.onerror = () => {
+        toast.showToast('图片读取失败', 'error')
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   // 快捷键系统
   useKeyboard([
     { key: 'z', ctrlKey: true, handler: undo },
@@ -913,6 +970,85 @@ function App() {
                 <div className="toolbar-divider" style={{ margin: '0 4px' }} />
               </>
             )}
+
+            {/* Markdown 格式化按钮 */}
+            <button
+              onClick={insertBold}
+              className="btn btn-ghost btn-icon"
+              title="加粗 (Ctrl+B)"
+            >
+              <span className="iconify icon-sm" data-icon="lucide:bold" style={{ fontWeight: 700 }}></span>
+            </button>
+            <button
+              onClick={insertItalic}
+              className="btn btn-ghost btn-icon"
+              title="斜体 (Ctrl+I)"
+            >
+              <span className="iconify icon-sm" data-icon="lucide:italic"></span>
+            </button>
+            <button
+              onClick={insertLink}
+              className="btn btn-ghost btn-icon"
+              title="插入链接 (Ctrl+K)"
+            >
+              <span className="iconify icon-sm" data-icon="lucide:link"></span>
+            </button>
+            <button
+              onClick={insertImage}
+              className="btn btn-ghost btn-icon"
+              title="插入图片 (Ctrl+Shift+I)"
+            >
+              <span className="iconify icon-sm" data-icon="lucide:image"></span>
+            </button>
+            <button
+              onClick={insertCode}
+              className="btn btn-ghost btn-icon"
+              title="行内代码 (Ctrl+`)"
+            >
+              <span className="iconify icon-sm" data-icon="lucide:code"></span>
+            </button>
+            <button
+              onClick={insertCodeBlock}
+              className="btn btn-ghost btn-icon"
+              title="代码块 (Ctrl+Shift+C)"
+            >
+              <span className="iconify icon-sm" data-icon="lucide:file-code"></span>
+            </button>
+            <button
+              onClick={insertHr}
+              className="btn btn-ghost btn-icon"
+              title="分割线"
+            >
+              <span className="iconify icon-sm" data-icon="lucide:minus"></span>
+            </button>
+            <button
+              onClick={insertQuote}
+              className="btn btn-ghost btn-icon"
+              title="引用"
+            >
+              <span className="iconify icon-sm" data-icon="lucide:quote"></span>
+            </button>
+
+            {/* 上传图片按钮 */}
+            <label
+              className="btn btn-ghost btn-icon"
+              title="上传图片"
+              style={{ cursor: 'pointer' }}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
+              />
+              <span
+                className="iconify icon-sm"
+                data-icon="lucide:upload"
+                style={{ color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-muted)' }}
+              ></span>
+            </label>
+
+            <div className="toolbar-divider" style={{ margin: '0 4px' }} />
 
             {/* 快捷键按钮 */}
             <button
