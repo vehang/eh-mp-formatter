@@ -410,6 +410,7 @@ function App() {
       const clone = previewEl.cloneNode(true) as HTMLElement
 
       // 创建临时容器 - 必须可见才能正确渲染
+      // 使用 z-index: -1 让容器在页面内容下方，用户看不到但 html2canvas 仍能渲染
       const container = document.createElement('div')
       container.id = 'pdf-temp-container'
       container.style.cssText = `
@@ -423,7 +424,7 @@ function App() {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', sans-serif;
         font-size: 14px;
         line-height: 1.8;
-        z-index: 99999;
+        z-index: -1;
       `
       container.appendChild(clone)
       document.body.appendChild(container)
