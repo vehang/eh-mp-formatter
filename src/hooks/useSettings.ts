@@ -7,7 +7,7 @@ import { useState, useCallback } from 'react'
 
 // 设置存储的 key
 const SETTINGS_KEY = 'mp-formatter-settings'
-const SETTINGS_VERSION = '1.0' // 缓存版本号
+const SETTINGS_VERSION = '2.0' // 缓存版本号（与 index.html 中的 CACHE_VERSION 保持一致）
 
 // 设置项类型定义
 export interface AppSettings {

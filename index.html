@@ -8,7 +8,7 @@
     <!-- 缓存版本检查和主题初始化 -->
     <script>
       (function() {
-        var CACHE_VERSION = '1.0';
+        var CACHE_VERSION = '2.0';
         
         try {
           // 检查缓存版本
@@ -16,20 +16,26 @@
           var currentVersion = localStorage.getItem(versionKey);
           
           if (currentVersion !== CACHE_VERSION) {
-            // 版本不匹配，清除所有缓存
+            // 版本不匹配，清除所有相关缓存
             console.log('[Cache] Version mismatch, clearing all cache');
             var keysToRemove = [];
             for (var i = 0; i < localStorage.length; i++) {
               var key = localStorage.key(i);
-              if (key && key.startsWith('mp-formatter-')) {
+              if (key && (
+                key.startsWith('mp-formatter-') ||
+                key.startsWith('iconify') ||
+                key.includes('iconify')
+              )) {
                 keysToRemove.push(key);
               }
             }
             keysToRemove.forEach(function(key) {
               localStorage.removeItem(key);
+              console.log('[Cache] Removed:', key);
             });
             // 设置新版本号
             localStorage.setItem(versionKey, CACHE_VERSION);
+            console.log('[Cache] Updated to version', CACHE_VERSION);
           }
           
           // 设置主题
@@ -44,6 +50,7 @@
           }
           document.documentElement.setAttribute('data-theme', theme);
         } catch (e) {
+          console.error('[Cache] Error:', e);
           document.documentElement.setAttribute('data-theme', 'dark');
         }
       })();

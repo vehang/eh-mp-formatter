@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-const CACHE_VERSION = '1.0'
+const CACHE_VERSION = '2.0' // 与 index.html 中的 CACHE_VERSION 保持一致
 
 export function useAutoSave<T>(
   key: string,
