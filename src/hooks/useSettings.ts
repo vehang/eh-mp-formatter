@@ -7,7 +7,7 @@ import { useState, useCallback } from 'react'
 
 // 设置存储的 key
 const SETTINGS_KEY = 'mp-formatter-settings'
-const SETTINGS_VERSION = '2.0' // 缓存版本号（与 index.html 中的 CACHE_VERSION 保持一致）
+const SETTINGS_VERSION = '2.1' // 缓存版本号
 
 // 设置项类型定义
 export interface AppSettings {
@@ -19,7 +19,8 @@ export interface AppSettings {
   previewMode: 'mobile' | 'pad' | 'desktop'
   // 同步滚动
   syncScroll: boolean
-  // UI 主题（深色/浅色）由 useUITheme 单独管理
+  // 跟随系统主题（与 useUITheme 配合使用）
+  followSystemTheme: boolean
 }
 
 // 默认设置
@@ -28,6 +29,7 @@ const defaultSettings: AppSettings = {
   codeStyle: 'github-dark',
   previewMode: 'desktop',
   syncScroll: true,
+  followSystemTheme: true,
 }
 
 // 从 localStorage 读取设置
@@ -36,14 +38,14 @@ function loadSettings(): AppSettings {
     const stored = localStorage.getItem(SETTINGS_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
-      
+
       // 检查版本号，如果不匹配则清除缓存
       if (parsed._version !== SETTINGS_VERSION) {
         console.log('[Settings] Version mismatch, clearing cache')
         localStorage.removeItem(SETTINGS_KEY)
         return { ...defaultSettings }
       }
-      
+
       // 合并默认值，确保新增字段有默认值
       const { _version, ...settings } = parsed
       return { ...defaultSettings, ...settings }
@@ -106,9 +108,11 @@ export function useSettings() {
     codeStyle: settings.codeStyle,
     previewMode: settings.previewMode,
     syncScroll: settings.syncScroll,
+    followSystemTheme: settings.followSystemTheme,
     setThemeId: (value: string) => updateSetting('themeId', value),
     setCodeStyle: (value: string) => updateSetting('codeStyle', value),
     setPreviewMode: (value: 'mobile' | 'pad' | 'desktop') => updateSetting('previewMode', value),
     setSyncScroll: (value: boolean) => updateSetting('syncScroll', value),
+    setFollowSystemTheme: (value: boolean) => updateSetting('followSystemTheme', value),
   }
 }
