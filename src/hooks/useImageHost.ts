@@ -19,7 +19,6 @@ const STORAGE_KEY = 'mp-formatter-image-host'
 // 默认设置
 const defaultSettings: ImageHostSettings = {
   // 传统图床
-  hello: { token: '', isConfigured: false },
   dk: { token: '', isConfigured: false },
   bolt: { token: '', isConfigured: false },
 
@@ -38,12 +37,12 @@ const defaultSettings: ImageHostSettings = {
 
 // 图床顺序（用于失败时的备选顺序）
 const HOST_ORDER: ImageHostType[] = [
-  'hello', 'dk', 'bolt',
+  'dk', 'bolt',
   'aliyun', 'tencent', 'qiniu', 'aws', 'upyun', 'huawei', 'netease', 'jd'
 ]
 
 // 传统图床列表
-const TRADITIONAL_HOSTS: ImageHostType[] = ['hello', 'dk', 'bolt']
+const TRADITIONAL_HOSTS: ImageHostType[] = ['dk', 'bolt']
 
 // 从 localStorage 读取设置
 function loadSettings(): ImageHostSettings {

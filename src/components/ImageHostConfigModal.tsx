@@ -153,7 +153,7 @@ export function ImageHostConfigModal({
   onSetDefault,
   onClearConfig,
 }: ImageHostConfigModalProps) {
-  const [activeTab, setActiveTab] = useState<ImageHostType>('hello')
+  const [activeTab, setActiveTab] = useState<ImageHostType>('bolt')
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>('idle')
   const [validationError, setValidationError] = useState('')
   const modalRef = useRef<HTMLDivElement>(null)
@@ -720,20 +720,22 @@ export function ImageHostConfigModal({
           width: '100%',
           padding: '10px 12px',
           background: isActive ? 'var(--bg-active)' : 'transparent',
-          border: 'none',
+          border: isActive ? '1px solid var(--orange-500)' : '1px solid transparent',
+          borderLeft: isActive ? '3px solid var(--orange-500)' : '3px solid transparent',
           borderRadius: '6px',
           cursor: 'pointer',
           textAlign: 'left',
-          transition: 'background 0.15s',
+          transition: 'all 0.15s',
           color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+          fontWeight: isActive ? 600 : 400,
         }}
       >
         <span
           className="iconify"
           data-icon={info.icon}
-          style={{ fontSize: '18px', flexShrink: 0 }}
+          style={{ fontSize: '18px', flexShrink: 0, color: isActive ? 'var(--orange-500)' : 'inherit' }}
         ></span>
-        <span style={{ flex: 1, fontSize: '13px', fontWeight: 500 }}>{info.name}</span>
+        <span style={{ flex: 1, fontSize: '13px' }}>{info.name}</span>
         {isDef && (
           <span
             style={{

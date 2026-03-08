@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // 传统图床
-type TraditionalHostType = 'hello' | 'dk' | 'bolt'
+type TraditionalHostType = 'dk' | 'bolt'
 
 // OSS 云存储平台
 type OSSHostType = 'aliyun' | 'tencent' | 'qiniu' | 'aws' | 'upyun' | 'huawei' | 'netease' | 'jd'
@@ -123,7 +123,6 @@ export type ImageHostConfig =
 // 图床设置（存储结构）
 export interface ImageHostSettings {
   // 传统图床
-  hello: { token: string; isConfigured: boolean }
   dk: { token: string; isConfigured: boolean }
   bolt: { token?: string; isConfigured: boolean }
 
@@ -161,26 +160,14 @@ export interface ImageHostInfo {
 // 图床元信息
 export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   // 传统图床
-  hello: {
-    name: 'Hello图床',
-    description: '免费图片托管服务',
-    icon: 'lucide:image',
-    category: 'traditional',
-    links: {
-      official: 'https://www.helloimg.com',
-      docs: 'https://www.helloimg.com/api',
-    },
-    requiresToken: true,
-    requiredFields: ['token'],
-  },
   dk: {
     name: 'DK图床',
     description: '免费图片托管服务',
     icon: 'lucide:hard-drive',
     category: 'traditional',
     links: {
-      official: 'https://www.helloimg.com',
-      docs: 'https://www.helloimg.com/api',
+      official: 'https://img.dkdun.cn',
+      docs: 'https://img.dkdun.cn/page/api-docs.html',
     },
     requiresToken: true,
     requiredFields: ['token'],
@@ -192,7 +179,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
     category: 'traditional',
     links: {
       official: 'https://www.boltp.com',
-      docs: 'https://www.boltp.com/api',
+      docs: 'https://www.boltp.com/pages/api-docs',
     },
     requiresToken: false,
     requiredFields: [],
@@ -202,7 +189,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   aliyun: {
     name: '阿里云 OSS',
     description: '阿里云对象存储服务',
-    icon: 'lucide:cloud',
+    icon: 'simple-icons:alibabadotcom',
     category: 'oss-domestic',
     links: {
       official: 'https://www.aliyun.com/product/oss',
@@ -215,7 +202,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   tencent: {
     name: '腾讯云 COS',
     description: '腾讯云对象存储服务',
-    icon: 'lucide:cloud',
+    icon: 'simple-icons:tencentqq',
     category: 'oss-domestic',
     links: {
       official: 'https://cloud.tencent.com/product/cos',
@@ -228,7 +215,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   qiniu: {
     name: '七牛云',
     description: '七牛云存储服务',
-    icon: 'lucide:database',
+    icon: 'simple-icons:alipay',
     category: 'oss-domestic',
     links: {
       official: 'https://www.qiniu.com',
@@ -241,7 +228,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   upyun: {
     name: '又拍云',
     description: '又拍云存储服务',
-    icon: 'lucide:upload-cloud',
+    icon: 'simple-icons:dropbox',
     category: 'oss-domestic',
     links: {
       official: 'https://www.upyun.com',
@@ -254,7 +241,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   huawei: {
     name: '华为云 OBS',
     description: '华为云对象存储服务',
-    icon: 'lucide:server',
+    icon: 'simple-icons:huawei',
     category: 'oss-domestic',
     links: {
       official: 'https://www.huaweicloud.com/product/obs.html',
@@ -267,7 +254,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   netease: {
     name: '网易云 NOS',
     description: '网易云对象存储服务',
-    icon: 'lucide:music',
+    icon: 'simple-icons:neteasecloudmusic',
     category: 'oss-domestic',
     links: {
       official: 'https://www.163yun.com/product/nos',
@@ -280,7 +267,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   jd: {
     name: '京东云 OSS',
     description: '京东云对象存储服务',
-    icon: 'lucide:shopping-bag',
+    icon: 'simple-icons:jd',
     category: 'oss-domestic',
     links: {
       official: 'https://www.jdcloud.com/cn/products/object-storage-service',
@@ -295,7 +282,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   aws: {
     name: 'AWS S3',
     description: 'Amazon S3 对象存储服务',
-    icon: 'lucide:amazon',
+    icon: 'simple-icons:amazonaws',
     category: 'oss-international',
     links: {
       official: 'https://aws.amazon.com/s3',
@@ -309,7 +296,6 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
 
 // 图床是否需要 token
 export const HOST_REQUIRES_TOKEN: Record<ImageHostType, boolean> = {
-  hello: true,
   dk: true,
   bolt: false,
   aliyun: true,

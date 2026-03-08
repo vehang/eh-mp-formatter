@@ -53,11 +53,11 @@ function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * 上传到传统图床 (Hello/DK/Bolt)
+ * 上传到传统图床 (DK/Bolt)
  */
 async function uploadToTraditionalHost(
   file: File,
-  hostType: 'hello' | 'dk' | 'bolt',
+  hostType: 'dk' | 'bolt',
   token?: string,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
@@ -852,7 +852,6 @@ export async function uploadImage(
 
   // 根据图床类型调用对应的上传函数
   switch (hostType) {
-    case 'hello':
     case 'dk':
     case 'bolt':
       return uploadToTraditionalHost(file, hostType, config?.token, onProgress)
