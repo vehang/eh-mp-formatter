@@ -180,164 +180,164 @@ export const slateTheme: Theme = {
 // 新增专业主题 v3.0
 // ═══════════════════════════════════════════════════════════════
 
-// 6. Ocean Deep - 深海蓝主题（类似 Linear 风格）
+// 6. Ocean Deep - 深海蓝主题（亮色版本，白天可读）
 const oceanDeepColors: ThemeColor = {
-  primary: '#2563EB',
+  primary: '#1E40AF',
   secondary: '#3B82F6',
-  accent: '#60A5FA',
-  background: '#0A0F1E',
-  text: '#E2E8F0',
-  textLight: '#60A5FA',
-  border: '#1E3A5F',
+  accent: '#0EA5E9',
+  background: '#F0F9FF',
+  text: '#0F172A',
+  textLight: '#1E40AF',
+  border: '#BFDBFE',
   code: {
-    inline: { background: '#1E3A5F', color: '#93C5FD' },
-    block: { background: '#0F172A', color: '#E2E8F0' }
+    inline: { background: '#DBEAFE', color: '#1E40AF' },
+    block: { background: '#1E3A5F', color: '#E0F2FE' }
   },
   blockquote: {
-    background: '#111827',
+    background: '#EFF6FF',
     borderLeft: '#3B82F6',
-    color: '#94A3B8'
+    color: '#1E3A5F'
   },
   table: {
-    headerBg: '#1E3A5F',
-    evenRowBg: '#0F172A',
-    border: '#1E3A5F'
+    headerBg: '#DBEAFE',
+    evenRowBg: '#F0F9FF',
+    border: '#BFDBFE'
   }
 }
 
 export const oceanDeepTheme: Theme = {
   id: 'ocean-deep',
   name: '深海蓝',
-  description: 'Linear 风格深色主题',
+  description: '清爽蓝色主题',
   colors: oceanDeepColors,
   styles: generateInlineStyles(oceanDeepColors),
   headingStyle: 'ocean'
 }
 
-// 7. Forest Night - 森林之夜主题
+// 7. Forest Night - 森林之夜主题（优化对比度）
 const forestNightColors: ThemeColor = {
-  primary: '#22C55E',
-  secondary: '#4ADE80',
-  accent: '#86EFAC',
-  background: '#0D1A0D',
-  text: '#E2E8F0',
-  textLight: '#4ADE80',
-  border: '#1A3A1A',
+  primary: '#16A34A',
+  secondary: '#22C55E',
+  accent: '#4ADE80',
+  background: '#F0FDF4',
+  text: '#14532D',
+  textLight: '#166534',
+  border: '#BBF7D0',
   code: {
-    inline: { background: '#1A3A1A', color: '#86EFAC' },
-    block: { background: '#0A150A', color: '#DCFCE7' }
+    inline: { background: '#DCFCE7', color: '#166534' },
+    block: { background: '#14532D', color: '#DCFCE7' }
   },
   blockquote: {
-    background: '#142014',
+    background: '#ECFDF5',
     borderLeft: '#22C55E',
-    color: '#94A3B8'
+    color: '#166534'
   },
   table: {
-    headerBg: '#1A3A1A',
-    evenRowBg: '#0F1F0F',
-    border: '#1A3A1A'
+    headerBg: '#DCFCE7',
+    evenRowBg: '#F0FDF4',
+    border: '#BBF7D0'
   }
 }
 
 export const forestNightTheme: Theme = {
   id: 'forest-night',
   name: '森林之夜',
-  description: '暗色森林绿主题',
+  description: '清新森林绿主题',
   colors: forestNightColors,
   styles: generateInlineStyles(forestNightColors),
   headingStyle: 'night-forest'
 }
 
-// 8. Rosé Pine - 优雅玫瑰松主题
+// 8. Rosé Pine - 优雅玫瑰松主题（亮色版本，高对比度）
 const rosePineColors: ThemeColor = {
-  primary: '#EB6F92',
-  secondary: '#F6C177',
-  accent: '#9CCFD8',
-  background: '#191724',
-  text: '#E0DEF4',
-  textLight: '#F6C177',
-  border: '#26233A',
+  primary: '#B91C1C',
+  secondary: '#EB6F92',
+  accent: '#C084FC',
+  background: '#FFFBFC',
+  text: '#1F1F1F',
+  textLight: '#BE123C',
+  border: '#FECDD3',
   code: {
-    inline: { background: '#26233A', color: '#EBBCBA' },
-    block: { background: '#1F1D2E', color: '#E0DEF4' }
+    inline: { background: '#FFF1F2', color: '#9F1239' },
+    block: { background: '#4C1D25', color: '#FEE2E2' }
   },
   blockquote: {
-    background: '#1F1D2E',
+    background: '#FFF1F2',
     borderLeft: '#EB6F92',
-    color: '#908CAA'
+    color: '#881337'
   },
   table: {
-    headerBg: '#26233A',
-    evenRowBg: '#1F1D2E',
-    border: '#26233A'
+    headerBg: '#FCE7F3',
+    evenRowBg: '#FFFBFC',
+    border: '#FBCFE8'
   }
 }
 
 export const rosePineTheme: Theme = {
   id: 'rose-pine',
   name: '玫瑰松',
-  description: 'Rosé Pine 暗色主题',
+  description: '浪漫玫瑰粉主题',
   colors: rosePineColors,
   styles: generateInlineStyles(rosePineColors),
   headingStyle: 'rose-pine'
 }
 
-// 9. Nord - 北欧冷调主题
+// 9. Nord - 北欧冷调主题（亮色版本，清爽干净）
 const nordColors: ThemeColor = {
-  primary: '#88C0D0',
-  secondary: '#81A1C1',
-  accent: '#5E81AC',
-  background: '#2E3440',
-  text: '#ECEFF4',
-  textLight: '#88C0D0',
-  border: '#3B4252',
+  primary: '#2E5A82',
+  secondary: '#5B8BA0',
+  accent: '#88C0D0',
+  background: '#FBFCFD',
+  text: '#2E3440',
+  textLight: '#3B6B8C',
+  border: '#D8E2EC',
   code: {
-    inline: { background: '#3B4252', color: '#A3BE8C' },
-    block: { background: '#242933', color: '#ECEFF4' }
+    inline: { background: '#E8EFF7', color: '#4C6B8A' },
+    block: { background: '#2E4A5E', color: '#E8F0F8' }
   },
   blockquote: {
-    background: '#3B4252',
-    borderLeft: '#88C0D0',
-    color: '#D8DEE9'
+    background: '#F0F5F9',
+    borderLeft: '#5B8BA0',
+    color: '#3B4A5A'
   },
   table: {
-    headerBg: '#3B4252',
-    evenRowBg: '#2E3440',
-    border: '#3B4252'
+    headerBg: '#E3EDF5',
+    evenRowBg: '#F7FAFC',
+    border: '#C5D8E8'
   }
 }
 
 export const nordTheme: Theme = {
   id: 'nord',
   name: '北欧',
-  description: 'Nord 冷色调主题',
+  description: '清爽北欧蓝主题',
   colors: nordColors,
   styles: generateInlineStyles(nordColors),
   headingStyle: 'nordic'
 }
 
-// 10. Dracula - 经典德古拉主题
+// 10. Dracula - 经典德古拉主题（亮色版本，白天可读）
 const draculaColors: ThemeColor = {
-  primary: '#BD93F9',
-  secondary: '#FF79C6',
-  accent: '#8BE9FD',
-  background: '#282A36',
-  text: '#F8F8F2',
-  textLight: '#FF79C6',
-  border: '#44475A',
+  primary: '#6B21A8',
+  secondary: '#9333EA',
+  accent: '#A855F7',
+  background: '#FAF5FF',
+  text: '#1F1F1F',
+  textLight: '#7C3AED',
+  border: '#E9D5FF',
   code: {
-    inline: { background: '#44475A', color: '#50FA7B' },
-    block: { background: '#1D1E26', color: '#F8F8F2' }
+    inline: { background: '#F3E8FF', color: '#6B21A8' },
+    block: { background: '#3B1D5E', color: '#F3E8FF' }
   },
   blockquote: {
-    background: '#44475A',
-    borderLeft: '#BD93F9',
-    color: '#F8F8F2'
+    background: '#FAF5FF',
+    borderLeft: '#9333EA',
+    color: '#581C87'
   },
   table: {
-    headerBg: '#44475A',
-    evenRowBg: '#282A36',
-    border: '#44475A'
+    headerBg: '#F3E8FF',
+    evenRowBg: '#FAF5FF',
+    border: '#E9D5FF'
   }
 }
 
@@ -384,28 +384,28 @@ export const solarizedTheme: Theme = {
   headingStyle: 'retro'
 }
 
-// 12. Monokai - 经典编辑器主题
+// 12. Monokai - 经典编辑器主题（亮色版本，高对比度）
 const monokaiColors: ThemeColor = {
-  primary: '#F92672',
-  secondary: '#A6E22E',
+  primary: '#BE185D',
+  secondary: '#F92672',
   accent: '#66D9EF',
-  background: '#272822',
-  text: '#F8F8F2',
-  textLight: '#A6E22E',
-  border: '#3E3D32',
+  background: '#FFFBFC',
+  text: '#1A1A1A',
+  textLight: '#BE123C',
+  border: '#FECDD3',
   code: {
-    inline: { background: '#3E3D32', color: '#FD971F' },
-    block: { background: '#1E1F1C', color: '#F8F8F2' }
+    inline: { background: '#FFF1F2', color: '#BE185D' },
+    block: { background: '#3D1F2D', color: '#FCE7F3' }
   },
   blockquote: {
-    background: '#3E3D32',
+    background: '#FFF1F2',
     borderLeft: '#F92672',
-    color: '#CFCFC2'
+    color: '#881337'
   },
   table: {
-    headerBg: '#3E3D32',
-    evenRowBg: '#272822',
-    border: '#3E3D32'
+    headerBg: '#FCE7F3',
+    evenRowBg: '#FFFBFC',
+    border: '#FBCFE8'
   }
 }
 
@@ -418,28 +418,28 @@ export const monokaiTheme: Theme = {
   headingStyle: 'code'
 }
 
-// 13. Gruvbox - 复古温暖主题
+// 13. Gruvbox - 复古温暖主题（亮色版本，高对比度）
 const gruvboxColors: ThemeColor = {
-  primary: '#D79921',
-  secondary: '#689D6A',
-  accent: '#458588',
-  background: '#282828',
-  text: '#EBDBB2',
-  textLight: '#D79921',
-  border: '#3C3836',
+  primary: '#B45309',
+  secondary: '#D97706',
+  accent: '#059669',
+  background: '#FFFBEB',
+  text: '#1C1917',
+  textLight: '#92400E',
+  border: '#FED7AA',
   code: {
-    inline: { background: '#3C3836', color: '#FE8019' },
-    block: { background: '#1D2021', color: '#EBDBB2' }
+    inline: { background: '#FEF3C7', color: '#92400E' },
+    block: { background: '#451A03', color: '#FEF3C7' }
   },
   blockquote: {
-    background: '#3C3836',
-    borderLeft: '#D79921',
-    color: '#D5C4A1'
+    background: '#FEF3C7',
+    borderLeft: '#D97706',
+    color: '#78350F'
   },
   table: {
-    headerBg: '#3C3836',
-    evenRowBg: '#282828',
-    border: '#3C3836'
+    headerBg: '#FEF3C7',
+    evenRowBg: '#FFFBEB',
+    border: '#FED7AA'
   }
 }
 
@@ -520,28 +520,28 @@ export const oneDarkTheme: Theme = {
   headingStyle: 'code'
 }
 
-// 16. Material - Material Design 主题
+// 16. Material - Material Design 主题（亮色版本，清晰可读）
 const materialColors: ThemeColor = {
-  primary: '#80CBC4',
-  secondary: '#C3E88D',
-  accent: '#FFCB6B',
-  background: '#263238',
-  text: '#EEFFFF',
-  textLight: '#80CBC4',
-  border: '#314549',
+  primary: '#00796B',
+  secondary: '#26A69A',
+  accent: '#FF7043',
+  background: '#FAFAFA',
+  text: '#212121',
+  textLight: '#00695C',
+  border: '#B2DFDB',
   code: {
-    inline: { background: '#314549', color: '#F78C6C' },
-    block: { background: '#1E272C', color: '#EEFFFF' }
+    inline: { background: '#E0F2F1', color: '#00695C' },
+    block: { background: '#004D40', color: '#E0F2F1' }
   },
   blockquote: {
-    background: '#314549',
-    borderLeft: '#80CBC4',
-    color: '#B2CCD6'
+    background: '#E0F2F1',
+    borderLeft: '#26A69A',
+    color: '#004D40'
   },
   table: {
-    headerBg: '#314549',
-    evenRowBg: '#263238',
-    border: '#314549'
+    headerBg: '#E0F2F1',
+    evenRowBg: '#FAFAFA',
+    border: '#B2DFDB'
   }
 }
 
