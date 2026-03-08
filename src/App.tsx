@@ -333,14 +333,14 @@ function App() {
     loadCodeStyle(codeStyle)
   }, [codeStyle])
 
-  // 保存预览模式到缓存
+  // 通过 useSettings 保存配置（统一管理）
   useEffect(() => {
-    localStorage.setItem('mp-formatter-settings', JSON.stringify({
+    settings.updateSettings({
       themeId: currentTheme.id,
       codeStyle,
       previewMode,
       syncScroll
-    }))
+    })
   }, [previewMode, syncScroll, codeStyle, currentTheme.id])
 
   const handleSelectTheme = (theme: Theme) => {
