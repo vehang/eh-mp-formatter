@@ -5,6 +5,17 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
+  HardDrive,
+  Zap,
+  Cloud,
+  CloudCog,
+  Database,
+  UploadCloud,
+  Server,
+  Music,
+  ShoppingBag,
+} from 'lucide-react'
+import {
   type ImageHostType,
   type ImageHostSettings,
   IMAGE_HOSTS,
@@ -17,13 +28,17 @@ import {
 } from '../types/imageHost'
 import { uploadImage } from '../utils/imageUploader'
 
-// 声明 Iconify 全局对象
-declare global {
-  interface Window {
-    Iconify?: {
-      scan: (root?: Element) => void
-    }
-  }
+// 图标映射
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>> = {
+  'lucide:hard-drive': HardDrive,
+  'lucide:zap': Zap,
+  'lucide:cloud': Cloud,
+  'lucide:cloud-cog': CloudCog,
+  'lucide:database': Database,
+  'lucide:upload-cloud': UploadCloud,
+  'lucide:server': Server,
+  'lucide:music': Music,
+  'lucide:shopping-bag': ShoppingBag,
 }
 
 // 1x1 透明像素 PNG（用于验证）
@@ -195,16 +210,6 @@ export function ImageHostConfigModal({
       setValidationError('')
     }
   }, [activeTab, isOpen, settings])
-
-  // 当 activeTab 变化时，触发 Iconify 重新扫描以更新图标颜色
-  useEffect(() => {
-    if (window.Iconify) {
-      // 使用 setTimeout 确保 DOM 更新后再扫描
-      setTimeout(() => {
-        window.Iconify?.scan()
-      }, 0)
-    }
-  }, [activeTab])
 
   // 获取当前配置
   const getCurrentConfig = useCallback(() => {
@@ -748,29 +753,15 @@ export function ImageHostConfigModal({
           fontWeight: isActive ? 600 : 400,
         }}
       >
-        {isActive ? (
-          <span
-            key={`icon-active-${type}`}
-            className="iconify"
-            data-icon={info.icon}
-            style={{
-              fontSize: '18px',
-              flexShrink: 0,
-              color: 'var(--orange-500)'
-            }}
-          ></span>
-        ) : (
-          <span
-            key={`icon-inactive-${type}`}
-            className="iconify"
-            data-icon={info.icon}
-            style={{
-              fontSize: '18px',
-              flexShrink: 0,
-              color: 'var(--text-secondary)'
-            }}
-          ></span>
-        )}
+        {(() => {
+          const IconComponent = ICON_MAP[info.icon]
+          return IconComponent ? (
+            <IconComponent
+              size={18}
+              style={{ flexShrink: 0, color: isActive ? 'var(--orange-500)' : 'var(--text-secondary)' }}
+            />
+          ) : null
+        })()}
         <span style={{
           flex: 1,
           fontSize: '13px',
