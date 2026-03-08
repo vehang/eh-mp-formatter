@@ -771,7 +771,7 @@ export function ImageHostConfigModal({
     >
       <div
         ref={modalRef}
-        className="theme-picker-modal"
+        className="image-host-modal"
         tabIndex={-1}
         style={{
           display: 'flex',

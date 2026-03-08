@@ -807,6 +807,15 @@ body {
   animation: modalSlideIn 250ms var(--ease-out);
 }
 
+/* 图床配置弹窗专用样式 - 不限制 flex-direction，由组件内联样式控制 */
+.image-host-modal {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  animation: modalSlideIn 250ms var(--ease-out);
+}
+
 @keyframes modalSlideIn {
   from {
     opacity: 0;
