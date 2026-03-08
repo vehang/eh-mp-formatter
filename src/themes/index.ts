@@ -384,41 +384,7 @@ export const solarizedTheme: Theme = {
   headingStyle: 'retro'
 }
 
-// 12. Monokai - 经典编辑器主题（亮色版本，高对比度）
-const monokaiColors: ThemeColor = {
-  primary: '#BE185D',
-  secondary: '#F92672',
-  accent: '#66D9EF',
-  background: '#FFFBFC',
-  text: '#1A1A1A',
-  textLight: '#BE123C',
-  border: '#FECDD3',
-  code: {
-    inline: { background: '#FFF1F2', color: '#BE185D' },
-    block: { background: '#3D1F2D', color: '#FCE7F3' }
-  },
-  blockquote: {
-    background: '#FFF1F2',
-    borderLeft: '#F92672',
-    color: '#881337'
-  },
-  table: {
-    headerBg: '#FCE7F3',
-    evenRowBg: '#FFFBFC',
-    border: '#FBCFE8'
-  }
-}
-
-export const monokaiTheme: Theme = {
-  id: 'monokai',
-  name: 'Monokai',
-  description: '经典粉红主题',
-  colors: monokaiColors,
-  styles: generateInlineStyles(monokaiColors),
-  headingStyle: 'code'
-}
-
-// 13. Gruvbox - 复古温暖主题（亮色版本，高对比度）
+// 12. Gruvbox - 复古温暖主题（亮色版本，高对比度）
 const gruvboxColors: ThemeColor = {
   primary: '#B45309',
   secondary: '#D97706',
@@ -452,7 +418,7 @@ export const gruvboxTheme: Theme = {
   headingStyle: 'retro'
 }
 
-// 14. Tokyo Night - 东京之夜主题
+// 13. Tokyo Night - 东京之夜主题
 const tokyoNightColors: ThemeColor = {
   primary: '#7AA2F7',
   secondary: '#BB9AF7',
@@ -486,7 +452,7 @@ export const tokyoNightTheme: Theme = {
   headingStyle: 'neon'
 }
 
-// 15. One Dark - Atom 经典主题
+// 14. One Dark - Atom 经典主题
 const oneDarkColors: ThemeColor = {
   primary: '#61AFEF',
   secondary: '#C678DD',
@@ -520,7 +486,7 @@ export const oneDarkTheme: Theme = {
   headingStyle: 'code'
 }
 
-// 16. Material - Material Design 主题（亮色版本，清晰可读）
+// 15. Material - Material Design 主题（亮色版本，清晰可读）
 const materialColors: ThemeColor = {
   primary: '#00796B',
   secondary: '#26A69A',
@@ -554,7 +520,7 @@ export const materialTheme: Theme = {
   headingStyle: 'material'
 }
 
-// 17. Sakura - 樱花主题（粉红色调，浪漫优雅）
+// 16. Sakura - 樱花主题（粉红色调，浪漫优雅）
 const sakuraColors: ThemeColor = {
   primary: '#DB2777',
   secondary: '#EC4899',
@@ -588,7 +554,7 @@ export const sakuraTheme: Theme = {
   headingStyle: 'cute'
 }
 
-// 18. Ayu - 阿尤主题（亮色版本，温暖橙色）
+// 17. Ayu - 阿尤主题（亮色版本，温暖橙色）
 const ayuColors: ThemeColor = {
   primary: '#C2410C',
   secondary: '#EA580C',
@@ -622,6 +588,40 @@ export const ayuTheme: Theme = {
   headingStyle: 'japanese'
 }
 
+// 18. Azure - 天青主题（清新明亮，蓝绿色调）
+const azureColors: ThemeColor = {
+  primary: '#0369A1',
+  secondary: '#0EA5E9',
+  accent: '#06B6D4',
+  background: '#F0F9FF',
+  text: '#0C4A6E',
+  textLight: '#0369A1',
+  border: '#BAE6FD',
+  code: {
+    inline: { background: '#E0F2FE', color: '#075985' },
+    block: { background: '#164E63', color: '#CFFAFE' }
+  },
+  blockquote: {
+    background: '#E0F2FE',
+    borderLeft: '#0EA5E9',
+    color: '#075985'
+  },
+  table: {
+    headerBg: '#E0F2FE',
+    evenRowBg: '#F0F9FF',
+    border: '#BAE6FD'
+  }
+}
+
+export const azureTheme: Theme = {
+  id: 'azure',
+  name: '天青',
+  description: '清新天蓝主题',
+  colors: azureColors,
+  styles: generateInlineStyles(azureColors),
+  headingStyle: 'nordic'
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 导出
 // ═══════════════════════════════════════════════════════════════
@@ -638,13 +638,13 @@ export const themes: Theme[] = [
   nordTheme,
   draculaTheme,
   solarizedTheme,
-  monokaiTheme,
   gruvboxTheme,
   tokyoNightTheme,
   oneDarkTheme,
   materialTheme,
   sakuraTheme,
-  ayuTheme
+  ayuTheme,
+  azureTheme
 ]
 
 export function applyTheme(theme: Theme): void {
