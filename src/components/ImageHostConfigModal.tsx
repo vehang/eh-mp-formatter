@@ -748,15 +748,29 @@ export function ImageHostConfigModal({
           fontWeight: isActive ? 600 : 400,
         }}
       >
-        <span
-          className="iconify"
-          data-icon={info.icon}
-          style={{
-            fontSize: '18px',
-            flexShrink: 0,
-            color: isActive ? 'var(--orange-500)' : 'var(--text-secondary)'
-          }}
-        ></span>
+        {isActive ? (
+          <span
+            key={`icon-active-${type}`}
+            className="iconify"
+            data-icon={info.icon}
+            style={{
+              fontSize: '18px',
+              flexShrink: 0,
+              color: 'var(--orange-500)'
+            }}
+          ></span>
+        ) : (
+          <span
+            key={`icon-inactive-${type}`}
+            className="iconify"
+            data-icon={info.icon}
+            style={{
+              fontSize: '18px',
+              flexShrink: 0,
+              color: 'var(--text-secondary)'
+            }}
+          ></span>
+        )}
         <span style={{
           flex: 1,
           fontSize: '13px',
