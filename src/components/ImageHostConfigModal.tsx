@@ -726,16 +726,23 @@ export function ImageHostConfigModal({
           cursor: 'pointer',
           textAlign: 'left',
           transition: 'all 0.15s',
-          color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
           fontWeight: isActive ? 600 : 400,
         }}
       >
         <span
           className="iconify"
           data-icon={info.icon}
-          style={{ fontSize: '18px', flexShrink: 0, color: isActive ? 'var(--orange-500)' : 'inherit' }}
+          style={{
+            fontSize: '18px',
+            flexShrink: 0,
+            color: isActive ? 'var(--orange-500)' : 'var(--text-secondary)'
+          }}
         ></span>
-        <span style={{ flex: 1, fontSize: '13px' }}>{info.name}</span>
+        <span style={{
+          flex: 1,
+          fontSize: '13px',
+          color: isActive ? 'var(--orange-500)' : 'var(--text-secondary)'
+        }}>{info.name}</span>
         {isDef && (
           <span
             style={{

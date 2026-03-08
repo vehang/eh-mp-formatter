@@ -267,7 +267,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   jd: {
     name: '京东云 OSS',
     description: '京东云对象存储服务',
-    icon: 'simple-icons:jd',
+    icon: 'lucide:shopping-cart',
     category: 'oss-domestic',
     links: {
       official: 'https://www.jdcloud.com/cn/products/object-storage-service',
