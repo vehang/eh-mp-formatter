@@ -189,7 +189,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   aliyun: {
     name: '阿里云 OSS',
     description: '阿里云对象存储服务',
-    icon: 'simple-icons:alibabadotcom',
+    icon: 'lucide:cloud',
     category: 'oss-domestic',
     links: {
       official: 'https://www.aliyun.com/product/oss',
@@ -202,7 +202,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   tencent: {
     name: '腾讯云 COS',
     description: '腾讯云对象存储服务',
-    icon: 'simple-icons:tencentqq',
+    icon: 'lucide:cloud-cog',
     category: 'oss-domestic',
     links: {
       official: 'https://cloud.tencent.com/product/cos',
@@ -215,7 +215,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   qiniu: {
     name: '七牛云',
     description: '七牛云存储服务',
-    icon: 'simple-icons:alipay',
+    icon: 'lucide:database',
     category: 'oss-domestic',
     links: {
       official: 'https://www.qiniu.com',
@@ -228,7 +228,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   upyun: {
     name: '又拍云',
     description: '又拍云存储服务',
-    icon: 'simple-icons:dropbox',
+    icon: 'lucide:upload-cloud',
     category: 'oss-domestic',
     links: {
       official: 'https://www.upyun.com',
@@ -241,7 +241,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   huawei: {
     name: '华为云 OBS',
     description: '华为云对象存储服务',
-    icon: 'simple-icons:huawei',
+    icon: 'lucide:server',
     category: 'oss-domestic',
     links: {
       official: 'https://www.huaweicloud.com/product/obs.html',
@@ -254,7 +254,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   netease: {
     name: '网易云 NOS',
     description: '网易云对象存储服务',
-    icon: 'simple-icons:neteasecloudmusic',
+    icon: 'lucide:music',
     category: 'oss-domestic',
     links: {
       official: 'https://www.163yun.com/product/nos',
@@ -267,7 +267,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   jd: {
     name: '京东云 OSS',
     description: '京东云对象存储服务',
-    icon: 'lucide:shopping-cart',
+    icon: 'lucide:shopping-bag',
     category: 'oss-domestic',
     links: {
       official: 'https://www.jdcloud.com/cn/products/object-storage-service',
@@ -282,7 +282,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   aws: {
     name: 'AWS S3',
     description: 'Amazon S3 对象存储服务',
-    icon: 'simple-icons:amazonaws',
+    icon: 'lucide:cloud',
     category: 'oss-international',
     links: {
       official: 'https://aws.amazon.com/s3',
