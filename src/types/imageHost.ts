@@ -202,7 +202,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   tencent: {
     name: '腾讯云 COS',
     description: '腾讯云对象存储服务',
-    icon: 'lucide:database',
+    icon: 'lucide:cloud-cog',
     category: 'oss-domestic',
     links: {
       official: 'https://cloud.tencent.com/product/cos',
@@ -215,7 +215,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   qiniu: {
     name: '七牛云',
     description: '七牛云存储服务',
-    icon: 'lucide:hard-drive',
+    icon: 'lucide:database',
     category: 'oss-domestic',
     links: {
       official: 'https://www.qiniu.com',
@@ -254,7 +254,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   netease: {
     name: '网易云 NOS',
     description: '网易云对象存储服务',
-    icon: 'lucide:hard-drive',
+    icon: 'lucide:cloud',
     category: 'oss-domestic',
     links: {
       official: 'https://www.163yun.com/product/nos',
