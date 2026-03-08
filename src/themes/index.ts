@@ -344,7 +344,7 @@ const draculaColors: ThemeColor = {
 export const draculaTheme: Theme = {
   id: 'dracula',
   name: '德古拉',
-  description: 'Dracula 经典暗色主题',
+  description: '神秘紫色主题',
   colors: draculaColors,
   styles: generateInlineStyles(draculaColors),
   headingStyle: 'gothic'
@@ -412,7 +412,7 @@ const monokaiColors: ThemeColor = {
 export const monokaiTheme: Theme = {
   id: 'monokai',
   name: 'Monokai',
-  description: '经典编辑器主题',
+  description: '经典粉红主题',
   colors: monokaiColors,
   styles: generateInlineStyles(monokaiColors),
   headingStyle: 'code'
@@ -446,7 +446,7 @@ const gruvboxColors: ThemeColor = {
 export const gruvboxTheme: Theme = {
   id: 'gruvbox',
   name: 'Gruvbox',
-  description: '复古温暖暗色主题',
+  description: '温暖复古主题',
   colors: gruvboxColors,
   styles: generateInlineStyles(gruvboxColors),
   headingStyle: 'retro'
@@ -548,75 +548,75 @@ const materialColors: ThemeColor = {
 export const materialTheme: Theme = {
   id: 'material',
   name: 'Material',
-  description: 'Material Design 主题',
+  description: '清新青绿主题',
   colors: materialColors,
   styles: generateInlineStyles(materialColors),
   headingStyle: 'material'
 }
 
-// 17. Panda - 熊猫主题
+// 17. Panda - 熊猫主题（亮色版本，可爱粉红）
 const pandaColors: ThemeColor = {
-  primary: '#FF75B5',
-  secondary: '#B6FCBD',
-  accent: '#FF9F43',
-  background: '#1F1F1F',
-  text: '#E6E6E6',
-  textLight: '#FF75B5',
-  border: '#3A3A3A',
+  primary: '#DB2777',
+  secondary: '#EC4899',
+  accent: '#F472B6',
+  background: '#FDF2F8',
+  text: '#1F1F1F',
+  textLight: '#BE185D',
+  border: '#FBCFE8',
   code: {
-    inline: { background: '#2A2A2A', color: '#FFCC95' },
-    block: { background: '#141414', color: '#E6E6E6' }
+    inline: { background: '#FCE7F3', color: '#9D174D' },
+    block: { background: '#831843', color: '#FCE7F3' }
   },
   blockquote: {
-    background: '#2A2A2A',
-    borderLeft: '#FF75B5',
-    color: '#B0B0B0'
+    background: '#FCE7F3',
+    borderLeft: '#EC4899',
+    color: '#831843'
   },
   table: {
-    headerBg: '#2A2A2A',
-    evenRowBg: '#1F1F1F',
-    border: '#3A3A3A'
+    headerBg: '#FCE7F3',
+    evenRowBg: '#FDF2F8',
+    border: '#FBCFE8'
   }
 }
 
 export const pandaTheme: Theme = {
   id: 'panda',
   name: 'Panda',
-  description: '熊猫粉红主题',
+  description: '可爱粉红主题',
   colors: pandaColors,
   styles: generateInlineStyles(pandaColors),
   headingStyle: 'cute'
 }
 
-// 18. Ayu - 阿尤主题
+// 18. Ayu - 阿尤主题（亮色版本，温暖橙色）
 const ayuColors: ThemeColor = {
-  primary: '#FF9940',
-  secondary: '#F07178',
-  accent: '#95E6CB',
-  background: '#0D1017',
-  text: '#B3B1AD',
-  textLight: '#FF9940',
-  border: '#1F2430',
+  primary: '#C2410C',
+  secondary: '#EA580C',
+  accent: '#F97316',
+  background: '#FFFBEB',
+  text: '#1C1917',
+  textLight: '#9A3412',
+  border: '#FED7AA',
   code: {
-    inline: { background: '#1F2430', color: '#FFB454' },
-    block: { background: '#0A0E14', color: '#B3B1AD' }
+    inline: { background: '#FFEDD5', color: '#9A3412' },
+    block: { background: '#7C2D12', color: '#FFEDD5' }
   },
   blockquote: {
-    background: '#1F2430',
-    borderLeft: '#FF9940',
-    color: '#8A9199'
+    background: '#FFEDD5',
+    borderLeft: '#EA580C',
+    color: '#7C2D12'
   },
   table: {
-    headerBg: '#1F2430',
-    evenRowBg: '#0D1017',
-    border: '#1F2430'
+    headerBg: '#FFEDD5',
+    evenRowBg: '#FFFBEB',
+    border: '#FED7AA'
   }
 }
 
 export const ayuTheme: Theme = {
   id: 'ayu',
   name: 'Ayu',
-  description: 'Ayu 温暖暗色主题',
+  description: '温暖橙色主题',
   colors: ayuColors,
   styles: generateInlineStyles(ayuColors),
   headingStyle: 'japanese'
