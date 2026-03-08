@@ -1,5 +1,6 @@
 /**
  * 图床配置管理 Hook
+ * 支持传统图床和 OSS 云存储
  */
 
 import { useState, useCallback } from 'react'
@@ -17,14 +18,32 @@ const STORAGE_KEY = 'mp-formatter-image-host'
 
 // 默认设置
 const defaultSettings: ImageHostSettings = {
+  // 传统图床
   hello: { token: '', isConfigured: false },
   dk: { token: '', isConfigured: false },
   bolt: { token: '', isConfigured: false },
+
+  // OSS 云存储
+  aliyun: { config: {}, isConfigured: false },
+  tencent: { config: {}, isConfigured: false },
+  qiniu: { config: {}, isConfigured: false },
+  aws: { config: {}, isConfigured: false },
+  upyun: { config: {}, isConfigured: false },
+  huawei: { config: {}, isConfigured: false },
+  netease: { config: {}, isConfigured: false },
+  jd: { config: {}, isConfigured: false },
+
   defaultHost: null,
 }
 
 // 图床顺序（用于失败时的备选顺序）
-const HOST_ORDER: ImageHostType[] = ['hello', 'dk', 'bolt']
+const HOST_ORDER: ImageHostType[] = [
+  'hello', 'dk', 'bolt',
+  'aliyun', 'tencent', 'qiniu', 'aws', 'upyun', 'huawei', 'netease', 'jd'
+]
+
+// 传统图床列表
+const TRADITIONAL_HOSTS: ImageHostType[] = ['hello', 'dk', 'bolt']
 
 // 从 localStorage 读取设置
 function loadSettings(): ImageHostSettings {
@@ -60,20 +79,30 @@ export function useImageHost() {
   // 更新图床配置
   const updateHostConfig = useCallback((
     hostType: ImageHostType,
-    config: { token?: string }
+    config: any
   ) => {
     setSettings((prev) => {
-      // 判断是否已配置：需要 token 的图床必须有 token，闪电图床直接算配置
-      const isConfigured = HOST_REQUIRES_TOKEN[hostType]
-        ? !!config.token?.trim()
-        : true
+      const isTraditional = TRADITIONAL_HOSTS.includes(hostType)
+
+      // 判断是否已配置
+      let isConfigured = false
+      if (isTraditional) {
+        isConfigured = HOST_REQUIRES_TOKEN[hostType]
+          ? !!(config.token?.trim())
+          : true
+      } else {
+        // OSS 配置需要检查必填字段
+        const hostInfo = IMAGE_HOSTS[hostType]
+        isConfigured = hostInfo.requiredFields.every(
+          field => config[field]?.trim()
+        )
+      }
 
       const newSettings: ImageHostSettings = {
         ...prev,
-        [hostType]: {
-          token: config.token || '',
-          isConfigured,
-        },
+        [hostType]: isTraditional
+          ? { token: config.token || '', isConfigured }
+          : { config: config || {}, isConfigured },
       }
 
       // 如果这是第一个配置的图床，自动设为默认
@@ -125,6 +154,21 @@ export function useImageHost() {
     return HOST_ORDER.some((h) => settings[h].isConfigured)
   }, [settings])
 
+  // 获取图床配置（用于上传）
+  const getHostConfig = useCallback((hostType: ImageHostType) => {
+    const hostSettings = settings[hostType]
+    if (!hostSettings.isConfigured) {
+      return null
+    }
+
+    const isTraditional = TRADITIONAL_HOSTS.includes(hostType)
+    if (isTraditional) {
+      return { token: (hostSettings as any).token }
+    } else {
+      return (hostSettings as any).config
+    }
+  }, [settings])
+
   // 上传图片
   const handleUpload = useCallback(async (
     file: File,
@@ -154,12 +198,13 @@ export function useImageHost() {
 
     // 尝试上传
     for (const targetHost of hostsToTry) {
-      const hostConfig = settings[targetHost]
+      const hostConfig = getHostConfig(targetHost)
+      if (!hostConfig) continue
 
       const result = await uploadImage(
         file,
         targetHost,
-        hostConfig.token,
+        hostConfig,
         setUploadProgress
       )
 
@@ -199,14 +244,18 @@ export function useImageHost() {
       success: false,
       error: '所有图床上传失败，请检查配置',
     }
-  }, [settings, hasAnyConfiguredHost])
+  }, [settings, hasAnyConfiguredHost, getHostConfig])
 
   // 清除图床配置
   const clearHostConfig = useCallback((hostType: ImageHostType) => {
     setSettings((prev) => {
+      const isTraditional = TRADITIONAL_HOSTS.includes(hostType)
+
       const newSettings: ImageHostSettings = {
         ...prev,
-        [hostType]: { token: '', isConfigured: false },
+        [hostType]: isTraditional
+          ? { token: '', isConfigured: false }
+          : { config: {}, isConfigured: false },
       }
 
       // 如果清除的是默认图床，重新选择
