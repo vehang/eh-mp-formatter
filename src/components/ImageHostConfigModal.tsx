@@ -17,6 +17,15 @@ import {
 } from '../types/imageHost'
 import { uploadImage } from '../utils/imageUploader'
 
+// 声明 Iconify 全局对象
+declare global {
+  interface Window {
+    Iconify?: {
+      scan: (root?: Element) => void
+    }
+  }
+}
+
 // 1x1 透明像素 PNG（用于验证）
 const TEST_PIXEL_PNG_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
 
@@ -186,6 +195,16 @@ export function ImageHostConfigModal({
       setValidationError('')
     }
   }, [activeTab, isOpen, settings])
+
+  // 当 activeTab 变化时，触发 Iconify 重新扫描以更新图标颜色
+  useEffect(() => {
+    if (window.Iconify) {
+      // 使用 setTimeout 确保 DOM 更新后再扫描
+      setTimeout(() => {
+        window.Iconify?.scan()
+      }, 0)
+    }
+  }, [activeTab])
 
   // 获取当前配置
   const getCurrentConfig = useCallback(() => {
