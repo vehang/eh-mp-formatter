@@ -771,6 +771,7 @@ export function ImageHostConfigModal({
     >
       <div
         ref={modalRef}
+        className="theme-picker-modal"
         tabIndex={-1}
         style={{
           display: 'flex',
@@ -778,9 +779,6 @@ export function ImageHostConfigModal({
           maxWidth: '95vw',
           height: '600px',
           maxHeight: '85vh',
-          background: 'var(--bg-primary)',
-          borderRadius: '12px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           overflow: 'hidden',
         }}
       >
