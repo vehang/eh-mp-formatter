@@ -8,11 +8,9 @@ import {
   HardDrive,
   Zap,
   Cloud,
-  CloudCog,
   Database,
   UploadCloud,
   Server,
-  Music,
   ShoppingBag,
 } from 'lucide-react'
 import {
@@ -33,11 +31,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   'lucide:hard-drive': HardDrive,
   'lucide:zap': Zap,
   'lucide:cloud': Cloud,
-  'lucide:cloud-cog': CloudCog,
   'lucide:database': Database,
   'lucide:upload-cloud': UploadCloud,
   'lucide:server': Server,
-  'lucide:music': Music,
   'lucide:shopping-bag': ShoppingBag,
 }
 
