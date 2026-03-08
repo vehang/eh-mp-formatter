@@ -8,12 +8,14 @@ import {
   HardDrive,
   Zap,
   Cloud,
-  CloudCog,
   Database,
   UploadCloud,
   Server,
   ShoppingBag,
 } from 'lucide-react'
+// 品牌图标
+import { SiAlibabacloud, SiQq, SiHuawei, SiNeteasecloudmusic } from 'react-icons/si'
+import { FaAws } from 'react-icons/fa'
 import {
   type ImageHostType,
   type ImageHostSettings,
@@ -27,16 +29,22 @@ import {
 } from '../types/imageHost'
 import { uploadImage } from '../utils/imageUploader'
 
-// 图标映射
+// 图标映射（品牌图标 + 通用图标）
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>> = {
+  // 通用图标
   'lucide:hard-drive': HardDrive,
   'lucide:zap': Zap,
   'lucide:cloud': Cloud,
-  'lucide:cloud-cog': CloudCog,
   'lucide:database': Database,
   'lucide:upload-cloud': UploadCloud,
   'lucide:server': Server,
   'lucide:shopping-bag': ShoppingBag,
+  // 品牌图标
+  'brand:aliyun': SiAlibabacloud,
+  'brand:tencent': SiQq,
+  'brand:huawei': SiHuawei,
+  'brand:netease': SiNeteasecloudmusic,
+  'brand:aws': FaAws,
 }
 
 // 1x1 透明像素 PNG（用于验证）

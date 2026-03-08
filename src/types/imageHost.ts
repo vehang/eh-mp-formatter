@@ -189,7 +189,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   aliyun: {
     name: '阿里云 OSS',
     description: '阿里云对象存储服务',
-    icon: 'lucide:cloud',
+    icon: 'brand:aliyun',
     category: 'oss-domestic',
     links: {
       official: 'https://www.aliyun.com/product/oss',
@@ -202,7 +202,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   tencent: {
     name: '腾讯云 COS',
     description: '腾讯云对象存储服务',
-    icon: 'lucide:cloud-cog',
+    icon: 'brand:tencent',
     category: 'oss-domestic',
     links: {
       official: 'https://cloud.tencent.com/product/cos',
@@ -215,7 +215,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   qiniu: {
     name: '七牛云',
     description: '七牛云存储服务',
-    icon: 'lucide:database',
+    icon: 'lucide:hard-drive',
     category: 'oss-domestic',
     links: {
       official: 'https://www.qiniu.com',
@@ -241,7 +241,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   huawei: {
     name: '华为云 OBS',
     description: '华为云对象存储服务',
-    icon: 'lucide:server',
+    icon: 'brand:huawei',
     category: 'oss-domestic',
     links: {
       official: 'https://www.huaweicloud.com/product/obs.html',
@@ -254,7 +254,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   netease: {
     name: '网易云 NOS',
     description: '网易云对象存储服务',
-    icon: 'lucide:cloud',
+    icon: 'brand:netease',
     category: 'oss-domestic',
     links: {
       official: 'https://www.163yun.com/product/nos',
@@ -282,7 +282,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   aws: {
     name: 'AWS S3',
     description: 'Amazon S3 对象存储服务',
-    icon: 'lucide:cloud',
+    icon: 'brand:aws',
     category: 'oss-international',
     links: {
       official: 'https://aws.amazon.com/s3',
