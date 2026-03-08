@@ -554,8 +554,8 @@ export const materialTheme: Theme = {
   headingStyle: 'material'
 }
 
-// 17. Panda - 熊猫主题（亮色版本，可爱粉红）
-const pandaColors: ThemeColor = {
+// 17. Sakura - 樱花主题（粉红色调，浪漫优雅）
+const sakuraColors: ThemeColor = {
   primary: '#DB2777',
   secondary: '#EC4899',
   accent: '#F472B6',
@@ -579,12 +579,12 @@ const pandaColors: ThemeColor = {
   }
 }
 
-export const pandaTheme: Theme = {
-  id: 'panda',
-  name: 'Panda',
-  description: '可爱粉红主题',
-  colors: pandaColors,
-  styles: generateInlineStyles(pandaColors),
+export const sakuraTheme: Theme = {
+  id: 'sakura',
+  name: '樱花',
+  description: '浪漫樱花主题',
+  colors: sakuraColors,
+  styles: generateInlineStyles(sakuraColors),
   headingStyle: 'cute'
 }
 
@@ -643,7 +643,7 @@ export const themes: Theme[] = [
   tokyoNightTheme,
   oneDarkTheme,
   materialTheme,
-  pandaTheme,
+  sakuraTheme,
   ayuTheme
 ]
 

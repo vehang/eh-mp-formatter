@@ -40,7 +40,7 @@ export type HeadingStyleVariant =
   | 'gothic'        // 哥特暗黑 - 蝙蝠装饰（dracula）
   | 'neon'          // 霓虹灯 - 发光效果（tokyo-night）
   | 'material'      // Material Design - 卡片阴影（material）
-  | 'cute'          // 可爱风格 - 熊猫爪印（panda）
+  | 'cute'          // 可爱风格 - 樱花装饰（sakura）
   | 'japanese'      // 日式风格 - 樱花装饰（ayu）
 
 // 内联样式映射 - 用于公众号复制
