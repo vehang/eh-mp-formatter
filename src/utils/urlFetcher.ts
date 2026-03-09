@@ -30,7 +30,7 @@ export async function fetchUrlContent(url: string): Promise<FetchResult> {
     const doc = parser.parseFromString(html, 'text/html')
 
     // 尝试找到主要内容区域
-    let contentElement =
+    const contentElement =
       doc.querySelector('article') ||
       doc.querySelector('main') ||
       doc.querySelector('.content') ||

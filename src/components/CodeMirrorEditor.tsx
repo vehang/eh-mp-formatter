@@ -35,7 +35,7 @@ function wrapSelection(view: EditorView, prefix: string, suffix: string = prefix
 
   if (from === to) {
     // 没有选中文本，插入占位符
-    const defaultPlaceholder = placeholder || prefix.replace(/[!*`#\[\]]/g, '') || '文字'
+    const defaultPlaceholder = placeholder || prefix.replace(/[!*`#\]]/g, '') || '文字'
     view.dispatch({
       changes: { from, to, insert: `${prefix}${defaultPlaceholder}${suffix}` },
       selection: { anchor: from + prefix.length, head: from + prefix.length + defaultPlaceholder.length },

@@ -104,6 +104,20 @@ export interface TraditionalHostConfig {
   token?: string
 }
 
+// OSS 配置联合类型
+export type AnyOSSConfig =
+  | Partial<AliyunOSSConfig>
+  | Partial<TencentCOSConfig>
+  | Partial<QiniuConfig>
+  | Partial<AWSS3Config>
+  | Partial<UpyunConfig>
+  | Partial<HuaweiOBSConfig>
+  | Partial<NeteaseNOSConfig>
+  | Partial<JDOSSConfig>
+
+// 图床配置值（用于组件状态）
+export type HostConfigValue = string | undefined | Record<string, string | undefined>
+
 // 单个图床配置（联合类型）
 export type ImageHostConfig =
   | { type: TraditionalHostType; token?: string }
@@ -138,6 +152,12 @@ export interface ImageHostSettings {
 
   defaultHost: ImageHostType | null
 }
+
+// 传统图床设置类型
+export type TraditionalHostSettings = { token?: string; isConfigured: boolean }
+
+// OSS 图床设置类型
+export type OSSHostSettings = { config: Record<string, string | undefined>; isConfigured: boolean }
 
 // ═══════════════════════════════════════════════════════════════
 // 图床元信息

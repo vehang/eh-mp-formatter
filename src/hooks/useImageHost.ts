@@ -9,6 +9,8 @@ import {
   type ImageHostSettings,
   type UploadProgress,
   type UploadResult,
+  type TraditionalHostSettings,
+  type OSSHostSettings,
   IMAGE_HOSTS,
   HOST_REQUIRES_TOKEN,
 } from '../types/imageHost'
@@ -78,7 +80,7 @@ export function useImageHost() {
   // 更新图床配置
   const updateHostConfig = useCallback((
     hostType: ImageHostType,
-    config: any
+    config: { token?: string } | Record<string, string | undefined>
   ) => {
     setSettings((prev) => {
       const isTraditional = TRADITIONAL_HOSTS.includes(hostType)
@@ -87,21 +89,22 @@ export function useImageHost() {
       let isConfigured = false
       if (isTraditional) {
         isConfigured = HOST_REQUIRES_TOKEN[hostType]
-          ? !!(config.token?.trim())
+          ? !!((config as { token?: string }).token?.trim())
           : true
       } else {
         // OSS 配置需要检查必填字段
         const hostInfo = IMAGE_HOSTS[hostType]
+        const ossConfig = config as Record<string, string | undefined>
         isConfigured = hostInfo.requiredFields.every(
-          field => config[field]?.trim()
+          field => ossConfig[field]?.trim()
         )
       }
 
       const newSettings: ImageHostSettings = {
         ...prev,
         [hostType]: isTraditional
-          ? { token: config.token || '', isConfigured }
-          : { config: config || {}, isConfigured },
+          ? { token: (config as { token?: string }).token || '', isConfigured }
+          : { config: config as Record<string, string | undefined>, isConfigured },
       }
 
       // 如果这是第一个配置的图床，自动设为默认
@@ -162,9 +165,9 @@ export function useImageHost() {
 
     const isTraditional = TRADITIONAL_HOSTS.includes(hostType)
     if (isTraditional) {
-      return { token: (hostSettings as any).token }
+      return { token: (hostSettings as TraditionalHostSettings).token }
     } else {
-      return (hostSettings as any).config
+      return (hostSettings as OSSHostSettings).config
     }
   }, [settings])
 

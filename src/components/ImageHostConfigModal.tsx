@@ -19,6 +19,8 @@ import { FaAws } from 'react-icons/fa'
 import {
   type ImageHostType,
   type ImageHostSettings,
+  type TraditionalHostSettings,
+  type OSSHostSettings,
   IMAGE_HOSTS,
   ALIYUN_REGIONS,
   TENCENT_REGIONS,
@@ -54,7 +56,7 @@ interface ImageHostConfigModalProps {
   isOpen: boolean
   onClose: () => void
   settings: ImageHostSettings
-  onUpdateConfig: (hostType: ImageHostType, config: any) => void
+  onUpdateConfig: (hostType: ImageHostType, config: { token?: string } | Record<string, string>) => void
   onSetDefault: (hostType: ImageHostType) => void
   onClearConfig: (hostType: ImageHostType) => void
 }
@@ -189,16 +191,16 @@ export function ImageHostConfigModal({
   const modalRef = useRef<HTMLDivElement>(null)
 
   // OSS 配置状态
-  const [ossConfig, setOssConfig] = useState<Record<string, any>>({})
+  const [ossConfig, setOssConfig] = useState<Record<string, string | undefined>>({})
 
   // 传统图床 token
   const [token, setToken] = useState('')
 
   // 获取图床列表（按分类）
   const hostList = useMemo(() => {
-    const traditional = Object.entries(IMAGE_HOSTS).filter(([_, info]) => info.category === 'traditional')
-    const ossDomestic = Object.entries(IMAGE_HOSTS).filter(([_, info]) => info.category === 'oss-domestic')
-    const ossInternational = Object.entries(IMAGE_HOSTS).filter(([_, info]) => info.category === 'oss-international')
+    const traditional = Object.entries(IMAGE_HOSTS).filter(([, info]) => info.category === 'traditional')
+    const ossDomestic = Object.entries(IMAGE_HOSTS).filter(([, info]) => info.category === 'oss-domestic')
+    const ossInternational = Object.entries(IMAGE_HOSTS).filter(([, info]) => info.category === 'oss-international')
     return { traditional, ossDomestic, ossInternational }
   }, [])
 
@@ -207,10 +209,10 @@ export function ImageHostConfigModal({
     if (isOpen) {
       const currentConfig = settings[activeTab as keyof ImageHostSettings]
       if (currentConfig && typeof currentConfig === 'object' && 'token' in currentConfig) {
-        setToken((currentConfig as any).token || '')
+        setToken((currentConfig as TraditionalHostSettings).token || '')
       }
       if (currentConfig && typeof currentConfig === 'object' && 'config' in currentConfig) {
-        setOssConfig((currentConfig as any).config || {})
+        setOssConfig((currentConfig as OSSHostSettings).config || {})
       }
       setValidationStatus('idle')
       setValidationError('')
@@ -380,7 +382,7 @@ export function ImageHostConfigModal({
 
     // OSS 配置表单
     const updateOssConfig = (key: string, value: string) => {
-      setOssConfig((prev: any) => ({ ...prev, [key]: value }))
+      setOssConfig((prev) => ({ ...prev, [key]: value }))
       setValidationStatus('idle')
     }
 

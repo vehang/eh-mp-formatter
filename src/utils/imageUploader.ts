@@ -836,6 +836,7 @@ async function uploadToJDOSS(
 export async function uploadImage(
   file: File,
   hostType: ImageHostType,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config?: any,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {

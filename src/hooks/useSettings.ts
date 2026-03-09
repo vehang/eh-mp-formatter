@@ -47,6 +47,7 @@ function loadSettings(): AppSettings {
       }
 
       // 合并默认值，确保新增字段有默认值
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { _version, ...settings } = parsed
       return { ...defaultSettings, ...settings }
     }

@@ -19,7 +19,6 @@ import { makeWeChatCompatible, applyInlineStyles } from './lib/wechatCompat'
 import { fetchUrlContent } from './utils/urlFetcher'
 import { themes, applyTheme, getThemeById } from './themes'
 import type { Theme } from './themes/types'
-import './styles/preview.css'
 import './App.css'
 
 // 代码风格配置 - 预导入 highlight.js 样式
