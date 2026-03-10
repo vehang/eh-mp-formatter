@@ -29,15 +29,8 @@ export function Preview({
       className="flex flex-col"
       style={{
         background: 'var(--bg-muted)',
-        flexShrink: 0,
-        width: isMobile
-          ? '100%'
-          : previewMode === 'desktop'
-            ? '100%'
-            : previewMode === 'pad'
-              ? '820px'
-              : '415px',
-        transition: 'width 0.3s ease-in-out',
+        width: '100%',
+        height: '100%',
         display: 'flex',
       }}
     >

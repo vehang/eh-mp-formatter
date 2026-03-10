@@ -838,7 +838,8 @@ function App() {
           style={{
             display: isMobile && mobileTab !== 'preview' ? 'none' : 'flex',
             flexDirection: 'column',
-            flex: 1,
+            width: isMobile ? '100%' : previewMode === 'desktop' ? '50%' : previewMode === 'pad' ? '820px' : '415px',
+            transition: 'width 0.3s ease-in-out',
           }}
         >
           <Preview
