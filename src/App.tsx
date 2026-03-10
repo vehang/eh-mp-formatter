@@ -836,7 +836,9 @@ function App() {
         {/* 右侧预览 */}
         <div
           style={{
-            display: isMobile && mobileTab !== 'preview' ? 'none' : 'flex'
+            display: isMobile && mobileTab !== 'preview' ? 'none' : 'flex',
+            flexDirection: 'column',
+            flexShrink: 0,
           }}
         >
           <Preview
