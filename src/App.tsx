@@ -1,11 +1,8 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react'
 import html2pdf from 'html2pdf.js'
 import { CodeMirrorEditor, type EditorHandle } from './components/CodeMirrorEditor'
-import { UrlFetchModal } from './components/UrlFetchModal'
-import { ThemePickerModal } from './components/ThemePickerModal'
-import { CodeStylePickerModal } from './components/CodeStylePickerModal'
-import { ImageHostConfigModal } from './components/ImageHostConfigModal'
-import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal'
+import { Toolbar } from './components/Toolbar'
+import { Preview } from './components/Preview'
 import { useToast } from './components/Toast'
 import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
@@ -14,6 +11,7 @@ import { useUITheme } from './hooks/useUITheme'
 import { useSyncScroll } from './hooks/useSyncScroll'
 import { useSettings } from './hooks/useSettings'
 import { useImageHost } from './hooks/useImageHost'
+import { useDebounce } from './hooks/useDebounce'
 import { parseMarkdown } from './utils/markdown'
 import { makeWeChatCompatible, applyInlineStyles } from './lib/wechatCompat'
 import { fetchUrlContent } from './utils/urlFetcher'
@@ -55,6 +53,16 @@ function loadCodeStyle(styleId: string) {
     loadedStyleId = styleId
   }
 }
+
+// React.lazy 加载弹窗组件
+const UrlFetchModal = lazy(() => import('./components/UrlFetchModal').then(m => ({ default: m.UrlFetchModal })))
+const ThemePickerModal = lazy(() => import('./components/ThemePickerModal').then(m => ({ default: m.ThemePickerModal })))
+const CodeStylePickerModal = lazy(() => import('./components/CodeStylePickerModal').then(m => ({ default: m.CodeStylePickerModal })))
+const ImageHostConfigModal = lazy(() => import('./components/ImageHostConfigModal').then(m => ({ default: m.ImageHostConfigModal })))
+const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcutsModal').then(m => ({ default: m.KeyboardShortcutsModal })))
+
+// Suspense 加载占位
+const ModalLoadingFallback = () => null
 
 const defaultMarkdown = `![Unsplash 示例图片](https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80)
 
@@ -322,7 +330,11 @@ function App() {
   const toast = useToast()
   const { isSaving } = useAutoSave('markdown-content', markdown, 2000)
 
-  const html = useMemo(() => parseMarkdown(markdown), [markdown])
+  // 防抖 Markdown 内容（300ms）
+  const debouncedMarkdown = useDebounce(markdown, 300)
+
+  // 使用防抖后的内容进行解析
+  const html = useMemo(() => parseMarkdown(debouncedMarkdown), [debouncedMarkdown])
 
   useEffect(() => {
     applyTheme(currentTheme)
@@ -375,15 +387,7 @@ function App() {
         return
       }
 
-      // ═══════════════════════════════════════════════════════════════
-      // 关键步骤（参考 raphael-publish）：
-      // 1. applyInlineStyles: 将样式内联到每个元素的 style 属性
-      //    - 传入 previewEl 以读取代码块的计算后样式
-      // 2. makeWeChatCompatible: 处理公众号兼容性问题
-      // ═══════════════════════════════════════════════════════════════
-
       // 步骤 1: 内联样式（关键！公众号不保留 CSS 类）
-      // 传入 previewEl 以读取代码块的实际样式（支持 GitHub Dark, Monokai 等）
       const htmlWithInlineStyles = applyInlineStyles(previewEl, currentTheme)
 
       // 步骤 2: 公众号兼容性处理
@@ -416,21 +420,10 @@ function App() {
         return
       }
 
-      console.log('[PDF Debug] Step 1: 找到预览元素', {
-        previewEl,
-        innerHTML: previewEl.innerHTML.substring(0, 500) + '...',
-        textContent: previewEl.textContent?.substring(0, 200)
-      })
-
-      // ═══════════════════════════════════════════════════════════════
-      // 方案 A: 使用 jsPDF 的 html() 方法（更可靠）
-      // ═══════════════════════════════════════════════════════════════
-
       // 克隆预览元素
       const clone = previewEl.cloneNode(true) as HTMLElement
 
-      // 创建临时容器 - 必须可见才能正确渲染
-      // 使用 z-index: -1 让容器在页面内容下方，用户看不到但 html2canvas 仍能渲染
+      // 创建临时容器
       const container = document.createElement('div')
       container.id = 'pdf-temp-container'
       container.style.cssText = `
@@ -449,196 +442,85 @@ function App() {
       container.appendChild(clone)
       document.body.appendChild(container)
 
-      console.log('[PDF Debug] Step 2: 创建临时容器', {
-        containerWidth: container.offsetWidth,
-        containerHeight: container.offsetHeight
-      })
-
       // 内联样式到克隆的元素
       const innerDiv = container.querySelector('.mp-preview') as HTMLElement
       if (innerDiv) {
-        // 移除可能影响布局的类
         innerDiv.className = 'mp-preview-pdf'
         innerDiv.style.cssText = `
           max-width: none;
           color: #1F2937;
         `
 
-        // 处理标题
+        // 处理各种元素样式
         innerDiv.querySelectorAll('h1').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            font-size: 24px;
-            font-weight: 700;
-            margin: 28px 0 16px;
-            line-height: 1.35;
-            color: #1F2937;
-          `
+          htmlEl.style.cssText = `font-size: 24px; font-weight: 700; margin: 28px 0 16px; line-height: 1.35; color: #1F2937;`
         })
         innerDiv.querySelectorAll('h2').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            font-size: 20px;
-            font-weight: 600;
-            margin: 24px 0 12px;
-            line-height: 1.4;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #E5E7EB;
-            color: #1F2937;
-          `
+          htmlEl.style.cssText = `font-size: 20px; font-weight: 600; margin: 24px 0 12px; line-height: 1.4; padding-bottom: 10px; border-bottom: 2px solid #E5E7EB; color: #1F2937;`
         })
         innerDiv.querySelectorAll('h3').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            font-size: 18px;
-            font-weight: 600;
-            margin: 20px 0 10px;
-            line-height: 1.45;
-            color: #1F2937;
-          `
+          htmlEl.style.cssText = `font-size: 18px; font-weight: 600; margin: 20px 0 10px; line-height: 1.45; color: #1F2937;`
         })
-
-        // 处理段落
         innerDiv.querySelectorAll('p').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            margin: 16px 0;
-            color: #1F2937;
-            line-height: 1.8;
-          `
+          htmlEl.style.cssText = `margin: 16px 0; color: #1F2937; line-height: 1.8;`
         })
-
-        // 处理列表
         innerDiv.querySelectorAll('ul').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            margin: 16px 0;
-            padding-left: 28px;
-            list-style-type: disc;
-          `
+          htmlEl.style.cssText = `margin: 16px 0; padding-left: 28px; list-style-type: disc;`
         })
         innerDiv.querySelectorAll('ol').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            margin: 16px 0;
-            padding-left: 28px;
-            list-style-type: decimal;
-          `
+          htmlEl.style.cssText = `margin: 16px 0; padding-left: 28px; list-style-type: decimal;`
         })
         innerDiv.querySelectorAll('li').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            margin: 6px 0;
-            line-height: 1.75;
-            color: #1F2937;
-          `
+          htmlEl.style.cssText = `margin: 6px 0; line-height: 1.75; color: #1F2937;`
         })
-
-        // 处理引用块
         innerDiv.querySelectorAll('blockquote').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            margin: 20px 0;
-            padding: 16px 20px;
-            background: #F5F3FF;
-            border-left: 4px solid #6366F1;
-            border-radius: 0 12px 12px 0;
-            color: #4B5563;
-          `
+          htmlEl.style.cssText = `margin: 20px 0; padding: 16px 20px; background: #F5F3FF; border-left: 4px solid #6366F1; border-radius: 0 12px 12px 0; color: #4B5563;`
         })
-
-        // 处理代码块
         innerDiv.querySelectorAll('pre').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            margin: 20px 0;
-            padding: 16px 20px;
-            background: #1E1E1E;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-family: 'SF Mono', Consolas, monospace;
-            font-size: 13px;
-            line-height: 1.6;
-          `
+          htmlEl.style.cssText = `margin: 20px 0; padding: 16px 20px; background: #1E1E1E; border-radius: 8px; overflow-x: auto; font-family: 'SF Mono', Consolas, monospace; font-size: 13px; line-height: 1.6;`
         })
         innerDiv.querySelectorAll('pre code').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            background: transparent;
-            color: #D4D4D4;
-            font-family: inherit;
-          `
+          htmlEl.style.cssText = `background: transparent; color: #D4D4D4; font-family: inherit;`
         })
-
-        // 处理行内代码
         innerDiv.querySelectorAll('code:not(pre code)').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            background: #EEF2FF;
-            color: #4338CA;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'SF Mono', Consolas, monospace;
-            font-size: 0.9em;
-          `
+          htmlEl.style.cssText = `background: #EEF2FF; color: #4338CA; padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', Consolas, monospace; font-size: 0.9em;`
         })
-
-        // 处理链接
         innerDiv.querySelectorAll('a').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            color: #4F46E5;
-            text-decoration: none;
-          `
+          htmlEl.style.cssText = `color: #4F46E5; text-decoration: none;`
         })
-
-        // 处理表格
         innerDiv.querySelectorAll('table').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 14px;
-          `
+          htmlEl.style.cssText = `width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;`
         })
         innerDiv.querySelectorAll('th, td').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            padding: 10px 14px;
-            border: 1px solid #E5E7EB;
-            text-align: left;
-          `
+          htmlEl.style.cssText = `padding: 10px 14px; border: 1px solid #E5E7EB; text-align: left;`
         })
         innerDiv.querySelectorAll('th').forEach((el) => {
           const htmlEl = el as HTMLElement
           htmlEl.style.background = '#F5F3FF'
           htmlEl.style.fontWeight = '600'
         })
-
-        // 处理图片
         innerDiv.querySelectorAll('img').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin: 16px auto;
-            display: block;
-          `
+          htmlEl.style.cssText = `max-width: 100%; height: auto; border-radius: 8px; margin: 16px auto; display: block;`
         })
-
-        // 处理分割线
         innerDiv.querySelectorAll('hr').forEach((el) => {
           const htmlEl = el as HTMLElement
-          htmlEl.style.cssText = `
-            border: none;
-            border-top: 1px solid #E5E7EB;
-            margin: 24px 0;
-          `
+          htmlEl.style.cssText = `border: none; border-top: 1px solid #E5E7EB; margin: 24px 0;`
         })
-
-        // 处理强调
         innerDiv.querySelectorAll('strong').forEach((el) => {
           const htmlEl = el as HTMLElement
           htmlEl.style.fontWeight = '600'
@@ -650,58 +532,32 @@ function App() {
         })
       }
 
-      console.log('[PDF Debug] Step 3: 内联样式完成', {
-        containerInnerHTML: container.innerHTML.substring(0, 1000) + '...'
-      })
-
       // 等待 DOM 更新
       await new Promise(resolve => setTimeout(resolve, 200))
 
       // 等待图片加载
       const images = container.querySelectorAll('img')
-      console.log('[PDF Debug] Step 4: 等待图片加载', { imageCount: images.length })
-
       await Promise.all(
-        Array.from(images).map((img, index) => {
-          if (img.complete) {
-            console.log(`[PDF Debug] 图片 ${index} 已加载`)
-            return Promise.resolve()
-          }
+        Array.from(images).map((img) => {
+          if (img.complete) return Promise.resolve()
           return new Promise(resolve => {
-            const timeout = setTimeout(() => {
-              console.log(`[PDF Debug] 图片 ${index} 加载超时`)
-              resolve(void 0)
-            }, 3000)
-            img.onload = () => {
-              clearTimeout(timeout)
-              console.log(`[PDF Debug] 图片 ${index} 加载完成`)
-              resolve(void 0)
-            }
-            img.onerror = () => {
-              clearTimeout(timeout)
-              console.log(`[PDF Debug] 图片 ${index} 加载失败`)
-              resolve(void 0)
-            }
+            const timeout = setTimeout(() => resolve(void 0), 3000)
+            img.onload = () => { clearTimeout(timeout); resolve(void 0) }
+            img.onerror = () => { clearTimeout(timeout); resolve(void 0) }
           })
         })
       )
 
-      console.log('[PDF Debug] Step 5: 开始生成 PDF', {
-        containerWidth: container.offsetWidth,
-        containerHeight: container.offsetHeight,
-        scrollHeight: container.scrollHeight
-      })
-
       // 使用 html2canvas + jsPDF 方案
       const opt = {
-        margin: [15, 15, 15, 20] as [number, number, number, number], // 上、右、下、左 - 增加左边距
+        margin: [15, 15, 15, 20] as [number, number, number, number],
         filename: `markdown-formatter-${Date.now()}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.95 },
         html2canvas: {
           scale: 2,
           useCORS: true,
           allowTaint: true,
-          logging: false, // 关闭调试日志
+          logging: false,
           letterRendering: true,
           width: container.offsetWidth,
           height: container.scrollHeight,
@@ -715,7 +571,6 @@ function App() {
           onclone: (clonedDoc: Document) => {
             const clonedContainer = clonedDoc.getElementById('pdf-temp-container')
             if (clonedContainer) {
-              // 确保克隆的容器也有正确的左边距
               clonedContainer.style.left = '50px'
               clonedContainer.style.paddingLeft = '25mm'
               clonedContainer.style.paddingRight = '25mm'
@@ -729,31 +584,16 @@ function App() {
         }
       }
 
-      // 先测试 html2canvas 是否能正确生成
-      console.log('[PDF Debug] Step 6: 调用 html2pdf')
-
       const pdf = html2pdf().set(opt).from(container)
-
-      // 获取 canvas 进行调试
-      const canvas = await pdf.toPdf().get('pdf').then((pdf: unknown) => {
-        console.log('[PDF Debug] PDF 对象生成完成', pdf)
-        return pdf
-      })
-
-      console.log('[PDF Debug] Step 7: 保存 PDF', { canvas })
-
+      await pdf.toPdf().get('pdf')
       await pdf.save()
-
-      console.log('[PDF Debug] Step 8: PDF 保存完成')
 
       // 清理临时容器
       document.body.removeChild(container)
-
       toast.showToast('PDF 下载成功', 'success')
     } catch (error) {
       console.error('[PDF Debug] PDF 生成失败:', error)
       toast.showToast('PDF 生成失败，请重试', 'error')
-      // 确保清理临时容器
       const tempContainer = document.getElementById('pdf-temp-container')
       if (tempContainer) {
         document.body.removeChild(tempContainer)
@@ -774,9 +614,7 @@ function App() {
     const result = await handleUpload(file)
 
     if (result.success && result.url) {
-      // 插入 Markdown 图片链接
       const imageMarkdown = `![image](${result.url})`
-      // 在当前内容末尾添加图片
       setMarkdown(markdown + '\n' + imageMarkdown)
       toast.showToast('图片上传成功', 'success')
     } else {
@@ -789,7 +627,6 @@ function App() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    // 清空 input 以便重复选择同一文件
     event.target.value = ''
 
     if (!file.type.startsWith('image/')) {
@@ -798,7 +635,6 @@ function App() {
     }
 
     if (hasConfiguredHost) {
-      // 使用图床上传
       const result = await handleUpload(file)
       if (result.success && result.url) {
         const imageMarkdown = `![${file.name}](${result.url})`
@@ -808,7 +644,6 @@ function App() {
         toast.showToast(result.error || '上传失败', 'error')
       }
     } else {
-      // 转换为 base64
       const reader = new FileReader()
       reader.onload = (e) => {
         const base64 = e.target?.result as string
@@ -913,267 +748,37 @@ function App() {
       <main className="flex-1 flex overflow-hidden min-h-0">
         {/* 左侧编辑器 */}
         <div
-          className="flex-1 flex flex-col"
           style={{
+            flex: 1,
+            display: isMobile && mobileTab !== 'edit' ? 'none' : 'flex',
+            flexDirection: 'column',
             background: 'var(--bg-surface)',
             borderRight: isMobile ? 'none' : '1px solid var(--border-subtle)',
-            display: isMobile && mobileTab !== 'edit' ? 'none' : 'flex'
           }}
         >
-          <div className="panel-header" style={{ flexWrap: 'wrap', gap: isMobile ? '6px' : '8px', padding: isMobile ? '8px 12px' : undefined }}>
-            {!isMobile && (
-              <>
-                <span className="iconify icon-sm" data-icon="lucide:file-text" style={{ marginRight: '4px', color: 'var(--text-muted)' }}></span>
-                <span className="panel-title">Markdown</span>
-                <div className="toolbar-divider" style={{ margin: '0 4px' }} />
-              </>
-            )}
-
-            {/* 撤销/重做/清空 - 手机模式隐藏 */}
-            {!isMobile && (
-              <>
-                <button
-                  onClick={undo}
-                  disabled={!canUndo}
-                  className="btn btn-ghost btn-icon"
-                  title="撤销 (Ctrl+Z)"
-                >
-                  <span className="iconify icon-sm" data-icon="lucide:undo-2"></span>
-                </button>
-                <button
-                  onClick={redo}
-                  disabled={!canRedo}
-                  className="btn btn-ghost btn-icon"
-                  title="重做 (Ctrl+Shift+Z)"
-                >
-                  <span className="iconify icon-sm" data-icon="lucide:redo-2"></span>
-                </button>
-                <button
-                  onClick={handleClear}
-                  className="btn btn-ghost btn-icon"
-                  title="清空内容"
-                  style={{ color: 'var(--red-500)' }}
-                >
-                  <span className="iconify icon-sm" data-icon="lucide:trash-2"></span>
-                </button>
-                <div className="toolbar-divider" style={{ margin: '0 4px' }} />
-              </>
-            )}
-
-            {/* 主题选择 - 窄屏幕只显示图标 */}
-            <button
-              onClick={() => setIsThemePickerOpen(true)}
-              className="btn btn-ghost"
-              title="选择配色主题"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: isNarrow ? '6px' : '4px 10px',
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                border: '1px solid var(--border-default)'
-              }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:palette"></span>
-              {!isNarrow && currentTheme.name}
-            </button>
-
-            {/* 代码风格 - 窄屏幕只显示图标 */}
-            <button
-              onClick={() => setIsCodeStylePickerOpen(true)}
-              className="btn btn-ghost"
-              title="选择代码样式"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: isNarrow ? '6px' : '4px 10px',
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                border: '1px solid var(--border-default)'
-              }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:code-2"></span>
-              {!isNarrow && (codeStyles.find(s => s.id === codeStyle)?.name || '代码样式')}
-            </button>
-
-            {/* 图床配置 - 窄屏幕只显示图标 */}
-            <button
-              onClick={() => setIsImageHostModalOpen(true)}
-              className="btn btn-ghost"
-              title="配置图床"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: isNarrow ? '6px' : '4px 10px',
-                fontSize: '12px',
-                color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-secondary)',
-                border: '1px solid var(--border-default)'
-              }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:image-up"></span>
-              {!isNarrow && '图床'}
-            </button>
-
-            {/* 同步滚动开关 - 手机模式隐藏 */}
-            {!isMobile && (
-              <button
-                onClick={() => setSyncScroll(!syncScroll)}
-                className="btn btn-ghost"
-                title={syncScroll ? '关闭同步滚动' : '开启同步滚动'}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '4px 10px',
-                  fontSize: '12px',
-                  color: syncScroll ? 'var(--orange-500)' : 'var(--text-muted)',
-                  border: '1px solid var(--border-default)'
-                }}
-              >
-                <span className="iconify icon-sm" data-icon={syncScroll ? 'lucide:link' : 'lucide:link-off'}></span>
-                {syncScroll ? '跟随开' : '跟随关'}
-              </button>
-            )}
-
-            {/* 快捷键按钮 - 跟随按钮右侧，只显示图标 */}
-            {!isMobile && (
-              <button
-                onClick={() => setIsShortcutsModalOpen(true)}
-                className="btn btn-ghost"
-                title="键盘快捷键"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '4px 8px',
-                  fontSize: '12px',
-                  color: 'var(--text-secondary)',
-                  border: '1px solid var(--border-default)'
-                }}
-              >
-                <span className="iconify icon-sm" data-icon="lucide:keyboard"></span>
-              </button>
-            )}
-
-            <div className="flex-1" />
-
-            {/* 抓取链接 - 手机模式隐藏 */}
-            {!isMobile && (
-              <button
-                className="btn btn-ghost"
-                onClick={() => setIsUrlModalOpen(true)}
-                title="抓取网页内容"
-                style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', fontSize: '12px' }}
-              >
-                <span className="iconify icon-sm" data-icon="lucide:link"></span>
-                抓取链接
-              </button>
-            )}
-            <span className="panel-meta" style={{ marginLeft: isMobile ? '0' : '8px', fontSize: '12px' }}>{markdown.length} 字</span>
-          </div>
-
-          {/* Markdown 格式化工具栏 - 第二行 */}
-          <div
-            className="formatting-toolbar"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '2px',
-              padding: isMobile ? '6px 12px' : '6px 16px',
-              background: 'var(--bg-surface)',
-              borderBottom: '1px solid var(--border-subtle)',
-              flexWrap: 'wrap'
-            }}
-          >
-            <button
-              onClick={() => editorRef.current?.insertBold()}
-              className="btn btn-ghost btn-icon"
-              title="加粗 (Ctrl+B)"
-              style={{ padding: '4px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:bold" style={{ fontWeight: 700 }}></span>
-            </button>
-            <button
-              onClick={() => editorRef.current?.insertItalic()}
-              className="btn btn-ghost btn-icon"
-              title="斜体 (Ctrl+I)"
-              style={{ padding: '4px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:italic"></span>
-            </button>
-            <button
-              onClick={() => editorRef.current?.insertLink()}
-              className="btn btn-ghost btn-icon"
-              title="插入链接 (Ctrl+K)"
-              style={{ padding: '4px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:link"></span>
-            </button>
-            <button
-              onClick={() => editorRef.current?.insertImage()}
-              className="btn btn-ghost btn-icon"
-              title="插入图片 (Ctrl+Shift+I)"
-              style={{ padding: '4px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:image"></span>
-            </button>
-            <button
-              onClick={() => editorRef.current?.insertCode()}
-              className="btn btn-ghost btn-icon"
-              title="行内代码 (Ctrl+`)"
-              style={{ padding: '4px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:code"></span>
-            </button>
-            <button
-              onClick={() => editorRef.current?.insertCodeBlock()}
-              className="btn btn-ghost btn-icon"
-              title="代码块 (Ctrl+Shift+C)"
-              style={{ padding: '4px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:file-code"></span>
-            </button>
-            <button
-              onClick={() => editorRef.current?.insertHr()}
-              className="btn btn-ghost btn-icon"
-              title="分割线"
-              style={{ padding: '4px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:minus"></span>
-            </button>
-            <button
-              onClick={() => editorRef.current?.insertQuote()}
-              className="btn btn-ghost btn-icon"
-              title="引用"
-              style={{ padding: '4px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:quote"></span>
-            </button>
-
-            <div className="toolbar-divider" style={{ margin: '0 4px', height: '16px' }} />
-
-            {/* 上传图片按钮 */}
-            <label
-              className="btn btn-ghost btn-icon"
-              title={hasConfiguredHost ? '上传图片到图床' : '上传图片（Base64）'}
-              style={{ cursor: 'pointer', padding: '4px' }}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                style={{ display: 'none' }}
-              />
-              <span
-                className="iconify icon-sm"
-                data-icon="lucide:upload"
-                style={{ color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-muted)' }}
-              ></span>
-            </label>
-          </div>
+          <Toolbar
+            editorRef={editorRef}
+            undo={undo}
+            redo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onClear={handleClear}
+            currentTheme={currentTheme}
+            codeStyle={codeStyle}
+            codeStyles={codeStyles}
+            onOpenThemePicker={() => setIsThemePickerOpen(true)}
+            onOpenCodeStylePicker={() => setIsCodeStylePickerOpen(true)}
+            hasConfiguredHost={hasConfiguredHost}
+            onOpenImageHostModal={() => setIsImageHostModalOpen(true)}
+            onImageUpload={handleImageUpload}
+            syncScroll={syncScroll}
+            onToggleSyncScroll={() => setSyncScroll(!syncScroll)}
+            onOpenShortcutsModal={() => setIsShortcutsModalOpen(true)}
+            onOpenUrlModal={() => setIsUrlModalOpen(true)}
+            markdownLength={markdown.length}
+            isMobile={isMobile}
+            isNarrow={isNarrow}
+          />
 
           <div className="flex-1 min-h-0">
             <CodeMirrorEditor
@@ -1186,204 +791,65 @@ function App() {
             />
           </div>
 
-          {/* 底部状态栏 - 只显示在左侧编辑器下方，手机模式隐藏 */}
+          {/* 底部状态栏 */}
           {!isMobile && (
-          <div
-            className="flex items-center justify-between"
-            style={{
-              height: '32px',
-              padding: '0 var(--space-4)',
-              background: 'var(--bg-surface)',
-              borderTop: '1px solid var(--border-subtle)',
-              fontSize: '12px'
-            }}
-          >
-            {/* 左侧提示文字 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '12px' }}>
-              <span className="iconify icon-sm" data-icon="lucide:clipboard-paste" style={{ color: 'var(--text-muted)' }}></span>
-              <span>支持直接粘贴</span>
-              <span style={{ color: '#07C160', fontWeight: 500 }}>公众号</span>
-              <span>、</span>
-              <span style={{ color: '#3370FF', fontWeight: 500 }}>飞书</span>
-              <span>、</span>
-              <span style={{ color: '#2B579A', fontWeight: 500 }}>Word</span>
-              <span>等富文本，自动转为Markdown</span>
+            <div
+              className="flex items-center justify-between"
+              style={{
+                height: '32px',
+                padding: '0 var(--space-4)',
+                background: 'var(--bg-surface)',
+                borderTop: '1px solid var(--border-subtle)',
+                fontSize: '12px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '12px' }}>
+                <span className="iconify icon-sm" data-icon="lucide:clipboard-paste" style={{ color: 'var(--text-muted)' }}></span>
+                <span>支持直接粘贴</span>
+                <span style={{ color: '#07C160', fontWeight: 500 }}>公众号</span>
+                <span>、</span>
+                <span style={{ color: '#3370FF', fontWeight: 500 }}>飞书</span>
+                <span>、</span>
+                <span style={{ color: '#2B579A', fontWeight: 500 }}>Word</span>
+                <span>等富文本，自动转为Markdown</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {uploadProgress.isUploading && (
+                  <div className="upload-progress-bar">
+                    <div className="upload-progress-fill" style={{ width: `${uploadProgress.progress}%` }} />
+                    <span className="upload-progress-text">{uploadProgress.statusText}</span>
+                  </div>
+                )}
+                {isSaving ? (
+                  <span style={{ color: 'var(--text-muted)' }}>保存中...</span>
+                ) : (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--green-500)' }}>
+                    <span className="iconify icon-sm" data-icon="lucide:check-circle"></span>
+                    已保存
+                  </span>
+                )}
+              </div>
             </div>
-
-            {/* 右侧状态 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {/* 上传进度 */}
-              {uploadProgress.isUploading && (
-                <div className="upload-progress-bar">
-                  <div
-                    className="upload-progress-fill"
-                    style={{ width: `${uploadProgress.progress}%` }}
-                  />
-                  <span className="upload-progress-text">{uploadProgress.statusText}</span>
-                </div>
-              )}
-              {/* 保存状态 */}
-              {isSaving ? (
-                <span style={{ color: 'var(--text-muted)' }}>
-                  保存中...
-                </span>
-              ) : (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--green-500)' }}>
-                  <span className="iconify icon-sm" data-icon="lucide:check-circle"></span>
-                  已保存
-                </span>
-              )}
-            </div>
-          </div>
           )}
         </div>
 
-        {/* 右侧预览 - 手机模式下根据 Tab 显示/隐藏 */}
+        {/* 右侧预览 */}
         <div
-          className="flex flex-col"
           style={{
-            background: 'var(--bg-muted)',
-            flexShrink: 0,
-            width: isMobile ? '100%' : previewMode === 'desktop' ? '50%' : previewMode === 'pad' ? '820px' : '415px',
-            transition: 'width 0.3s ease-in-out',
             display: isMobile && mobileTab !== 'preview' ? 'none' : 'flex'
           }}
         >
-          <div className="panel-header" style={{ padding: isMobile ? '8px 12px' : undefined }}>
-            {!isMobile && (
-              <>
-                <span className="iconify icon-sm" data-icon="lucide:eye" style={{ marginRight: '8px', color: 'var(--text-muted)' }}></span>
-                {previewMode !== 'mobile' && (
-                  <span className="panel-title">预览</span>
-                )}
-                <span className="panel-badge">{currentTheme.name}</span>
-              </>
-            )}
-
-            {/* 预览模式切换 - 手机模式隐藏 */}
-            {!isMobile && (
-              <div className="toggle-group" style={{
-                marginLeft: '12px',
-                transition: 'all 0.2s ease-in-out'
-              }}>
-              <button
-                onClick={() => setPreviewMode('desktop')}
-                className={`toggle-btn ${previewMode === 'desktop' ? 'active' : ''}`}
-                title="宽屏模式"
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '6px', 
-                  padding: '4px 8px', 
-                  fontSize: '13px',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                <span className="iconify icon-sm" data-icon="lucide:monitor"></span>
-                {previewMode !== 'mobile' && '宽屏'}
-              </button>
-              <button
-                onClick={() => setPreviewMode('pad')}
-                className={`toggle-btn ${previewMode === 'pad' ? 'active' : ''}`}
-                title="Pad 模式"
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '6px', 
-                  padding: '4px 8px', 
-                  fontSize: '13px',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                <span className="iconify icon-sm" data-icon="lucide:tablet"></span>
-                {previewMode !== 'mobile' && 'Pad'}
-              </button>
-              <button
-                onClick={() => setPreviewMode('mobile')}
-                className={`toggle-btn ${previewMode === 'mobile' ? 'active' : ''}`}
-                title="手机模式"
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '6px', 
-                  padding: '4px 8px', 
-                  fontSize: '13px',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                <span className="iconify icon-sm" data-icon="lucide:smartphone"></span>
-                {previewMode !== 'mobile' && '手机'}
-              </button>
-            </div>
-            )}
-
-            <div className="flex-1" />
-
-            {/* 下载 PDF 按钮 - 手机模式只显示图标 */}
-            <button
-              className="btn btn-ghost"
-              onClick={handleDownloadPDF}
-              disabled={isDownloading}
-              title="下载 PDF"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: isMobile ? '6px' : '4px 10px', fontSize: '13px', marginRight: '8px' }}
-            >
-              {isDownloading ? (
-                <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
-              ) : (
-                <span className="iconify icon-sm" data-icon="lucide:download"></span>
-              )}
-              {!isMobile && previewMode !== 'mobile' && '下载 PDF'}
-            </button>
-
-            {/* 复制排版按钮 */}
-            <button
-              className="btn btn-primary"
-              onClick={handleCopyHTML}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: isMobile ? '4px 10px' : '4px 10px', fontSize: '13px' }}
-            >
-              <span className="iconify icon-sm" data-icon="lucide:copy"></span>
-              复制排版
-            </button>
-
-            {/* 手机模式时隐藏尺寸显示 */}
-            {!isMobile && previewMode !== 'mobile' && (
-              <span className="panel-meta" style={{ marginLeft: '12px' }}>
-                {previewMode === 'pad' ? '768px' : '自适应'}
-              </span>
-            )}
-          </div>
-          <div
-            className="flex-1 overflow-auto flex justify-center"
-            style={{
-              padding: isMobile ? '0' : 'var(--space-6)',
-              background: 'var(--bg-base)'
-            }}
-          >
-            <div
-              ref={previewRef}
-              className="card"
-              style={{
-                width: previewMode === 'mobile' ? '375px' : previewMode === 'pad' ? '768px' : '100%',
-                maxWidth: '100%',
-                overflow: 'hidden',
-                transition: 'width 0.3s ease-in-out'
-              }}
-            >
-              <div
-                className="overflow-auto theme-transition preview-scroll-container"
-                style={{
-                  padding: isMobile ? 'var(--space-4)' : 'var(--space-6)',
-                  maxHeight: isMobile ? 'calc(100vh - 120px)' : 'calc(100vh - 180px)'
-                }}
-              >
-                <div
-                  className="mp-preview"
-                  style={{ maxWidth: 'none' }}
-                  dangerouslySetInnerHTML={{ __html: html }}
-                />
-              </div>
-            </div>
-          </div>
+          <Preview
+            previewRef={previewRef}
+            html={html}
+            previewMode={previewMode}
+            currentTheme={currentTheme}
+            isMobile={isMobile}
+            isDownloading={isDownloading}
+            onDownloadPDF={handleDownloadPDF}
+            onCopyHTML={handleCopyHTML}
+            onPreviewModeChange={setPreviewMode}
+          />
         </div>
       </main>
 
@@ -1444,47 +910,53 @@ function App() {
         </div>
       )}
 
-      {/* URL 抓取弹窗 */}
-      <UrlFetchModal
-        isOpen={isUrlModalOpen}
-        onClose={() => setIsUrlModalOpen(false)}
-        onFetch={handleFetchUrl}
-        isLoading={isFetchingUrl}
-      />
+      {/* 弹窗组件 - 使用 React.lazy 懒加载 */}
+      <Suspense fallback={<ModalLoadingFallback />}>
+        <UrlFetchModal
+          isOpen={isUrlModalOpen}
+          onClose={() => setIsUrlModalOpen(false)}
+          onFetch={handleFetchUrl}
+          isLoading={isFetchingUrl}
+        />
+      </Suspense>
 
-      {/* 主题选择弹窗 */}
-      <ThemePickerModal
-        isOpen={isThemePickerOpen}
-        onClose={() => setIsThemePickerOpen(false)}
-        themes={themes}
-        currentTheme={currentTheme}
-        onSelectTheme={handleSelectTheme}
-      />
+      <Suspense fallback={<ModalLoadingFallback />}>
+        <ThemePickerModal
+          isOpen={isThemePickerOpen}
+          onClose={() => setIsThemePickerOpen(false)}
+          themes={themes}
+          currentTheme={currentTheme}
+          onSelectTheme={handleSelectTheme}
+        />
+      </Suspense>
 
-      {/* 代码样式选择弹窗 */}
-      <CodeStylePickerModal
-        isOpen={isCodeStylePickerOpen}
-        onClose={() => setIsCodeStylePickerOpen(false)}
-        codeStyles={codeStyles}
-        currentStyle={codeStyle}
-        onSelectStyle={setCodeStyle}
-      />
+      <Suspense fallback={<ModalLoadingFallback />}>
+        <CodeStylePickerModal
+          isOpen={isCodeStylePickerOpen}
+          onClose={() => setIsCodeStylePickerOpen(false)}
+          codeStyles={codeStyles}
+          currentStyle={codeStyle}
+          onSelectStyle={setCodeStyle}
+        />
+      </Suspense>
 
-      {/* 图床配置弹窗 */}
-      <ImageHostConfigModal
-        isOpen={isImageHostModalOpen}
-        onClose={() => setIsImageHostModalOpen(false)}
-        settings={imageHostSettings}
-        onUpdateConfig={updateHostConfig}
-        onSetDefault={setDefaultHost}
-        onClearConfig={clearHostConfig}
-      />
+      <Suspense fallback={<ModalLoadingFallback />}>
+        <ImageHostConfigModal
+          isOpen={isImageHostModalOpen}
+          onClose={() => setIsImageHostModalOpen(false)}
+          settings={imageHostSettings}
+          onUpdateConfig={updateHostConfig}
+          onSetDefault={setDefaultHost}
+          onClearConfig={clearHostConfig}
+        />
+      </Suspense>
 
-      {/* 键盘快捷键弹窗 */}
-      <KeyboardShortcutsModal
-        isOpen={isShortcutsModalOpen}
-        onClose={() => setIsShortcutsModalOpen(false)}
-      />
+      <Suspense fallback={<ModalLoadingFallback />}>
+        <KeyboardShortcutsModal
+          isOpen={isShortcutsModalOpen}
+          onClose={() => setIsShortcutsModalOpen(false)}
+        />
+      </Suspense>
     </div>
   )
 }

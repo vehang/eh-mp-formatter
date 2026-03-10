@@ -1,5 +1,6 @@
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
+import DOMPurify from 'dompurify'
 // @ts-ignore - katex 模块没有类型定义
 import katex from '@traptitech/markdown-it-katex'
 
@@ -21,8 +22,60 @@ const md: MarkdownIt = new MarkdownIt({
 // @ts-ignore - katex 插件类型不兼容
 }).use(katex)
 
+/**
+ * 解析 Markdown 并进行安全清理
+ * @param content - Markdown 内容
+ * @returns 清理后的 HTML 字符串
+ */
 export function parseMarkdown(content: string): string {
-  return md.render(content)
+  const rawHtml = md.render(content)
+  // 使用 DOMPurify 清理 XSS 攻击向量，但保留必要的 HTML 标签
+  return DOMPurify.sanitize(rawHtml, {
+    // 允许的标签（保留 markdown 渲染所需的所有标签）
+    ALLOWED_TAGS: [
+      // 基础标签
+      'p', 'br', 'span', 'div', 'a', 'img',
+      // 标题
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      // 列表
+      'ul', 'ol', 'li',
+      // 文本格式
+      'strong', 'em', 'b', 'i', 'u', 's', 'del', 'ins', 'mark', 'code', 'pre',
+      // 引用和块
+      'blockquote', 'hr',
+      // 表格
+      'table', 'thead', 'tbody', 'tr', 'th', 'td',
+      // 其他
+      'sup', 'sub', 'abbr', 'cite', 'q', 'dfn', 'kbd', 'samp', 'var',
+      // 数学公式（KaTeX 生成）
+      'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'mfrac', 'msup', 'msub',
+      'munder', 'mover', 'munderover', 'mtext', 'mspace', 'mstyle', 'merror',
+      'mpadded', 'mphantom', 'mfenced', 'msqrt', 'mroot', 'mtable', 'mtr', 'mtd',
+      // 脚注
+      'section', 'article', 'aside', 'header', 'footer', 'nav',
+    ],
+    // 允许的属性
+    ALLOWED_ATTR: [
+      // 通用属性
+      'class', 'id', 'style',
+      // 链接属性
+      'href', 'title', 'target', 'rel',
+      // 图片属性
+      'src', 'alt', 'width', 'height', 'loading',
+      // 代码块属性
+      'data-language',
+      // 表格属性
+      'colspan', 'rowspan', 'align', 'valign',
+      // 数学公式属性（KaTeX）
+      'xmlns', 'display', 'mathvariant', 'mathsize', 'mathcolor', 'mathbackground',
+      'stretchy', 'symmetric', 'maxsize', 'minsize', 'largeop', 'movablelimits',
+      'accent', 'accentunder', 'delimiterheight', 'linethickness', 'scriptlevel',
+      'scriptminfontsize', 'scriptsizemultiplier', 'fence', 'separator', 'form',
+      'notation', 'open', 'close', 'separators',
+    ],
+    // 允许 data-* 属性
+    ALLOW_DATA_ATTR: true,
+  })
 }
 
 export { md }
