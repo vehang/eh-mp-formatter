@@ -33,7 +33,7 @@ export function Preview({
         width: isMobile
           ? '100%'
           : previewMode === 'desktop'
-            ? '100%'
+            ? '50%'
             : previewMode === 'pad'
               ? '820px'
               : '415px',

@@ -838,7 +838,6 @@ function App() {
           style={{
             display: isMobile && mobileTab !== 'preview' ? 'none' : 'flex',
             flexDirection: 'column',
-            flex: 1,
           }}
         >
           <Preview
