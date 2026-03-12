@@ -14,7 +14,7 @@ import {
   ShoppingBag,
 } from 'lucide-react'
 // 品牌图标
-import { SiAlibabacloud, SiQq, SiHuawei, SiNeteasecloudmusic } from 'react-icons/si'
+import { SiAlibabacloud, SiTencentqq, SiHuawei, SiNeteasecloudmusic } from 'react-icons/si'
 import { FaAws } from 'react-icons/fa'
 import {
   type ImageHostType,
@@ -43,7 +43,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   'lucide:shopping-bag': ShoppingBag,
   // 品牌图标
   'brand:aliyun': SiAlibabacloud,
-  'brand:tencent': SiQq,
+  'brand:tencent': SiTencentqq,
   'brand:huawei': SiHuawei,
   'brand:netease': SiNeteasecloudmusic,
   'brand:aws': FaAws,
