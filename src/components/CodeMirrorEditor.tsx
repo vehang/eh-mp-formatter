@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { EditorState } from '@codemirror/state'
 import { EditorView, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view'
 import { markdown } from '@codemirror/lang-markdown'
+import { htmlToMarkdown } from '../utils/markdown'
 
 interface CodeMirrorEditorProps {
   value: string
@@ -101,6 +102,29 @@ export function CodeMirrorEditor({ value, onChange, placeholder }: CodeMirrorEdi
           },
         }),
         EditorView.lineWrapping,
+        // 自定义粘贴处理，支持富文本
+        EditorView.domEventHandlers({
+          paste(event, view) {
+            const clipboardData = event.clipboardData
+            if (!clipboardData) return false
+
+            // 优先使用 text/html 格式（保留富文本格式）
+            const html = clipboardData.getData('text/html')
+            if (html) {
+              event.preventDefault()
+              const markdown = htmlToMarkdown(html)
+              const { from, to } = view.state.selection.main
+              view.dispatch({
+                changes: { from, to, insert: markdown },
+                selection: { anchor: from + markdown.length },
+              })
+              return true
+            }
+
+            // 如果没有 HTML，使用默认的纯文本处理
+            return false
+          },
+        }),
         placeholder ? EditorView.contentAttributes.of({ 'data-placeholder': placeholder }) : [],
       ],
     })
