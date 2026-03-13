@@ -4,6 +4,23 @@ import DOMPurify from 'dompurify'
 // @ts-ignore - katex 模块没有类型定义
 import katex from '@traptitech/markdown-it-katex'
 
+// 常用语言列表，用于自动检测时提高准确率
+const COMMON_LANGUAGES = [
+  // 配置文件
+  'yaml', 'json', 'xml', 'properties', 'ini', 'toml',
+  // 编程语言
+  'javascript', 'typescript', 'python', 'java', 'go', 'rust', 'c', 'cpp', 'csharp',
+  'php', 'ruby', 'swift', 'kotlin', 'scala', 'perl',
+  // 脚本/Shell
+  'bash', 'shell', 'powershell', 'dockerfile', 'makefile',
+  // 前端
+  'html', 'css', 'scss', 'less', 'vue', 'jsx', 'tsx',
+  // 数据/查询
+  'sql', 'graphql',
+  // 其他
+  'markdown', 'plaintext'
+]
+
 // 创建 markdown-it 实例
 const md: MarkdownIt = new MarkdownIt({
   html: true,
@@ -18,9 +35,9 @@ const md: MarkdownIt = new MarkdownIt({
         // ignore
       }
     }
-    // 没有指定语言时，自动检测语言进行高亮
+    // 没有指定语言时，在常用语言中自动检测，提高准确率
     try {
-      const result = hljs.highlightAuto(str)
+      const result = hljs.highlightAuto(str, COMMON_LANGUAGES)
       return `<pre class="hljs"><code>${result.value}</code></pre>`
     } catch {
       // 自动检测失败，返回纯文本

@@ -30,6 +30,20 @@ turndownService.addRule('coloredText', {
   },
 })
 
+// 自定义规则：清理公众号关键词链接（javascript:; 链接只保留文本）
+turndownService.addRule('cleanWechatLinks', {
+  filter: (node) => {
+    if (node.nodeName !== 'A') return false
+    const href = (node as HTMLElement).getAttribute('href') || ''
+    // 匹配 javascript:;, javascript:void(0) 等无效链接
+    return href.startsWith('javascript:') || href === '' || href === '#'
+  },
+  replacement: (content) => {
+    // 只返回文本内容，不生成链接
+    return content
+  },
+})
+
 // 处理图片
 turndownService.addRule('image', {
   filter: 'img',
