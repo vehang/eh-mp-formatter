@@ -10,6 +10,7 @@ const md: MarkdownIt = new MarkdownIt({
   linkify: true,
   typographer: true,
   highlight: function (str: string, lang: string): string {
+    // 如果指定了语言且支持，使用指定语言高亮
     if (lang && hljs.getLanguage(lang)) {
       try {
         return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
@@ -17,7 +18,14 @@ const md: MarkdownIt = new MarkdownIt({
         // ignore
       }
     }
-    return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
+    // 没有指定语言时，自动检测语言进行高亮
+    try {
+      const result = hljs.highlightAuto(str)
+      return `<pre class="hljs"><code>${result.value}</code></pre>`
+    } catch {
+      // 自动检测失败，返回纯文本
+      return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
+    }
   }
 // @ts-ignore - katex 插件类型不兼容
 }).use(katex)
