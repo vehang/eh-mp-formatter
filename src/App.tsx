@@ -48,10 +48,34 @@ function loadCodeStyle(styleId: string) {
     // 添加新样式（使用 style 标签而非 link）
     const styleEl = document.createElement('style')
     styleEl.id = 'hljs-style'
-    styleEl.textContent = style.css
+    // 增加 .mp-preview 前缀提高选择器优先级，确保覆盖其他样式
+    styleEl.textContent = prefixSelectors(style.css, '.mp-preview')
     document.head.appendChild(styleEl)
     loadedStyleId = styleId
   }
+}
+
+/**
+ * 为 CSS 选择器添加前缀，提高优先级
+ * 例如：.hljs { color: red } => .mp-preview .hljs { color: red }
+ */
+function prefixSelectors(css: string, prefix: string): string {
+  // 处理 @media 查询
+  return css.replace(/@media\s*\([^)]+\)\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/g, (_match: string, content: string) => {
+    return '@media (min-width: 0) {' + prefixSelectors(content, prefix) + '}'
+  }).replace(/([^{]+)\{([^}]*)\}/g, (_match: string, selectors: string, declarations: string) => {
+    // 跳过 @ 规则
+    if (selectors.trim().startsWith('@')) return _match
+    // 为每个选择器添加前缀
+    const prefixedSelectors = selectors.split(',').map((s: string) => {
+      s = s.trim()
+      if (!s) return s
+      // 跳过已经有 .mp-preview 前缀的
+      if (s.includes('.mp-preview')) return s
+      return `${prefix} ${s}`
+    }).join(', ')
+    return `${prefixedSelectors} { ${declarations} }`
+  })
 }
 
 // React.lazy 加载弹窗组件
