@@ -49,9 +49,47 @@ function loadCodeStyle(styleId: string) {
     const styleEl = document.createElement('style')
     styleEl.id = 'hljs-style'
     // 增加 .mp-preview 前缀提高选择器优先级，确保覆盖其他样式
-    styleEl.textContent = prefixSelectors(style.css, '.mp-preview')
+    // 并根据主题类型追加配置文件增强样式
+    const isDark = styleId.includes('dark') || styleId === 'monokai' || styleId === 'tokyo-night'
+    styleEl.textContent = prefixSelectors(style.css, '.mp-preview') + getConfigEnhanceStyles(isDark)
     document.head.appendChild(styleEl)
     loadedStyleId = styleId
+  }
+}
+
+/**
+ * 配置文件增强样式
+ * 让 key 和 value 有更明显的颜色区分
+ */
+function getConfigEnhanceStyles(isDark: boolean): string {
+  if (isDark) {
+    // 暗色主题增强
+    return `
+/* 配置文件增强样式 - 让 key/value 颜色更明显 */
+.mp-preview .hljs-attr {
+  color: #7dd3fc !important; /* 天蓝色 - key */
+}
+.mp-preview .hljs-number {
+  color: #fbbf24 !important; /* 金黄色 - number value */
+}
+.mp-preview .hljs-punctuation {
+  color: #9ca3af !important; /* 灰色 - 标点 */
+}
+`
+  } else {
+    // 亮色主题增强
+    return `
+/* 配置文件增强样式 - 让 key/value 颜色更明显 */
+.mp-preview .hljs-attr {
+  color: #0369a1 !important; /* 深蓝色 - key */
+}
+.mp-preview .hljs-number {
+  color: #d97706 !important; /* 橙黄色 - number value */
+}
+.mp-preview .hljs-punctuation {
+  color: #6b7280 !important; /* 灰色 - 标点 */
+}
+`
   }
 }
 
