@@ -12,7 +12,7 @@ const CONFIG = {
   appSecret: 'CRV8phtp1hTE7sz5tpwlCfGXnaIEvWCV',
   chatId: 'oc_ffc3e3276fcf68d1759933ec0e494ae8',
   location: 'Shanghai',  // 可改为其他城市
-  lang: 'zh-CN'
+  lang: 'zh-cn'
 };
 
 // 获取飞书 access_token
@@ -100,7 +100,7 @@ function buildCard(weatherData) {
   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   
   // 当前天气
-  const current = weatherData.current_condition[0];
+  const current = weatherData.data.current_condition[0];
   const currentTemp = current.temp_C;
   const feelsLike = current.FeelsLikeC;
   const humidity = current.humidity;
@@ -110,7 +110,7 @@ function buildCard(weatherData) {
   const weatherEmoji = weatherCodeToEmoji(current.weatherCode);
   
   // 今日预报
-  const today = weatherData.weather[0];
+  const today = weatherData.data.weather[0];
   const maxTemp = today.maxtempC;
   const minTemp = today.mintempC;
   const sunrise = today.astronomy[0].sunrise;
@@ -129,8 +129,8 @@ function buildCard(weatherData) {
   }
   
   // 未来两天预报
-  const tomorrow = weatherData.weather[1];
-  const dayAfter = weatherData.weather[2];
+  const tomorrow = weatherData.data.weather[1];
+  const dayAfter = weatherData.data.weather[2];
   
   const tomorrowEmoji = weatherCodeToEmoji(tomorrow.hourly[4].weatherCode);
   const dayAfterEmoji = weatherCodeToEmoji(dayAfter.hourly[4].weatherCode);
@@ -311,8 +311,8 @@ async function main() {
     console.log('✅ 天气卡片发送成功:', result.message_id);
     
     // 输出天气摘要
-    const current = weatherData.current_condition[0];
-    const today = weatherData.weather[0];
+    const current = weatherData.data.current_condition[0];
+    const today = weatherData.data.weather[0];
     console.log(`📊 天气摘要: ${current.temp_C}°C, ${current.weatherDesc[0].value}, ${today.mintempC}°C ~ ${today.maxtempC}°C`);
   } catch (err) {
     console.error('❌ 发送失败:', err.message);
