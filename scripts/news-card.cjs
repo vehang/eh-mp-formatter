@@ -319,7 +319,7 @@ async function sendCard(token, card) {
     const data = JSON.stringify({
       receive_id: CONFIG.chatId,
       msg_type: 'interactive',
-      content: JSON.stringify(card)
+      content: JSON.stringify(card)  // interactive消息content必须是JSON字符串
     });
     
     const req = https.request({

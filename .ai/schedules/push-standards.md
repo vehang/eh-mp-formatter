@@ -3,7 +3,7 @@
 > 本文档定义了天气和资讯推送的标准格式，所有推送必须严格遵守此规范。
 > 
 > **创建时间**: 2026-03-21  
-> **最后更新**: 2026-03-21
+> **最后更新**: 2026-03-21 12:15
 
 ---
 
@@ -16,7 +16,8 @@
 | **服务名称** | 天气早报 |
 | **推送机器人** | Notify Bot |
 | **推送时间** | 每天 07:00 |
-| **推送渠道** | 飞书私聊 |
+| **推送渠道** | 飞书群聊 |
+| **Chat ID** | oc_ffc3e3276fcf68d1759933ec0e494ae8 |
 
 ### 1.2 位置信息（重要）
 
@@ -63,6 +64,29 @@ const CONFIG = {
 - 🌅 日出、日落时间
 - 📆 未来两天预报
 - 💡 生活建议（穿搭、出行）
+
+### 1.7 卡片消息格式（重要）
+
+```json
+{
+  "config": { "wide_screen_mode": true },
+  "header": {
+    "template": "turquoise",
+    "title": { "tag": "plain_text", "content": "🌤️ 宜昌夷陵区 天气早报" }
+  },
+  "elements": [
+    { "tag": "div", "text": { "tag": "lark_md", "content": "**📅 3月21日 周六**" } },
+    { "tag": "hr" },
+    { "tag": "div", "text": { "tag": "lark_md", "content": "**🌡️ 当前温度**: 17°C (体感 15°C)" } },
+    ...
+  ]
+}
+```
+
+**⚠️ 重要**: 
+- `msg_type` 必须是 `'interactive'`
+- `content` 必须是 `JSON.stringify(card)` (JSON字符串)
+- 卡片必须包含 `config`、`header`、`elements` 三个字段
 
 ---
 
@@ -111,10 +135,9 @@ const CONFIG = {
   "config": { "wide_screen_mode": true },
   "header": {
     "template": "blue",
-    "title": "📰 科技资讯{早/午/晚}报 - {日期} {时间}"
+    "title": { "tag": "plain_text", "content": "📰 科技资讯早报 - 3月21日 08:00" }
   },
   "elements": [
-    // 分类标题：使用 fields 布局
     {
       "tag": "div",
       "fields": [
@@ -122,23 +145,16 @@ const CONFIG = {
         { "is_short": true, "text": { "tag": "lark_md", "content": "" } }
       ]
     },
-    // 新闻内容：使用 lark_md 格式，可点击链接
     {
       "tag": "div",
       "text": { "tag": "lark_md", "content": "• [新闻标题](https://链接地址)" }
     },
-    ...
-    // 分隔线
     { "tag": "hr" },
     ...
-    // 底部
-    {
-      "tag": "hr"
-    },
     {
       "tag": "note",
       "elements": [
-        { "tag": "plain_text", "content": "来源：36氪、虎嗅 | Notify Bot · {日期} {时间}" }
+        { "tag": "plain_text", "content": "来源：36氪、虎嗅 | Notify Bot · 3月21日 08:00" }
       ]
     }
   ]
@@ -147,11 +163,14 @@ const CONFIG = {
 
 #### ⚠️ 严格要求
 
-1. **分类标题**: 必须使用 `fields` 布局（左标题右空白）
-2. **新闻内容**: 必须使用 `lark_md` 格式的可点击链接 `[标题](URL)`
-3. **分隔线**: 各分类之间使用 `{ "tag": "hr" }` 分隔
-4. **数量限制**: 每个分类最多显示 3 条新闻
-5. **底部格式**: 必须注明来源和推送时间
+1. **卡片结构**: 必须包含 `config`、`header`、`elements` 三个字段
+2. **消息类型**: `msg_type` 必须是 `'interactive'`
+3. **内容格式**: `content` 必须是 `JSON.stringify(card)` (JSON字符串)
+4. **分类标题**: 必须使用 `fields` 布局（左标题右空白）
+5. **新闻内容**: 必须使用 `lark_md` 格式的可点击链接 `[标题](URL)`
+6. **分隔线**: 各分类之间使用 `{ "tag": "hr" }` 分隔
+7. **数量限制**: 每个分类最多显示 3 条新闻
+8. **底部格式**: 必须注明来源和推送时间
 
 #### 分类名称
 
@@ -176,7 +195,7 @@ const CONFIG = {
 3. 去重（过滤已发送的）
 4. 分类（热点/市场/公司/技术）
 5. 构建卡片（可点击链接）
-6. 发送到飞书
+6. 发送到飞书（使用 interactive 消息类型）
 7. 标记为已发送
 
 ---
@@ -249,6 +268,21 @@ wttr.in/{坐标}?format=j1&lang=zh-cn
 36氪: https://36kr.com/feed
 ```
 
+### 5.4 飞书消息发送 API
+
+```
+POST https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id
+Headers:
+  Authorization: Bearer {tenant_access_token}
+  Content-Type: application/json
+Body:
+{
+  "receive_id": "oc_ffc3e3276fcf68d1759933ec0e494ae8",
+  "msg_type": "interactive",
+  "content": "{JSON字符串化的卡片对象}"
+}
+```
+
 ---
 
 ## 六、变更记录
@@ -258,6 +292,7 @@ wttr.in/{坐标}?format=j1&lang=zh-cn
 | 2026-03-21 | 创建规范文档，定义天气和资讯推送标准 | Agent |
 | 2026-03-21 | 修正天气坐标为 30.77,111.33 | Agent |
 | 2026-03-21 | 修正资讯格式为可点击链接 | Agent |
+| 2026-03-21 | 补充卡片消息格式要求，强调 msg_type 和 content 格式 | Agent |
 
 ---
 
@@ -270,7 +305,11 @@ wttr.in/{坐标}?format=j1&lang=zh-cn
 
 ---
 
-**⚠️ 重要提示**: 所有修改推送脚本或配置的操作，必须确保符合本文档的规范。
+**⚠️ 重要提示**: 
+1. 所有修改推送脚本或配置的操作，必须确保符合本文档的规范。
+2. 卡片消息必须使用 `msg_type: 'interactive'` 和正确的卡片JSON结构。
+3. 测试推送时，用户会直接在飞书收到卡片，无需在对话中汇报。
 
-*文档版本: v1.0*  
-*创建时间: 2026-03-21*
+*文档版本: v1.1*  
+*创建时间: 2026-03-21*  
+*最后更新: 2026-03-21 12:15*
