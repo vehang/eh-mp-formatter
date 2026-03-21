@@ -11,7 +11,7 @@ const CONFIG = {
   appId: 'cli_a91476e0a5f8dbc0',
   appSecret: 'CRV8phtp1hTE7sz5tpwlCfGXnaIEvWCV',
   chatId: 'oc_ffc3e3276fcf68d1759933ec0e494ae8',
-  location: 'Shanghai',  // 可改为其他城市
+  location: '30.77,111.33',  // 坐标：湖北省宜昌市夷陵区东湖大道50号
   lang: 'zh-cn'
 };
 
@@ -245,7 +245,7 @@ function buildCard(weatherData) {
     config: { wide_screen_mode: true },
     header: {
       template: 'turquoise',
-      title: { tag: 'plain_text', content: `🌤️ ${CONFIG.location} 天气早报` }
+      title: { tag: 'plain_text', content: `🌤️ 宜昌夷陵区 天气早报` }
     },
     elements: elements
   };

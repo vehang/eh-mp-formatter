@@ -247,7 +247,7 @@ function categorizeNews(items) {
   return categories;
 }
 
-// 构建卡片 JSON
+// 构建卡片 JSON - 按照约定格式，每条新闻可点击
 function buildCard(categories, timeLabel) {
   const now = new Date();
   const dateStr = `${now.getMonth() + 1}月${now.getDate()}日`;
@@ -255,25 +255,23 @@ function buildCard(categories, timeLabel) {
   const weekDay = weekDays[now.getDay()];
   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   
-  const elements = [
-    {
-      tag: 'div',
-      text: { tag: 'lark_md', content: `📅 ${dateStr} ${weekDay}` }
-    }
-  ];
+  const elements = [];
   
-  // 添加每个分类 - 使用纯文本标题，不带链接
-  Object.entries(categories).forEach(([catName, items]) => {
+  // 添加每个分类 - 使用 fields 布局
+  Object.entries(categories).forEach(([catName, items], index) => {
     if (items.length > 0) {
-      // 分类标题
+      // 分类标题 - 使用 fields 布局（左标题右空白）
       elements.push({
         tag: 'div',
-        text: { tag: 'lark_md', content: `**${catName}**` }
+        fields: [
+          { is_short: true, text: { tag: 'lark_md', content: `**${catName}**` } },
+          { is_short: true, text: { tag: 'lark_md', content: '' } }
+        ]
       });
       
-      // 每条新闻一个可点击的 div
-      items.forEach(item => {
-        // 转义标题中的特殊字符
+      // 每条新闻 - 使用 lark_md 格式的可点击链接
+      items.slice(0, 3).forEach(item => {
+        // 转义标题中的特殊字符（方括号、圆括号）
         const safeTitle = item.title.replace(/([[\]()])/g, '\\$1');
         // 确保 URL 以 https:// 开头
         let safeUrl = item.link;
@@ -286,14 +284,22 @@ function buildCard(categories, timeLabel) {
           text: { tag: 'lark_md', content: `• [${safeTitle}](${safeUrl})` }
         });
       });
+      
+      // 添加分隔线（最后一个分类不加）
+      if (index < Object.keys(categories).filter(k => categories[k].length > 0).length - 1) {
+        elements.push({ tag: 'hr' });
+      }
     }
   });
   
-  // 添加底部
+  // 添加底部 - 注明来源
+  elements.push({
+    tag: 'hr'
+  });
   elements.push({
     tag: 'note',
     elements: [
-      { tag: 'plain_text', content: `Notify Bot · ${timeStr} | 点击标题查看详情` }
+      { tag: 'plain_text', content: `来源：36氪、虎嗅 | Notify Bot · ${dateStr} ${timeStr}` }
     ]
   });
   
@@ -301,7 +307,7 @@ function buildCard(categories, timeLabel) {
     config: { wide_screen_mode: true },
     header: {
       template: 'blue',
-      title: { tag: 'plain_text', content: `📰 科技资讯${timeLabel}` }
+      title: { tag: 'plain_text', content: `📰 科技资讯${timeLabel} - ${dateStr} ${timeStr}` }
     },
     elements: elements
   };
