@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 天气早报卡片推送脚本
- * 获取天气数据并发送飞书交互式卡片
+ * 使用 Open-Meteo API 获取天气数据并发送飞书交互式卡片
  */
 
 const https = require('https');
@@ -11,8 +11,10 @@ const CONFIG = {
   appId: 'cli_a91476e0a5f8dbc0',
   appSecret: 'CRV8phtp1hTE7sz5tpwlCfGXnaIEvWCV',
   chatId: 'oc_ffc3e3276fcf68d1759933ec0e494ae8',
-  location: '30.77,111.33',  // 坐标：湖北省宜昌市夷陵区东湖大道50号
-  lang: 'zh-cn'
+  latitude: 30.77,
+  longitude: 111.33,
+  locationName: '宜昌夷陵区',
+  timezone: 'Asia/Shanghai'
 };
 
 // 获取飞书 access_token
@@ -47,10 +49,10 @@ async function getAccessToken() {
   });
 }
 
-// 获取天气数据（JSON格式）
+// 获取天气数据（Open-Meteo API）
 async function fetchWeather() {
   return new Promise((resolve, reject) => {
-    const url = `https://wttr.in/${encodeURIComponent(CONFIG.location)}?format=j1&lang=${CONFIG.lang}`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.latitude}&longitude=${CONFIG.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,weather_code&timezone=${encodeURIComponent(CONFIG.timezone)}&forecast_days=3&lang=zh`;
     
     https.get(url, (res) => {
       let body = '';
@@ -66,29 +68,58 @@ async function fetchWeather() {
   });
 }
 
-// 天气代码转 emoji
-function weatherCodeToEmoji(code) {
-  const codeNum = parseInt(code);
-  // WMO天气代码映射
-  if (codeNum === 0) return '☀️';  // 晴
-  if (codeNum <= 3) return '⛅';   // 多云
-  if (codeNum <= 49) return '🌫️';  // 雾
-  if (codeNum <= 59) return '🌧️';  // 小雨
-  if (codeNum <= 69) return '🌧️';  // 雨
-  if (codeNum <= 79) return '❄️';   // 雪
-  if (codeNum <= 99) return '⛈️';   // 雷暴
-  return '🌤️';
+// WMO天气代码转描述和emoji
+function weatherCodeToInfo(code) {
+  const weatherMap = {
+    0: { desc: '晴', emoji: '☀️' },
+    1: { desc: '大部晴朗', emoji: '🌤️' },
+    2: { desc: '局部多云', emoji: '⛅' },
+    3: { desc: '多云', emoji: '☁️' },
+    45: { desc: '雾', emoji: '🌫️' },
+    48: { desc: '雾凇', emoji: '🌫️' },
+    51: { desc: '小毛毛雨', emoji: '🌧️' },
+    53: { desc: '中毛毛雨', emoji: '🌧️' },
+    55: { desc: '大毛毛雨', emoji: '🌧️' },
+    56: { desc: '冻毛毛雨', emoji: '🌨️' },
+    57: { desc: '强冻毛毛雨', emoji: '🌨️' },
+    61: { desc: '小雨', emoji: '🌧️' },
+    63: { desc: '中雨', emoji: '🌧️' },
+    65: { desc: '大雨', emoji: '🌧️' },
+    66: { desc: '冻雨', emoji: '🌨️' },
+    67: { desc: '强冻雨', emoji: '🌨️' },
+    71: { desc: '小雪', emoji: '🌨️' },
+    73: { desc: '中雪', emoji: '❄️' },
+    75: { desc: '大雪', emoji: '❄️' },
+    77: { desc: '雪粒', emoji: '❄️' },
+    80: { desc: '小阵雨', emoji: '🌦️' },
+    81: { desc: '中阵雨', emoji: '🌦️' },
+    82: { desc: '大阵雨', emoji: '🌧️' },
+    85: { desc: '小阵雪', emoji: '🌨️' },
+    86: { desc: '大阵雪', emoji: '❄️' },
+    95: { desc: '雷暴', emoji: '⛈️' },
+    96: { desc: '雷暴伴小冰雹', emoji: '⛈️' },
+    99: { desc: '雷暴伴大冰雹', emoji: '⛈️' }
+  };
+  return weatherMap[code] || { desc: '未知', emoji: '🌤️' };
 }
 
-// 风向转中文
-function windDirToChinese(dir) {
-  const dirs = {
-    'N': '北', 'NNE': '北东北', 'NE': '东北', 'ENE': '东东北',
-    'E': '东', 'ESE': '东东南', 'SE': '东南', 'SSE': '南东南',
-    'S': '南', 'SSW': '南西南', 'SW': '西南', 'WSW': '西西南',
-    'W': '西', 'WNW': '西西北', 'NW': '西北', 'NNW': '北西北'
-  };
-  return dirs[dir] || dir;
+// 风向角度转中文
+function windDegreeToChinese(degree) {
+  const directions = [
+    { min: 337.5, max: 360, name: '北' },
+    { min: 0, max: 22.5, name: '北' },
+    { min: 22.5, max: 67.5, name: '东北' },
+    { min: 67.5, max: 112.5, name: '东' },
+    { min: 112.5, max: 157.5, name: '东南' },
+    { min: 157.5, max: 202.5, name: '南' },
+    { min: 202.5, max: 247.5, name: '西南' },
+    { min: 247.5, max: 292.5, name: '西' },
+    { min: 292.5, max: 337.5, name: '西北' }
+  ];
+  for (const d of directions) {
+    if (degree >= d.min && degree < d.max) return d.name;
+  }
+  return '北';
 }
 
 // 构建卡片 JSON
@@ -100,61 +131,50 @@ function buildCard(weatherData) {
   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   
   // 当前天气
-  const current = weatherData.current_condition[0];
-  const currentTemp = current.temp_C;
-  const feelsLike = current.FeelsLikeC;
-  const humidity = current.humidity;
-  const windSpeed = current.windspeedKmph;
-  const windDir = windDirToChinese(current.winddir16Point);
-  const weatherDesc = current.weatherDesc[0].value;
-  const weatherEmoji = weatherCodeToEmoji(current.weatherCode);
+  const current = weatherData.current;
+  const currentTemp = current.temperature_2m;
+  const feelsLike = current.apparent_temperature;
+  const humidity = current.relative_humidity_2m;
+  const windSpeed = current.wind_speed_10m;
+  const windDir = windDegreeToChinese(current.wind_direction_10m);
+  const weatherInfo = weatherCodeToInfo(current.weather_code);
   
   // 今日预报
-  const today = weatherData.weather[0];
-  const maxTemp = today.maxtempC;
-  const minTemp = today.mintempC;
-  const sunrise = today.astronomy[0].sunrise;
-  const sunset = today.astronomy[0].sunset;
-  
-  // 空气质量（如果有）
-  let aqiInfo = '';
-  if (current.air_quality) {
-    const pm25 = parseFloat(current.air_quality.pm2_5);
-    let aqiLevel = '良好';
-    let aqiEmoji = '🟢';
-    if (pm25 > 75) { aqiLevel = '轻度污染'; aqiEmoji = '🟡'; }
-    if (pm25 > 115) { aqiLevel = '中度污染'; aqiEmoji = '🟠'; }
-    if (pm25 > 150) { aqiLevel = '重度污染'; aqiEmoji = '🔴'; }
-    aqiInfo = `${aqiEmoji} **空气质量**: ${aqiLevel} (PM2.5: ${pm25.toFixed(0)})`;
-  }
+  const daily = weatherData.daily;
+  const todayMax = daily.temperature_2m_max[0];
+  const todayMin = daily.temperature_2m_min[0];
+  const sunrise = daily.sunrise[0].split('T')[1];
+  const sunset = daily.sunset[0].split('T')[1];
   
   // 未来两天预报
-  const tomorrow = weatherData.weather[1];
-  const dayAfter = weatherData.weather[2];
-  
-  const tomorrowEmoji = weatherCodeToEmoji(tomorrow.hourly[4].weatherCode);
-  const dayAfterEmoji = weatherCodeToEmoji(dayAfter.hourly[4].weatherCode);
+  const tomorrow = { 
+    min: daily.temperature_2m_min[1], 
+    max: daily.temperature_2m_max[1],
+    weather: weatherCodeToInfo(daily.weather_code[1])
+  };
+  const dayAfter = { 
+    min: daily.temperature_2m_min[2], 
+    max: daily.temperature_2m_max[2],
+    weather: weatherCodeToInfo(daily.weather_code[2])
+  };
   
   // 生活建议
   const suggestions = [];
-  const temp = parseInt(currentTemp);
+  const temp = currentTemp;
   if (temp <= 5) suggestions.push('🥶 天气寒冷，注意保暖');
   else if (temp <= 15) suggestions.push('🧥 天气较凉，建议穿外套');
   else if (temp <= 25) suggestions.push('👕 天气温和，穿着舒适');
   else suggestions.push('🥵 天气炎热，注意防暑');
   
-  if (parseInt(humidity) >= 80) suggestions.push('💧 湿度较高，体感闷热');
-  if (parseInt(windSpeed) >= 30) suggestions.push('💨 风力较大，外出注意');
+  if (humidity >= 80) suggestions.push('💧 湿度较高，体感闷热');
+  if (windSpeed >= 30) suggestions.push('💨 风力较大，外出注意');
   
-  // 降水概率
-  const hourlyData = today.hourly;
-  let maxRainChance = 0;
-  hourlyData.forEach(h => {
-    const chance = parseInt(h.chanceofrain);
-    if (chance > maxRainChance) maxRainChance = chance;
-  });
-  if (maxRainChance >= 50) {
-    suggestions.push(`☔ 今日降水概率 ${maxRainChance}%，建议带伞`);
+  // 检查是否有雨
+  const rainyCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99];
+  if (rainyCodes.includes(current.weather_code)) {
+    suggestions.push('☔ 当前有雨，出门带伞');
+  } else if (rainyCodes.includes(daily.weather_code[0])) {
+    suggestions.push('🌂 今日可能有雨，建议带伞');
   }
   
   const elements = [
@@ -169,7 +189,7 @@ function buildCard(weatherData) {
     // 当前天气
     {
       tag: 'div',
-      text: { tag: 'lark_md', content: `${weatherEmoji} **当前天气**: ${weatherDesc}` }
+      text: { tag: 'lark_md', content: `${weatherInfo.emoji} **当前天气**: ${weatherInfo.desc}` }
     },
     {
       tag: 'div',
@@ -177,7 +197,7 @@ function buildCard(weatherData) {
     },
     {
       tag: 'div',
-      text: { tag: 'lark_md', content: `📊 **今日**: ${minTemp}°C ~ ${maxTemp}°C` }
+      text: { tag: 'lark_md', content: `📊 **今日**: ${todayMin}°C ~ ${todayMax}°C` }
     },
     {
       tag: 'div',
@@ -188,14 +208,6 @@ function buildCard(weatherData) {
       text: { tag: 'lark_md', content: `🌅 **日出**: ${sunrise}  |  🌇 **日落**: ${sunset}` }
     }
   ];
-  
-  // 添加空气质量
-  if (aqiInfo) {
-    elements.push({
-      tag: 'div',
-      text: { tag: 'lark_md', content: aqiInfo }
-    });
-  }
   
   // 未来预报
   elements.push({
@@ -208,11 +220,11 @@ function buildCard(weatherData) {
   });
   elements.push({
     tag: 'div',
-    text: { tag: 'lark_md', content: `${tomorrowEmoji} **明天**: ${tomorrow.mintempC}°C ~ ${tomorrow.maxtempC}°C` }
+    text: { tag: 'lark_md', content: `${tomorrow.weather.emoji} **明天**: ${tomorrow.min}°C ~ ${tomorrow.max}°C (${tomorrow.weather.desc})` }
   });
   elements.push({
     tag: 'div',
-    text: { tag: 'lark_md', content: `${dayAfterEmoji} **后天**: ${dayAfter.mintempC}°C ~ ${dayAfter.maxtempC}°C` }
+    text: { tag: 'lark_md', content: `${dayAfter.weather.emoji} **后天**: ${dayAfter.min}°C ~ ${dayAfter.max}°C (${dayAfter.weather.desc})` }
   });
   
   // 生活建议
@@ -237,7 +249,7 @@ function buildCard(weatherData) {
   elements.push({
     tag: 'note',
     elements: [
-      { tag: 'plain_text', content: `Weather Bot · ${timeStr} | 数据来源: wttr.in` }
+      { tag: 'plain_text', content: `Weather Bot · ${timeStr} | 数据来源: Open-Meteo` }
     ]
   });
   
@@ -245,7 +257,7 @@ function buildCard(weatherData) {
     config: { wide_screen_mode: true },
     header: {
       template: 'turquoise',
-      title: { tag: 'plain_text', content: `🌤️ 宜昌夷陵区 天气早报` }
+      title: { tag: 'plain_text', content: `🌤️ ${CONFIG.locationName} 天气早报` }
     },
     elements: elements
   };
@@ -275,7 +287,7 @@ async function sendCard(token, card) {
         try {
           const json = JSON.parse(body);
           if (json.code === 0) resolve(json.data);
-          else reject(new Error(json.msg));
+          else reject(new Error(`飞书API错误: ${json.msg} (code: ${json.code})`));
         } catch (e) {
           reject(e);
         }
@@ -290,7 +302,7 @@ async function sendCard(token, card) {
 // 主函数
 async function main() {
   try {
-    console.log(`🌤️ 获取 ${CONFIG.location} 天气数据...`);
+    console.log(`🌤️ 获取 ${CONFIG.locationName} 天气数据...`);
     
     // 获取天气数据
     const weatherData = await fetchWeather();
@@ -299,6 +311,7 @@ async function main() {
     // 获取 token
     console.log('🎫 获取飞书 Token...');
     const token = await getAccessToken();
+    console.log('✅ Token 获取成功');
     
     // 构建卡片
     console.log('📦 构建天气卡片...');
@@ -308,12 +321,15 @@ async function main() {
     console.log('📤 发送卡片到飞书...');
     const result = await sendCard(token, card);
     
-    console.log('✅ 天气卡片发送成功:', result.message_id);
+    console.log('✅ 天气卡片发送成功! message_id:', result.message_id);
     
     // 输出天气摘要
-    const current = weatherData.current_condition[0];
-    const today = weatherData.weather[0];
-    console.log(`📊 天气摘要: ${current.temp_C}°C, ${current.weatherDesc[0].value}, ${today.mintempC}°C ~ ${today.maxtempC}°C`);
+    const current = weatherData.current;
+    const daily = weatherData.daily;
+    const weatherInfo = weatherCodeToInfo(current.weather_code);
+    console.log(`📊 天气摘要: ${current.temperature_2m}°C, ${weatherInfo.desc}, ${daily.temperature_2m_min[0]}°C ~ ${daily.temperature_2m_max[0]}°C`);
+    
+    process.exit(0);
   } catch (err) {
     console.error('❌ 发送失败:', err.message);
     process.exit(1);
