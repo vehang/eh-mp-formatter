@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(npm run build 2>&1)",
-      "Bash(node /home/node/.openclaw/workspace/screenshot.cjs 2>&1)"
-    ]
-  }
-}

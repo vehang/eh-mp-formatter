@@ -1,1 +1,0 @@
-/home/node/.openclaw/workspace/scripts/weather-card.cjs
