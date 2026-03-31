@@ -4,7 +4,37 @@
 
 ---
 
-## 一、开发工作流
+## 一、开发工具配置
+
+### JDK 和 Maven 路径
+
+```
+JDK: ~/.openclaw/tools/jdk8
+Maven: ~/.openclaw/tools/maven-3.6.3
+Maven 仓库: ~/.openclaw/tools/maven-3.6.3/repository
+```
+
+### 使用方式
+
+```bash
+# 设置环境变量
+export JAVA_HOME=~/.openclaw/tools/jdk8
+export PATH=$JAVA_HOME/bin:$PATH
+
+# 编译后端项目
+cd ~/.openclaw/workspace/dev/projects/baoboxs-service
+~/.openclaw/tools/maven-3.6.3/bin/mvn package -Dmaven.test.skip=true
+```
+
+### Maven 配置说明
+
+Maven 本地仓库已配置在 `~/.openclaw/tools/maven-3.6.3/repository`，依赖会持久化保存，无需重复下载。
+
+配置文件位置：`~/.openclaw/tools/maven-3.6.3/conf/settings.xml`
+
+---
+
+## 二、开发工作流
 
 ### 完整开发流程
 
