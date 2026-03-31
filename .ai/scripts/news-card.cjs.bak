@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * 科技资讯卡片推送脚本（增强版）
- * 综合获取多源 RSS 资讯并发送飞书交互式卡片
+ * 科技资讯卡片推送脚本
+ * 获取 RSS 资讯并发送飞书交互式卡片
  * 支持去重：已发送过的资讯不会重复发送
  */
 
@@ -15,63 +15,26 @@ const CONFIG = {
   appSecret: 'CRV8phtp1hTE7sz5tpwlCfGXnaIEvWCV',
   chatId: 'oc_ffc3e3276fcf68d1759933ec0e494ae8',
   rssFeeds: [
-    { name: '36氪', url: 'https://36kr.com/feed' },
-    { name: '虎嗅', url: 'https://www.huxiu.com/rss/0.xml' },
-    { name: '机器之心', url: 'https://www.jiqizhixin.com/rss' },
-    { name: '新智元', url: 'https://www.xinzhiyuan.com/feed' },
-    { name: '量子位', url: 'https://www.qbitai.com/feed' },
-    { name: 'IT之家', url: 'https://www.ithome.com/rss' }
+    { name: '虎嗅', url: 'https://www.huxiu.com/rss/' },
+    { name: '36氪', url: 'https://36kr.com/feed' }
   ],
-  keywords: [
-    // AI相关
-    'AI', '人工智能', '大模型', 'LLM', 'GPT', 'ChatGPT',
-    'DeepSeek', 'OpenAI', 'Anthropic', 'Claude',
-    '月之暗面', 'Kimi', 'MiniMax', '智谱', 'GLM', '百川',
-    'Gemini', 'Copilot', 'Midjourney', 'Stable Diffusion',
-    
-    // 芯片相关
-    '芯片', '半导体', 'GPU', 'CPU', 'NPU', 'TPU',
-    '英伟达', 'NVIDIA', '台积电', 'AMD', '英特尔', 'Intel',
-    '存储', '内存', 'SSD', 'HBM', '光刻机', 'EDA',
-    
-    // 公司相关
-    '微软', 'Microsoft', '谷歌', 'Google', '苹果', 'Apple', '特斯拉', 'Tesla',
-    '亚马逊', 'Amazon', 'Meta', 'Facebook', 'Netflix',
-    '甲骨文', 'Oracle', 'Salesforce', 'Adobe', 'IBM',
-    '阿里', '阿里巴巴', '腾讯', '字节', '字节跳动', '百度', '华为', '小米', 'OPPO', 'vivo',
-    '美团', '京东', '拼多多', '滴滴', '快手', 'B站',
-    
-    // 市场相关
-    '营收', '融资', 'IPO', '股价', '市值', '财报', '业绩',
-    '增长', '下跌', '暴涨', '暴跌', '投资', '收购', '并购', '重组',
-    '降本增效', '裁员', '招聘', '上市',
-    
-    // 技术相关
-    '云计算', 'SaaS', 'PaaS', 'IaaS', '数据中心', '服务器',
-    '新能源', '电池', '电动车', '自动驾驶', '无人机',
-    '机器人', '人形机器人', '具身智能', '机械臂',
-    '量子计算', '区块链', 'Web3', '元宇宙',
-    '操作系统', '数据库', '内核', '编译器',
-    
-    // 应用场景
-    '医疗AI', '教育AI', '金融AI', '法律AI', '客服AI',
-    '代码生成', 'AI编程', 'Agent', '智能体', 'RAG',
-    '语音识别', '图像识别', '自然语言', 'OCR'
-  ],
+  keywords: ['AI', '英伟达', '芯片', '半导体', '大模型', 'DeepSeek', 'OpenAI', '特斯拉', '苹果', '微软', '谷歌', 'Anthropic', '月之暗面', 'MiniMax', '存储', '新能源'],
   // 去重配置
   sentNewsFile: '/home/node/.openclaw/workspace/scripts/sent-news.json',
-  maxSentRecords: 1000,
-  expireDays: 7
+  maxSentRecords: 1000,  // 最多保留1000条记录
+  expireDays: 7          // 记录过期天数
 };
 
 // ==================== 去重功能 ====================
 
+// 生成资讯的唯一ID（用标题+链接的hash）
 function generateNewsId(item) {
   const crypto = require('crypto');
   const content = `${item.title}|${item.link}`;
   return crypto.createHash('md5').update(content).digest('hex').substring(0, 16);
 }
 
+// 加载已发送的资讯记录
 function loadSentNews() {
   try {
     if (fs.existsSync(CONFIG.sentNewsFile)) {
@@ -84,6 +47,7 @@ function loadSentNews() {
   return { records: {}, lastClean: Date.now() };
 }
 
+// 保存已发送的资讯记录
 function saveSentNews(sentNews) {
   try {
     const dir = path.dirname(CONFIG.sentNewsFile);
@@ -96,10 +60,12 @@ function saveSentNews(sentNews) {
   }
 }
 
+// 清理过期记录
 function cleanExpiredRecords(sentNews) {
   const now = Date.now();
   const expireMs = CONFIG.expireDays * 24 * 60 * 60 * 1000;
   
+  // 每天清理一次
   if (now - sentNews.lastClean < 24 * 60 * 60 * 1000) {
     return sentNews;
   }
@@ -114,6 +80,7 @@ function cleanExpiredRecords(sentNews) {
     }
   });
   
+  // 如果记录数超过限制，删除最旧的
   if (Object.keys(sentNews.records).length > CONFIG.maxSentRecords) {
     const sortedIds = Object.entries(sentNews.records)
       .sort((a, b) => a[1].time - b[1].time)
@@ -131,17 +98,20 @@ function cleanExpiredRecords(sentNews) {
   return sentNews;
 }
 
+// 检查资讯是否已发送
 function isNewsSent(sentNews, newsId) {
   return sentNews.records.hasOwnProperty(newsId);
 }
 
+// 标记资讯为已发送
 function markNewsAsSent(sentNews, newsId, title) {
   sentNews.records[newsId] = {
     time: Date.now(),
-    title: title.substring(0, 50)
+    title: title.substring(0, 50)  // 只保留前50个字符
   };
 }
 
+// 过滤掉已发送的资讯
 function filterSentNews(items, sentNews) {
   const newItems = [];
   let duplicateCount = 0;
@@ -162,8 +132,7 @@ function filterSentNews(items, sentNews) {
   return newItems;
 }
 
-// ==================== 飞书 API ====================
-
+// 获取飞书 access_token
 async function getAccessToken() {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({
@@ -195,8 +164,7 @@ async function getAccessToken() {
   });
 }
 
-// ==================== RSS 获取 ====================
-
+// 获取 RSS 内容（简化版，直接用 HTTP 获取）
 async function fetchRSS(url) {
   return new Promise((resolve, reject) => {
     https.get(url, (res) => {
@@ -207,6 +175,7 @@ async function fetchRSS(url) {
   });
 }
 
+// 解析 RSS XML（简化版）
 function parseRSS(xml, feedName) {
   const items = [];
   const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
@@ -215,11 +184,15 @@ function parseRSS(xml, feedName) {
   while ((match = itemRegex.exec(xml)) !== null) {
     const itemXml = match[1];
     
+    // 标题：支持 CDATA 和普通格式
     const titleMatch = itemXml.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/i) || itemXml.match(/<title>(.*?)<\/title>/i);
+    
+    // 链接：支持 CDATA 和普通格式
     const linkMatch = itemXml.match(/<link><!\[CDATA\[(.*?)\]\]><\/link>/i) || itemXml.match(/<link>(.*?)<\/link>/i);
     
     if (titleMatch && linkMatch) {
       let link = linkMatch[1].trim();
+      // 移除可能的查询参数中的特殊字符
       link = link.split('"')[0].split("'")[0].trim();
       
       items.push({
@@ -233,6 +206,7 @@ function parseRSS(xml, feedName) {
   return items;
 }
 
+// 过滤关键词匹配的新闻
 function filterByKeywords(items, keywords) {
   return items.filter(item => {
     const text = item.title.toLowerCase();
@@ -240,56 +214,40 @@ function filterByKeywords(items, keywords) {
   });
 }
 
-// ==================== 分类 ====================
-
+// 分类新闻
 function categorizeNews(items) {
   const categories = {
     '🔥 热点头条': [],
     '📈 市场动态': [],
     '🏢 公司动态': [],
-    '💡 技术突破': [],
-    '🔋 新能源': [],
-    '🤖 AI前沿': []
+    '💡 技术突破': []
   };
   
+  // 简单分类逻辑
   items.forEach(item => {
     const title = item.title;
-    
-    // 更智能的分类
-    if (title.includes('营收') || title.includes('融资') || title.includes('IPO') || title.includes('财报') || title.includes('市值')) {
-      categories['📈 市场动态'].push(item);
-    } else if (title.includes('英伟达') || title.includes('NVIDIA') || title.includes('台积电') || title.includes('芯片') || title.includes('半导体')) {
+    if (title.includes('英伟达') || title.includes('NVIDIA') || title.includes('营收') || title.includes('融资')) {
       categories['🔥 热点头条'].push(item);
-    } else if (title.includes('新能源') || title.includes('电池') || title.includes('电动车') || title.includes('特斯拉')) {
-      categories['🔋 新能源'].push(item);
-    } else if (title.includes('AI') || title.includes('大模型') || title.includes('LLM') || title.includes('GPT') || title.includes('DeepSeek') || title.includes('OpenAI')) {
-      categories['🤖 AI前沿'].push(item);
-    } else if (title.includes('公司') || title.includes('架构') || title.includes('CEO') || title.includes('合作') || title.includes('收购')) {
+    } else if (title.includes('市场') || title.includes('涨价') || title.includes('下跌') || title.includes('增长')) {
+      categories['📈 市场动态'].push(item);
+    } else if (title.includes('公司') || title.includes('架构') || title.includes('CEO') || title.includes('合作')) {
       categories['🏢 公司动态'].push(item);
-    } else if (title.includes('技术') || title.includes('突破') || title.includes('发布') || title.includes('推出')) {
+    } else if (title.includes('AI') || title.includes('模型') || title.includes('芯片') || title.includes('技术')) {
       categories['💡 技术突破'].push(item);
     } else {
       categories['🔥 热点头条'].push(item);
     }
   });
   
-  // 每个分类最多6条
+  // 每个分类最多5条
   Object.keys(categories).forEach(cat => {
-    categories[cat] = categories[cat].slice(0, 6);
-  });
-  
-  // 移除空分类
-  Object.keys(categories).forEach(cat => {
-    if (categories[cat].length === 0) {
-      delete categories[cat];
-    }
+    categories[cat] = categories[cat].slice(0, 5);
   });
   
   return categories;
 }
 
-// ==================== 卡片构建 ====================
-
+// 构建卡片 JSON
 function buildCard(categories, timeLabel) {
   const now = new Date();
   const dateStr = `${now.getMonth() + 1}月${now.getDate()}日`;
@@ -304,15 +262,20 @@ function buildCard(categories, timeLabel) {
     }
   ];
   
+  // 添加每个分类 - 使用纯文本标题，不带链接
   Object.entries(categories).forEach(([catName, items]) => {
     if (items.length > 0) {
+      // 分类标题
       elements.push({
         tag: 'div',
         text: { tag: 'lark_md', content: `**${catName}**` }
       });
       
+      // 每条新闻一个可点击的 div
       items.forEach(item => {
+        // 转义标题中的特殊字符
         const safeTitle = item.title.replace(/([[\]()])/g, '\\$1');
+        // 确保 URL 以 https:// 开头
         let safeUrl = item.link;
         if (!safeUrl.startsWith('http://') && !safeUrl.startsWith('https://')) {
           safeUrl = 'https://' + safeUrl;
@@ -326,6 +289,7 @@ function buildCard(categories, timeLabel) {
     }
   });
   
+  // 添加底部
   elements.push({
     tag: 'note',
     elements: [
@@ -343,8 +307,7 @@ function buildCard(categories, timeLabel) {
   };
 }
 
-// ==================== 发送 ====================
-
+// 发送卡片消息
 async function sendCard(token, card) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({
@@ -380,39 +343,36 @@ async function sendCard(token, card) {
   });
 }
 
-// ==================== 主函数 ====================
-
+// 主函数
 async function main() {
   const timeLabel = process.argv[2] || '早报';
   
   try {
     console.log(`📰 获取 ${timeLabel} 资讯...`);
     
+    // 加载已发送记录
     let sentNews = loadSentNews();
     sentNews = cleanExpiredRecords(sentNews);
     
+    // 获取所有 RSS 源
     let allItems = [];
-    let feedStats = [];
-    
     for (const feed of CONFIG.rssFeeds) {
       try {
         console.log(`  获取 ${feed.name}...`);
         const xml = await fetchRSS(feed.url);
         const items = parseRSS(xml, feed.name);
         console.log(`  ${feed.name}: ${items.length} 条`);
-        feedStats.push({ name: feed.name, count: items.length });
         allItems = allItems.concat(items);
       } catch (e) {
         console.log(`  ${feed.name} 获取失败: ${e.message}`);
-        feedStats.push({ name: feed.name, count: 0, error: e.message });
       }
     }
     
-    console.log(`📊 总计获取: ${allItems.length} 条`);
-    
+    // 过滤关键词
     const filtered = filterByKeywords(allItems, CONFIG.keywords);
-    console.log(`🔍 关键词匹配: ${filtered.length} 条`);
+    console.log(`关键词匹配: ${filtered.length} 条`);
     
+    // 过滤已发送的资讯
     const newItems = filterSentNews(filtered, sentNews);
     
     if (newItems.length === 0) {
@@ -422,25 +382,29 @@ async function main() {
     
     console.log(`📰 新资讯: ${newItems.length} 条`);
     
+    // 分类
     const categories = categorizeNews(newItems);
     
+    // 获取 token
     console.log('🎫 获取飞书 Token...');
     const token = await getAccessToken();
     
+    // 构建卡片
     console.log('📦 构建卡片...');
     const card = buildCard(categories, timeLabel);
     
+    // 发送
     console.log('📤 发送卡片...');
     const result = await sendCard(token, card);
     
+    // 标记已发送
     newItems.forEach(item => {
       markNewsAsSent(sentNews, item._id, item.title);
     });
     saveSentNews(sentNews);
     
     console.log('✅ 发送成功:', result.message_id);
-    console.log(`📊 统计: ${newItems.length} 条新资讯`);
-    console.log(`📊 来源: ${feedStats.map(f => `${f.name}(${f.count})`).join('、')}`);
+    console.log(`📊 统计: 发送 ${newItems.length} 条新资讯`);
   } catch (err) {
     console.error('❌ 发送失败:', err.message);
     process.exit(1);
