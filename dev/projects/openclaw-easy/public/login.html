@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - OpenClaw</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    <style>
+        /* 验证中状态样式 */
+        .verify-loading {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+        }
+        .verify-loading.active {
+            display: flex;
+        }
+        .verify-loading .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .verify-loading .text {
+            margin-top: 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        /* 登录表单默认隐藏，验证失败后显示 */
+        .login-form-container {
+            display: none;
+        }
+        .login-form-container.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-card fade-in">
+            <div class="login-header">
+                <a href="https://www.tilldream.com/" target="_blank" style="text-decoration: none; color: inherit;">
+                    <div class="logo-icon"><img src="/images/logo.webp" alt="Logo"></div>
+                    <h1>OpenClaw</h1>
+                </a>
+                <p id="pageTitle">请输入管理密码</p>
+            </div>
+
+            <!-- 验证中状态（有 token 参数时显示） -->
+            <div class="verify-loading" id="verifyLoading">
+                <div class="spinner"></div>
+                <div class="text">正在验证身份...</div>
+            </div>
+
+            <!-- 登录表单（验证失败或无 token 时显示） -->
+            <div class="login-form-container" id="loginFormContainer">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label class="form-label">管理密码</label>
+                                <input type="password" class="form-control" id="password"
+                                       placeholder="请输入密码" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">
+                                登录
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        /**
+         * Token 验证（自动登录）
+         */
+        async function verifyTokenAndLogin() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            const barCode = urlParams.get('barCode');
+            
+            if (!token || !barCode) {
+                // 没有 token 参数，直接显示登录表单
+                showLoginForm();
+                return false;
+            }
+            
+            console.log('[Token验证] 检测到 token 参数:', token.substring(0, 10) + '...');
+            
+            // 显示验证中状态
+            showVerifyLoading();
+            
+            try {
+                const response = await fetch('/api/verify-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, barCode })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 0) {
+                    // 验证成功
+                    updateVerifyText('身份验证成功，正在跳转...');
+                    
+                    // 清除 URL 参数，跳转到首页
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 800);
+                    
+                    return true;
+                } else {
+                    // 验证失败，显示登录表单
+                    console.log('[Token验证] 验证失败:', data.msg);
+                    showLoginForm();
+                    showToast(data.msg || '身份验证失败，请手动登录', 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('[Token验证] 请求失败:', error);
+                showLoginForm();
+                showToast('验证请求失败，请手动登录', 'error');
+                return false;
+            }
+        }
+        
+        /**
+         * 显示验证中状态
+         */
+        function showVerifyLoading() {
+            document.getElementById('verifyLoading').classList.add('active');
+            document.getElementById('loginFormContainer').classList.remove('active');
+            document.getElementById('pageTitle').textContent = '身份验证中';
+        }
+        
+        /**
+         * 显示登录表单
+         */
+        function showLoginForm() {
+            document.getElementById('verifyLoading').classList.remove('active');
+            document.getElementById('loginFormContainer').classList.add('active');
+            document.getElementById('pageTitle').textContent = '请输入管理密码';
+            document.getElementById('password').focus();
+        }
+        
+        /**
+         * 更新验证提示文字
+         */
+        function updateVerifyText(text) {
+            document.querySelector('.verify-loading .text').textContent = text;
+        }
+        
+        /**
+         * 页面加载时先尝试 Token 验证
+         */
+        verifyTokenAndLogin();
+        
+        /**
+         * 登录表单提交
+         */
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (!password) {
+                showToast('请输入密码', 'error');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading"></span> 登录中...';
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.code === 0) {
+                    showToast(data.msg || '登录成功', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 500);
+                } else {
+                    showToast(data.msg || '登录失败', 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = '登录';
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                showToast('网络错误，请重试', 'error');
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登录';
+            }
+        });
+    </script>
+</body>
+</html>

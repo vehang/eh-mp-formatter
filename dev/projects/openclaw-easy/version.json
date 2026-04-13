@@ -1,0 +1,20 @@
+{
+    "versionName": "1.0.0.6",
+    "versionCode": 1006,
+    "releaseDate": "2026-04-14",
+    "appAuthRequired": true,
+    "changelog": [
+        "初始版本",
+        "支持简化配置接口",
+        "支持微信扫码登录",
+        "支持 Gateway 服务管理",
+        "支持多种压缩格式解压",
+        "/api/fix 异步执行",
+        "barCode 设备标识参数",
+        "新增 App API 认证体系",
+        "新增 POST /api/app/auth 认证接口",
+        "新增 appAuthMiddleware 中间件",
+        "支持 5 种 accessToken 传递方式（Header/Query/Body/Cookie）",
+        "version.json 增加 appAuthRequired 开关"
+    ]
+}
