@@ -64,3 +64,12 @@
   - barCode 设备标识参数
   - HTML/API 路由修复
 - 详情见 `memory/2026-04-10.md`
+
+### 2026-04-14
+- openclaw-easy 两大改造（基于 feature/modular-refactor 分支）
+  - App API 认证体系：持久化 accessToken（7天有效）、appAuthMiddleware 保护5个接口、appAuthRequired 开关
+  - 更新机制重构：同级目录+测试启动+mv切换，routes/update.js 从370行简化到169行
+- Git 推送：001069e, c6c5241, 61389cd → vehang/openclaw-easy feature/modular-refactor
+- 创建了 hermes-docker 部署项目
+- 教训：不同项目必须在各自 git 目录下操作，push 前确认 remote
+- 详情见 `memory/2026-04-14.md`
