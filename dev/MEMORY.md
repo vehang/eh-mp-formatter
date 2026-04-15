@@ -56,6 +56,13 @@
 
 ## 工作记录
 
+### 2026-04-15
+- Hermes Docker 镜像构建（暂缓，SIGTERM + chown 慢）
+- openclaw-easy verify 页面布局修复（bddc20a → 最终用户自修 1c73ebf）
+- OpenClaw 智谱 GLM-5.1 模型配置（双模型共存）
+- 微信插件安装流程分析，待在构建时集成 CLI 更新
+- 详情见 `memory/2026-04-15.md`
+
 ### 2026-04-10
 - openclaw-easy 项目优化
   - update.sh 多格式压缩支持
