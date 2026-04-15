@@ -21,15 +21,9 @@ RUN npm install --prefer-offline --no-audit && \
     npm install --prefer-offline --no-audit && \
     npm cache clean --force
 
-# 权限
-RUN chown -R hermes:hermes /opt/hermes
-
 # 安装 Python 依赖
-USER hermes
 RUN uv venv && \
     uv pip install --no-cache-dir -e ".[all]"
-
-USER root
 
 # entrypoint
 COPY --chmod=0755 entrypoint.sh /opt/hermes/docker/entrypoint.sh
