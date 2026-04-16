@@ -1,7 +1,6 @@
 # ========================================
 # Layer 2: Hermes Agent App
-# 基于 base 镜像，安装 Hermes 源码 + Python 依赖
-# 版本更新时只需重新构建这层
+# 基于 base 镜像，安装 Hermes 源码 + 依赖
 # ========================================
 ARG BASE_IMAGE=hermes-base:latest
 FROM ${BASE_IMAGE}
@@ -9,7 +8,9 @@ FROM ${BASE_IMAGE}
 ARG HERMES_VERSION=main
 
 # 克隆 Hermes 源码
-RUN git clone --depth 1 --branch ${HERMES_VERSION} \
+WORKDIR /opt
+RUN rm -rf /opt/hermes && \
+    git clone --depth 1 --branch ${HERMES_VERSION} \
     https://github.com/NousResearch/hermes-agent.git /opt/hermes && \
     rm -rf /opt/hermes/.git
 
@@ -21,12 +22,17 @@ RUN npm install --prefer-offline --no-audit && \
     npm install --prefer-offline --no-audit && \
     npm cache clean --force
 
-# 安装 Python 依赖
+# 安装 Python 依赖（含飞书 SDK）
 RUN uv venv && \
-    uv pip install --no-cache-dir -e ".[all]"
+    uv pip install --no-cache-dir -e ".[all]" && \
+    uv pip install --no-cache-dir lark-oapi
+
+# 预置默认配置
+COPY hermes.env /opt/hermes/hermes.env.example
 
 # entrypoint
-COPY --chmod=0755 entrypoint.sh /opt/hermes/docker/entrypoint.sh
+COPY entrypoint.sh /opt/hermes/docker/entrypoint.sh
+RUN chmod +x /opt/hermes/docker/entrypoint.sh
 
 ENV HERMES_HOME=/opt/data
 VOLUME ["/opt/data"]

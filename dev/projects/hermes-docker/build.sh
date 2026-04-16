@@ -15,7 +15,7 @@ echo "🔨 [1/2] 构建 base 镜像 (hermes-base:latest)..."
 echo "   包含：系统依赖、Node.js、Python、Playwright chromium"
 echo ""
 
-docker build -f Dockerfile.base -t hermes-base:latest .
+docker build --no-cache -f Dockerfile.base -t hermes-base:latest .
 
 echo ""
 echo "✅ base 镜像构建完成！"
