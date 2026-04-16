@@ -7,7 +7,8 @@
 - [四、运行](#四运行)
 - [五、飞书平台配置](#五飞书平台配置)
 - [六、LLM 模型配置](#六llm-模型配置)
-- [七、常见问题](#七常见问题)
+- [七、完整构建示例](#七完整构建示例)
+- [八、常见问题](#八常见问题)
 
 ---
 
@@ -16,20 +17,33 @@
 ### 分层镜像设计
 
 ```
-hermes-agent (App 层)     4.75GB
-  └── hermes-base (系统层)  1.79GB
+hermes-agent (App 层)     约 4.8GB
+  └── hermes-base (系统层)  约 2GB
         ├── debian:13.4
-        ├── Python 3.13 + Node 20 + Playwright
+        ├── Python 3.13 + Node 20
         ├── uv 0.11.6
-        └── lark-oapi (飞书 SDK)
+        ├── Playwright (Chromium)
+        ├── Claude Code CLI (@anthropic-ai/claude-code)
+        └── 常用工具链（见下表）
 ```
 
-- **hermes-base**: 系统依赖（不频繁变动）
-- **hermes-agent**: 源码 + 应用依赖（更新频繁）
+### Base 镜像包含的工具
 
-### 支持的国内平台
+| 类别 | 工具 | 说明 |
+|------|------|------|
+| **基础开发** | python3, nodejs, npm, git, curl, ripgrep, ffmpeg | 核心运行时 |
+| **编译构建** | build-essential, gcc, libffi-dev | 编译 C 扩展 |
+| **Shell 增强** | tmux, zsh, fonts-powerline, sudo, wget | 终端体验 |
+| **系统工具** | tree, htop, ncdu, fastfetch | 系统查看 |
+| **Git 增强** | lazygit, gh, delta | Git 可视化 / GitHub CLI / diff 高亮 |
+| **文件搜索** | bat, eza, fd, fzf, zoxide | 文件查看 / 智能 cd |
+| **数据处理** | jq, yq, httpie | JSON/YAML/HTTP 处理 |
+| **消息平台** | lark-oapi | 飞书 SDK |
+| **浏览器** | Playwright (Chromium) | 网页自动化 |
 
-| 平台 | 状态 | 配置 key |
+### 支持的消息平台
+
+| 平台 | 状态 | 配置 Key |
 |------|------|---------|
 | 飞书 (Feishu) | ✅ WebSocket 已连接 | `FEISHU_APP_ID` / `FEISHU_APP_SECRET` |
 | 钉钉 (DingTalk) | 待配置 | `DINGTALK_*` |
@@ -38,64 +52,51 @@ hermes-agent (App 层)     4.75GB
 
 ### 支持的 LLM
 
-| 模型 | Provider | 备注 |
+| 模型 | Provider | 配置 |
 |------|----------|------|
-| 智谱 GLM-5.1 | `zai` | ✅ 已配置 |
-| Kimi / Moonshot | `kimi-coding` | 需配置 `KIMI_API_KEY` |
-| MiniMax | `minimax-cn` | 需配置 `MINIMAX_CN_API_KEY` |
+| 智谱 GLM-5.1 | `zai` | `GLM_API_KEY` |
+| Kimi / Moonshot | `kimi-coding` | `KIMI_API_KEY` |
+| MiniMax | `minimax-cn` | `MINIMAX_CN_API_KEY` |
 
 ---
 
 ## 二、构建镜像
 
-### 前置条件
-
-- Docker 已安装
-- 磁盘空间 > 10GB
-- 网络通畅（访问 GitHub / Debian 源）
-
-### 构建 base 镜像（系统依赖层）
+### 2.1 构建 base 镜像（系统依赖层）
 
 ```bash
 cd ~/hermes-docker
 
-# 构建（使用缓存，构建速度快）
 docker build -f Dockerfile.base -t hermes-base:latest .
 ```
 
-**注意事项：**
-- 不要加 `--no-cache`，会导致 apt-get 内存不足被 kill
-- base 镜像包含：Python 3.13、Node 20、Playwright、uv、ripgrep、ffmpeg 等
+**⚠️ 注意：不要加 `--no-cache`**，会导致 apt-get 内存不足被 kill。构建约需 10-15 分钟（取决于网络）。
 
-### 构建 app 镜像（应用层）
+### 2.2 构建 app 镜像（应用层）
 
 ```bash
-# 基于 base 构建 app 层
-docker build -f Dockerfile.app -t hermes-agent:latest .
+# 先构建 base
+docker build -f Dockerfile.base -t hermes-base:latest .
 
-# 或者用 build.sh（两层一起构建）
-./build.sh
+# 再构建 app（会复用 base 的缓存层）
+docker build -f Dockerfile.app -t hermes-agent:latest .
 ```
 
-### 验证镜像
+### 2.3 验证镜像
 
 ```bash
-# 检查镜像
+# 检查镜像大小
 docker images | grep hermes
+
+# 预期：
+# hermes-base     latest   约 2GB
+# hermes-agent   latest   约 4.8GB
 
 # 验证 base 工具链
 docker run --rm hermes-base:latest bash -c "which uv && uv --version && node --version"
 
 # 验证 app
 docker run --rm hermes-agent:latest hermes --help
-```
-
-**预期输出：**
-```
-hermes-base:     1.79GB
-hermes-agent:    4.75GB
-uv 0.11.6 (x86_64-unknown-linux-gnu)
-v20.19.2
 ```
 
 ---
@@ -108,107 +109,113 @@ v20.19.2
 
 ```
 /opt/data/
-├── .env          # API Keys、平台凭证（敏感）
+├── .env          # API Keys、平台凭证（敏感数据）
 ├── config.yaml   # 模型、工具、行为配置
 └── SOUL.md      # AI 人格设定
 ```
 
-### 配置方式
-
-#### 方式 1：挂载本地目录（推荐）
+### 3.1 方式一：挂载本地目录（配置持久化，推荐）
 
 ```bash
-# 创建本地配置目录
-mkdir -p ~/hermes-data
-
-# 运行容器（配置持久化到宿主机）
+# 运行容器（完整挂载）
 docker run -d \
-  --name hermes-test \
+  --name hermes \
   -p 49080:8080 \
-  -v ~/hermes-data:/opt/data \
   -e TZ=Asia/Shanghai \
+  -v /home/data/docker/hermes/data:/opt/data \
+  -v /home/sys/docker/openclaw:/home/sys/docker/openclaw \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /home/sys/docker/overlay2:/var/lib/docker/overlay2 \
   --restart unless-stopped \
   hermes-agent:latest gateway run
 ```
 
-#### 方式 2：进入容器直接编辑
+**挂载说明：**
+
+| 挂载 | 作用 |
+|------|------|
+| `/opt/data` | Hermes 配置、数据、源码 |
+| `/home/sys/docker/openclaw` | OpenClaw 数据 |
+| `/var/run/docker.sock` | Docker daemon socket（容器内运行 docker 命令） |
+| `/var/lib/docker/overlay2` | 复用宿主机镜像缓存（节省空间和带宽） |
+
+### 3.2 方式二：进入容器编辑
 
 ```bash
 # 进入容器
-docker exec -it hermes-test bash
+docker exec -it hermes bash
 
 # 编辑配置
-vi /opt/data/.env        # API Keys
-vi /opt/data/config.yaml  # 模型配置
+vi /opt/data/.env
+vi /opt/data/config.yaml
 
 # 改完后重启
-docker restart hermes-test
+docker restart hermes
 
 # 查看日志
-docker logs -f hermes-test
+docker logs -f hermes
 ```
 
-### 快捷配置命令
+### 3.3 快捷配置命令
 
 ```bash
-# 查看当前 .env（不含敏感信息）
-docker exec hermes-test bash -c 'cat /opt/data/.env | grep -v "^#" | grep -v "^$"'
+# 查看当前 .env（非注释非空行）
+docker exec hermes bash -c 'cat /opt/data/.env | grep -v "^#" | grep -v "^$"'
 
 # 查看当前模型配置
-docker exec hermes-test bash -c 'grep -E "^  (default|provider|base_url):" /opt/data/config.yaml'
+docker exec hermes bash -c 'grep -E "^  (default|provider|base_url):" /opt/data/config.yaml'
 
-# 临时开启全用户访问（测试用）
-docker exec hermes-test bash -c 'echo "GATEWAY_ALLOW_ALL_USERS=true" >> /opt/data/.env'
-docker restart hermes-test
+# 追加配置到 .env
+docker exec hermes bash -c 'cat >> /opt/data/.env << EOF
+GLM_API_KEY=你的Key
+GLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+EOF'
+
+# 修改 config.yaml 中的模型配置
+docker exec hermes bash -c '
+sed -i "/^  default:/c\  default: \\"glm-5.1\\"" /opt/data/config.yaml
+sed -i "/^  provider:/c\  provider: \\"zai\\"" /opt/data/config.yaml
+sed -i "/^  base_url:/c\  base_url: \\"https://open.bigmodel.cn/api/paas/v4\\"" /opt/data/config.yaml
+'
+
+docker restart hermes
 ```
 
 ---
 
 ## 四、运行
 
-### 快速启动（使用数据卷）
+### 4.1 首次启动
+
+entrypoint 会自动初始化目录结构和默认配置：
 
 ```bash
-# 创建命名数据卷
-docker volume create hermes-data
-
-# 启动
 docker run -d \
   --name hermes \
   -p 49080:8080 \
-  -e TZ=Asia/Shanghai \
   -v hermes-data:/opt/data \
+  -e TZ=Asia/Shanghai \
   --restart unless-stopped \
   hermes-agent:latest gateway run
 ```
 
-### 首次运行会自动初始化
+**自动创建：**
+- `.env` — 从 `hermes.env.example` 复制（包含默认 LLM + 飞书配置）
+- `config.yaml` — 模型、工具配置
+- `SOUL.md` — AI 人格
+- `cron/`, `sessions/`, `logs/`, `skills/`, `memories/` 等目录
 
-entrypoint 会自动创建以下目录和文件：
-
-```
-/opt/data/
-├── .env           # 首次从 hermes.env.example 复制
-├── config.yaml    # 首次从 cli-config.yaml.example 复制
-├── SOUL.md        # AI 人格
-├── cron/          # 定时任务
-├── sessions/      # 会话
-├── logs/          # 日志
-├── skills/        # 技能
-└── memories/      # 记忆
-```
-
-### 查看运行状态
+### 4.2 查看状态
 
 ```bash
 # 查看日志
-docker logs --tail 30 hermes-test
+docker logs --tail 30 hermes
 
-# 实时跟踪日志
-docker logs -f hermes-test
+# 实时跟踪
+docker logs -f hermes
 
-# 检查飞书连接状态
-docker logs hermes-test 2>&1 | grep -i "lark\|feishu\|connected"
+# 检查飞书连接
+docker logs hermes 2>&1 | grep -i "lark\|feishu\|connected"
 ```
 
 **飞书连接成功的日志：**
@@ -216,206 +223,253 @@ docker logs hermes-test 2>&1 | grep -i "lark\|feishu\|connected"
 [Lark] connected to wss://msg-frontier.feishu.cn/ws/v2...
 ```
 
+### 4.3 停止 / 重启
+
+```bash
+docker stop hermes
+docker start hermes
+docker restart hermes
+```
+
 ---
 
 ## 五、飞书平台配置
 
-### 步骤 1：在飞书开放平台创建应用
+### 步骤 1：创建飞书应用
 
 1. 打开 [飞书开放平台](https://open.feishu.cn/app)
-2. 创建企业自建应用
+2. 创建**企业自建应用**
 3. 获取 **App ID** 和 **App Secret**
-4. 配置权限（消息权限、事件订阅等）
-5. 开启**长连接**（WebSocket）模式
+4. 开启**机器人**功能
+5. 配置**权限**（消息相关权限）
+6. 开启**长连接**（WebSocket 模式）
 
 ### 步骤 2：写入配置
 
 ```bash
-docker exec hermes-test bash -c 'cat >> /opt/data/.env << EOF
+docker exec hermes bash -c 'cat >> /opt/data/.env << EOF
 
 # 飞书平台
 FEISHU_APP_ID=你的AppID
 FEISHU_APP_SECRET=你的AppSecret
 EOF'
 
-docker restart hermes-test
+docker restart hermes
 ```
 
 ### 步骤 3：验证连接
 
 ```bash
-docker logs -f hermes-test
+docker logs -f hermes
 # 看到 [Lark] connected 表示成功
 ```
 
-### 飞书权限配置（必选）
-
-在飞书开放平台 → 应用功能 → 权限管理，添加以下权限：
+### 飞书必配权限
 
 | 权限 | 说明 |
 |------|------|
-| `im:message` | 读取和发送消息 |
+| `im:message` | 读写消息 |
 | `im:message.receive_v1` | 接收消息事件 |
 | `im:chat` | 获取群信息 |
-
-### 常见问题
-
-**Q: 飞书连接成功但收不到消息？**
-- 检查应用是否已发布/上线
-- 检查权限是否已审批
-- 确认机器人是否被加入会话
 
 ---
 
 ## 六、LLM 模型配置
 
-### 智谱 GLM（推荐国内使用）
+### 6.1 智谱 GLM（推荐国内使用）
 
 ```bash
-# 写入 .env
-docker exec hermes-test bash -c 'cat >> /opt/data/.env << EOF
+docker exec hermes bash -c 'cat >> /opt/data/.env << EOF
 
 # 智谱 GLM
 GLM_API_KEY=你的APIKey
 GLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
 EOF'
 
-# 修改 config.yaml
-docker exec hermes-test bash -c '
+docker exec hermes bash -c '
 sed -i "/^  default:/c\  default: \\"glm-5.1\\"" /opt/data/config.yaml
 sed -i "/^  provider:/c\  provider: \\"zai\\"" /opt/data/config.yaml
 sed -i "/^  base_url:/c\  base_url: \\"https://open.bigmodel.cn/api/paas/v4\\"" /opt/data/config.yaml
 '
 
-docker restart hermes-test
+docker restart hermes
 ```
 
-### Kimi / Moonshot
+### 6.2 Kimi / Moonshot
 
 ```bash
-docker exec hermes-test bash -c 'cat >> /opt/data/.env << EOF
+docker exec hermes bash -c 'cat >> /opt/data/.env << EOF
 
 # Kimi
 KIMI_API_KEY=你的KimiKey
 EOF'
 
-docker exec hermes-test bash -c '
+docker exec hermes bash -c '
 sed -i "/^  default:/c\  default: \\"kimi-k2.5\\"" /opt/data/config.yaml
 sed -i "/^  provider:/c\  provider: \\"kimi-coding\\"" /opt/data/config.yaml
+sed -i "/^  base_url:/s|base_url:.*|base_url: \\"https://api.kimi.com/coding/v1\\"|" /opt/data/config.yaml
 '
-docker restart hermes-test
+
+docker restart hermes
 ```
 
-### MiniMax
+### 6.3 MiniMax
 
 ```bash
-docker exec hermes-test bash -c 'cat >> /opt/data/.env << EOF
+docker exec hermes bash -c 'cat >> /opt/data/.env << EOF
 
 # MiniMax 中国
-MINIMAX_CN_API_KEY=你的MiniMaxKey
+MINIMAX_CN_API_KEY=你的Key
 MINIMAX_CN_BASE_URL=https://api.minimaxi.com/v1
 EOF'
 
-docker exec hermes-test bash -c '
+docker exec hermes bash -c '
 sed -i "/^  default:/c\  default: \\"MiniMax-M2.7\\"" /opt/data/config.yaml
 sed -i "/^  provider:/c\  provider: \\"minimax-cn\\"" /opt/data/config.yaml
 '
-docker restart hermes-test
+
+docker restart hermes
 ```
 
 ---
 
-## 七、常见问题
+## 七、完整构建示例
 
-### 1. 端口被占用
+以下是从零开始构建并配置 Hermes 的完整流程：
 
 ```bash
-# 查占用端口的进程
+# ========== 1. 进入项目目录 ==========
+cd ~/hermes-docker
+
+# ========== 2. 构建 base 镜像（约 10-15 分钟）==========
+docker build -f Dockerfile.base -t hermes-base:latest .
+
+# ========== 3. 构建 app 镜像（约 3-5 分钟）==========
+docker build -f Dockerfile.app -t hermes-agent:latest .
+
+# ========== 4. 创建数据卷 ==========
+docker volume create hermes-data
+
+# ========== 5. 运行容器（首次，自动初始化配置）==========
+docker run -d \
+  --name hermes \
+  -p 49080:8080 \
+  -e TZ=Asia/Shanghai \
+  -v /home/data/docker/hermes/data:/opt/data \
+  -v /home/sys/docker/openclaw:/home/sys/docker/openclaw \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /home/sys/docker/overlay2:/var/lib/docker/overlay2 \
+  --restart unless-stopped \
+  hermes-agent:latest gateway run
+
+# ========== 6. 配置智谱 GLM ==========
+docker exec hermes bash -c 'cat >> /opt/data/.env << EOF
+
+# 智谱 GLM
+GLM_API_KEY=你的APIKey
+GLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+EOF'
+
+# ========== 7. 配置飞书平台 ==========
+docker exec hermes bash -c 'cat >> /opt/data/.env << EOF
+
+# 飞书平台
+FEISHU_APP_ID=你的AppID
+FEISHU_APP_SECRET=你的AppSecret
+EOF'
+
+# ========== 8. 修改 config.yaml 模型配置 ==========
+docker exec hermes bash -c '
+sed -i "/^  default:/c\  default: \\"glm-5.1\\"" /opt/data/config.yaml
+sed -i "/^  provider:/c\  provider: \\"zai\\"" /opt/data/config.yaml
+sed -i "/^  base_url:/c\  base_url: \\"https://open.bigmodel.cn/api/paas/v4\\"" /opt/data/config.yaml
+'
+
+# ========== 9. 重启生效 ==========
+docker restart hermes
+
+# ========== 10. 验证 ==========
+docker logs -f hermes
+# 看到 [Lark] connected 表示飞书连接成功
+```
+
+---
+
+## 八、常见问题
+
+### Q1: 端口被占用
+
+```bash
+# 查占用进程
 lsof -i :49080
 
-# 换端口
+# 换端口（如 48080）
 docker run -d --name hermes -p 48080:8080 ...
 ```
 
-### 2. 飞书 SDK (lark-oapi) 缺失
+### Q2: 飞书 SDK (lark-oapi) 缺失
 
 ```bash
-# 手动安装
-docker exec hermes-test bash -c "cd /opt/hermes && .venv/bin/pip install lark-oapi"
+# 手动安装（临时）
+docker exec hermes bash -c "cd /opt/hermes && .venv/bin/pip install lark-oapi"
 
-# 更新 Dockerfile.app，下次构建自动包含
-# 在 uv pip install 行末尾添加：&& uv pip install lark-oapi
+# 更新 Dockerfile.app（永久）
+# 在 uv pip install 那行末尾添加：&& uv pip install lark-oapi
 ```
 
-### 3. 飞书连接失败
+### Q3: 飞书连接成功但收不到消息
+
+- 检查应用是否已**发布/上线**
+- 检查**权限**是否已审批
+- 确认机器人是否被**加入会话**
+
+### Q4: 模型不生效
 
 ```bash
-# 检查 lark_oapi 是否安装
-docker exec hermes-test python3 -c "import lark_oapi; print('OK')"
-
-# 检查 .env 配置
-docker exec hermes-test grep FEISHU /opt/data/.env
-
-# 查看详细错误
-docker logs hermes-test 2>&1 | grep -i error
-```
-
-### 4. 模型不生效
-
-```bash
-# 确认 .env 中的 KEY 已写入
-docker exec hermes-test grep GLM_API_KEY /opt/data/.env
+# 确认 .env 有 KEY
+docker exec hermes grep GLM_API_KEY /opt/data/.env
 
 # 确认 config.yaml 非注释行
-docker exec hermes-test grep -E "^  (default|provider|base_url):" /opt/data/config.yaml
+docker exec hermes grep -E "^  (default|provider|base_url):" /opt/data/config.yaml
 
-# 重启
-docker restart hermes-test
+docker restart hermes
 ```
 
-### 5. 重建镜像后配置丢失
+### Q5: 重建镜像后配置丢失
 
-**重要：配置在数据卷中，不在镜像中！**
+**配置在数据卷中，不在镜像中，不会丢失！**
 
 ```bash
-# 备份配置
-docker exec hermes-test tar czf /tmp/hermes-config.tar.gz -C /opt/data .env config.yaml SOUL.md
-
-# 导出到宿主机
-docker cp hermes-test:/tmp/hermes-config.tar.gz ~/hermes-config.tar.gz
-
-# 恢复（重建后）
-docker cp ~/hermes-config.tar.gz 新容器ID:/opt/data/
-docker exec 新容器ID bash -c "cd /opt/data && tar xzf /tmp/hermes-config.tar.gz"
+# 备份（可选）
+docker exec hermes tar czf /tmp/hermes-backup.tar.gz -C /opt/data .
+docker cp hermes:/tmp/hermes-backup.tar.gz ~/hermes-backup.tar.gz
 ```
 
-### 6. 镜像太大，构建失败
-
-磁盘空间不足，清理：
+### Q6: 磁盘空间不足
 
 ```bash
-# 清理未使用的 Docker 对象
+# 清理未使用资源
 docker system prune -a --volumes
 
 # 检查空间
 df -h /
-
-# 确认有 > 10GB 可用
 ```
 
 ---
 
-## 附录：快速参考命令
+## 附录：快速命令速查
 
 ```bash
 # 构建
-cd ~/hermes-docker
 docker build -f Dockerfile.base -t hermes-base:latest .
 docker build -f Dockerfile.app -t hermes-agent:latest .
 
-# 启动
+# 运行
 docker run -d --name hermes -p 49080:8080 \
-  -v hermes-data:/opt/data \
+  -v /home/data/docker/hermes/data:/opt/data \
+  -v /home/sys/docker/openclaw:/home/sys/docker/openclaw \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /home/sys/docker/overlay2:/var/lib/docker/overlay2 \
   --restart unless-stopped \
   hermes-agent:latest gateway run
 
@@ -442,3 +496,5 @@ docker rm -f hermes
 | 日期 | 版本 | 更新内容 |
 |------|------|---------|
 | 2026-04-16 | v1.0 | 初始文档，基础镜像分层 + 飞书配置 |
+| 2026-04-16 | v1.1 | 新增常用工具链（lazygit/gh/delta/bat/eza/fd/fzf/zoxide/jq/yq/httpie等）|
+| 2026-04-16 | v1.2 | 新增 Claude Code CLI + 完整构建示例章节 |
