@@ -117,13 +117,13 @@ docker run --rm hermes-agent:latest hermes --help
 ### 3.1 方式一：挂载本地目录（配置持久化，推荐）
 
 ```bash
-# 运行容器（完整挂载）
 docker run -d \
   --name hermes \
   -p 49080:8080 \
   -e TZ=Asia/Shanghai \
   -v /home/data/docker/hermes/data:/opt/data \
   -v /home/sys/docker/openclaw:/home/sys/docker/openclaw \
+  -v /home/data/docker/workspace:/home/data/docker/workspace \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /home/sys/docker/overlay2:/var/lib/docker/overlay2 \
   --restart unless-stopped \
@@ -134,8 +134,9 @@ docker run -d \
 
 | 挂载 | 作用 |
 |------|------|
-| `/opt/data` | Hermes 配置、数据、源码 |
+| `/home/data/docker/hermes/data:/opt/data` | Hermes 配置、数据、sessions、日志（**绑定到本地目录**） |
 | `/home/sys/docker/openclaw` | OpenClaw 数据 |
+| `/home/data/docker/workspace:/home/data/docker/workspace` | 工作目录映射 |
 | `/var/run/docker.sock` | Docker daemon socket（容器内运行 docker 命令） |
 | `/var/lib/docker/overlay2` | 复用宿主机镜像缓存（节省空间和带宽） |
 
@@ -193,8 +194,12 @@ entrypoint 会自动初始化目录结构和默认配置：
 docker run -d \
   --name hermes \
   -p 49080:8080 \
-  -v hermes-data:/opt/data \
   -e TZ=Asia/Shanghai \
+  -v /home/data/docker/hermes/data:/opt/data \
+  -v /home/sys/docker/openclaw:/home/sys/docker/openclaw \
+  -v /home/data/docker/workspace:/home/data/docker/workspace \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /home/sys/docker/overlay2:/var/lib/docker/overlay2 \
   --restart unless-stopped \
   hermes-agent:latest gateway run
 ```
@@ -283,13 +288,13 @@ docker exec hermes bash -c 'cat >> /opt/data/.env << EOF
 
 # 智谱 GLM
 GLM_API_KEY=你的APIKey
-GLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+GLM_BASE_URL=https://open.bigmodel.cn/api/coding/paas/v4
 EOF'
 
 docker exec hermes bash -c '
 sed -i "/^  default:/c\  default: \\"glm-5.1\\"" /opt/data/config.yaml
 sed -i "/^  provider:/c\  provider: \\"zai\\"" /opt/data/config.yaml
-sed -i "/^  base_url:/c\  base_url: \\"https://open.bigmodel.cn/api/paas/v4\\"" /opt/data/config.yaml
+sed -i "/^  base_url:/c\  base_url: \\"https://open.bigmodel.cn/api/coding/paas/v4\\"" /opt/data/config.yaml
 '
 
 docker restart hermes
