@@ -72,6 +72,14 @@
   - HTML/API 路由修复
 - 详情见 `memory/2026-04-10.md`
 
+### 2026-04-17
+- hermes-docker 构建完成并启动
+  - `hermes-base:latest` (2.02GB) + `hermes-agent:latest` (4.92GB) 已构建
+  - 容器运行于 49080 端口，WebSocket 飞书已连接
+  - 模型配置：glm-5.1 + 智谱 GLM (zai)
+  - 数据卷 hermes-data 持久化配置
+  - 详情见 `projects/hermes-docker/README.md`
+
 ### 2026-04-14
 - openclaw-easy 两大改造（基于 feature/modular-refactor 分支）
   - App API 认证体系：持久化 accessToken（7天有效）、appAuthMiddleware 保护5个接口、appAuthRequired 开关
