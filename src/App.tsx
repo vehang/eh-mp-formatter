@@ -26,6 +26,7 @@ import monokai from 'highlight.js/styles/monokai.css?inline'
 import github from 'highlight.js/styles/github.css?inline'
 import atomOneLight from 'highlight.js/styles/atom-one-light.css?inline'
 import tokyoNightDark from 'highlight.js/styles/tokyo-night-dark.css?inline'
+import { Icon } from '@iconify/react'
 
 const codeStyles = [
   { id: 'github-dark', name: 'GitHub Dark', css: githubDark },
@@ -760,11 +761,7 @@ function App() {
               boxShadow: '0 2px 8px rgba(249, 115, 22, 0.3)'
             }}
           >
-            <span
-              className="iconify"
-              data-icon="lucide:pen-tool"
-              style={{ fontSize: isMobile ? '18px' : '20px', color: 'white' }}
-            ></span>
+            <Icon icon="lucide:pen-tool" style={{ fontSize: isMobile ? '18px' : '20px', color: 'white' }} />
           </div>
           {isMobile ? (
             <div className="flex flex-col">
@@ -795,10 +792,10 @@ function App() {
         >
           <div className="theme-icon-wrapper">
             <span className="theme-icon-sun">
-              <span className="iconify" data-icon="lucide:sun" style={{ fontSize: isMobile ? '20px' : '18px' }}></span>
+              <Icon icon="lucide:sun" style={{ fontSize: isMobile ? '20px' : '18px' }} />
             </span>
             <span className="theme-icon-moon">
-              <span className="iconify" data-icon="lucide:moon" style={{ fontSize: isMobile ? '20px' : '18px' }}></span>
+              <Icon icon="lucide:moon" style={{ fontSize: isMobile ? '20px' : '18px' }} />
             </span>
           </div>
         </button>
@@ -866,7 +863,7 @@ function App() {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '12px' }}>
-                <span className="iconify icon-sm" data-icon="lucide:clipboard-paste" style={{ color: 'var(--text-muted)' }}></span>
+                <Icon icon="lucide:clipboard-paste" width={14} height={14} style={{ color: 'var(--text-muted)' }} />
                 <span>支持直接粘贴</span>
                 <span style={{ color: '#07C160', fontWeight: 500 }}>公众号</span>
                 <span>、</span>
@@ -886,7 +883,7 @@ function App() {
                   <span style={{ color: 'var(--text-muted)' }}>保存中...</span>
                 ) : (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--green-500)' }}>
-                    <span className="iconify icon-sm" data-icon="lucide:check-circle"></span>
+                    <Icon icon="lucide:check-circle" width={14} height={14} />
                     已保存
                   </span>
                 )}
@@ -948,7 +945,7 @@ function App() {
               transition: 'color 0.2s ease'
             }}
           >
-            <span className="iconify" data-icon="lucide:file-edit" style={{ fontSize: '20px' }}></span>
+            <Icon icon="lucide:file-edit" style={{ fontSize: '20px' }} />
             <span>编辑</span>
           </button>
           <button
@@ -969,7 +966,7 @@ function App() {
               transition: 'color 0.2s ease'
             }}
           >
-            <span className="iconify" data-icon="lucide:eye" style={{ fontSize: '20px' }}></span>
+            <Icon icon="lucide:eye" style={{ fontSize: '20px' }} />
             <span>预览</span>
           </button>
         </div>

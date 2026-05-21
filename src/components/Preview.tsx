@@ -1,5 +1,6 @@
 import { type RefObject } from 'react'
 import type { Theme } from '../themes/types'
+import { Icon } from '@iconify/react'
 
 interface PreviewProps {
   previewRef: RefObject<HTMLDivElement | null>
@@ -37,11 +38,7 @@ export function Preview({
       <div className="panel-header" style={{ padding: isMobile ? '8px 12px' : undefined }}>
         {!isMobile && (
           <>
-            <span
-              className="iconify icon-sm"
-              data-icon="lucide:eye"
-              style={{ marginRight: '8px', color: 'var(--text-muted)' }}
-            ></span>
+            <Icon icon="lucide:eye" width={14} height={14} style={{ marginRight: '8px', color: 'var(--text-muted)' }} />
             {previewMode !== 'mobile' && <span className="panel-title">预览</span>}
             <span className="panel-badge">{currentTheme.name}</span>
           </>
@@ -69,7 +66,7 @@ export function Preview({
                 whiteSpace: 'nowrap',
               }}
             >
-              <span className="iconify icon-sm" data-icon="lucide:monitor"></span>
+              <Icon icon="lucide:monitor" width={14} height={14} />
               {previewMode !== 'mobile' && '宽屏'}
             </button>
             <button
@@ -85,7 +82,7 @@ export function Preview({
                 whiteSpace: 'nowrap',
               }}
             >
-              <span className="iconify icon-sm" data-icon="lucide:tablet"></span>
+              <Icon icon="lucide:tablet" width={14} height={14} />
               {previewMode !== 'mobile' && 'Pad'}
             </button>
             <button
@@ -101,7 +98,7 @@ export function Preview({
                 whiteSpace: 'nowrap',
               }}
             >
-              <span className="iconify icon-sm" data-icon="lucide:smartphone"></span>
+              <Icon icon="lucide:smartphone" width={14} height={14} />
               {previewMode !== 'mobile' && '手机'}
             </button>
           </div>
@@ -125,13 +122,9 @@ export function Preview({
           }}
         >
           {isDownloading ? (
-            <span
-              className="iconify icon-sm"
-              data-icon="lucide:loader-2"
-              style={{ animation: 'spin 1s linear infinite' }}
-            ></span>
+            <Icon icon="lucide:loader-2" width={14} height={14} style={{ animation: 'spin 1s linear infinite' }} />
           ) : (
-            <span className="iconify icon-sm" data-icon="lucide:download"></span>
+            <Icon icon="lucide:download" width={14} height={14} />
           )}
           {!isMobile && previewMode !== 'mobile' && '下载 PDF'}
         </button>
@@ -148,7 +141,7 @@ export function Preview({
             fontSize: '13px',
           }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:copy"></span>
+          <Icon icon="lucide:copy" width={14} height={14} />
           复制排版
         </button>
 

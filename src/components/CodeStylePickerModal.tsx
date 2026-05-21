@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import hljs from 'highlight.js'
+import { Icon } from '@iconify/react'
 
 interface CodeStyle {
   id: string
@@ -146,7 +147,7 @@ export function CodeStylePickerModal({
         {/* 头部 */}
         <div className="theme-picker-header">
           <h2 id="code-style-picker-title" className="theme-picker-title">
-            <span className="iconify" data-icon="lucide:code-2" style={{ marginRight: '8px' }}></span>
+            <Icon icon="lucide:code-2" style={{ marginRight: '8px' }} />
             选择代码样式
           </h2>
           <button
@@ -154,7 +155,7 @@ export function CodeStylePickerModal({
             onClick={onClose}
             aria-label="关闭"
           >
-            <span className="iconify" data-icon="lucide:x"></span>
+            <Icon icon="lucide:x" />
           </button>
         </div>
 
@@ -175,7 +176,7 @@ export function CodeStylePickerModal({
                 {/* 选中指示器 */}
                 {isSelected && (
                   <div className="theme-card-selected-badge">
-                    <span className="iconify" data-icon="lucide:check"></span>
+                    <Icon icon="lucide:check" />
                   </div>
                 )}
 
@@ -193,7 +194,7 @@ export function CodeStylePickerModal({
 
         {/* 底部提示 */}
         <div className="theme-picker-footer">
-          <span className="iconify" data-icon="lucide:info" style={{ marginRight: '6px' }}></span>
+          <Icon icon="lucide:info" style={{ marginRight: '6px' }} />
           点击卡片即可切换代码样式，设置会自动保存
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { CodeMirrorEditor, type EditorHandle } from './CodeMirrorEditor'
+import { Icon } from '@iconify/react'
 
 interface EditorProps {
   editorRef: React.RefObject<EditorHandle | null>
@@ -65,11 +66,7 @@ export function Editor({
               fontSize: '12px',
             }}
           >
-            <span
-              className="iconify icon-sm"
-              data-icon="lucide:clipboard-paste"
-              style={{ color: 'var(--text-muted)' }}
-            ></span>
+            <Icon icon="lucide:clipboard-paste" width={14} height={14} style={{ color: 'var(--text-muted)' }} />
             <span>支持直接粘贴</span>
             <span style={{ color: '#07C160', fontWeight: 500 }}>公众号</span>
             <span>、</span>
@@ -103,7 +100,7 @@ export function Editor({
                   color: 'var(--green-500)',
                 }}
               >
-                <span className="iconify icon-sm" data-icon="lucide:check-circle"></span>
+                <Icon icon="lucide:check-circle" width={14} height={14} />
                 已保存
               </span>
             )}

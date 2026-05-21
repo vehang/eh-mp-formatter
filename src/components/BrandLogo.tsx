@@ -1,3 +1,5 @@
+import { Icon } from '@iconify/react'
+
 export function BrandLogo() {
   return (
     <div className="flex items-center gap-3">
@@ -11,11 +13,7 @@ export function BrandLogo() {
           boxShadow: '0 2px 8px rgba(249, 115, 22, 0.3)'
         }}
       >
-        <span
-          className="iconify"
-          data-icon="lucide:pen-tool"
-          style={{ fontSize: '20px', color: 'white' }}
-        ></span>
+        <Icon icon="lucide:pen-tool" style={{ fontSize: '20px', color: 'white' }} />
       </div>
       <div className="flex flex-col">
         <span

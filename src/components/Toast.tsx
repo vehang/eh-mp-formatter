@@ -1,4 +1,5 @@
 import { useState, createContext, useContext, type ReactNode } from 'react'
+import { Icon } from '@iconify/react'
 
 interface Toast {
   id: string
@@ -44,7 +45,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div className="toast-container">
         {toasts.map(toast => (
           <div key={toast.id} className={`toast toast-${toast.type}`}>
-            <span className="toast-icon iconify" data-icon={iconMap[toast.type]}></span>
+            <Icon icon={iconMap[toast.type]} className="toast-icon" />
             <span>{toast.message}</span>
           </div>
         ))}

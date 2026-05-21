@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Icon } from '@iconify/react'
 
 interface UrlFetchModalProps {
   isOpen: boolean
@@ -134,16 +135,12 @@ export function UrlFetchModal({ isOpen, onClose, onFetch, isLoading }: UrlFetchM
             >
               {isLoading ? (
                 <>
-                  <span
-                    className="iconify icon-sm"
-                    data-icon="lucide:loader-2"
-                    style={{ animation: 'spin 1s linear infinite' }}
-                  ></span>
+                  <Icon icon="lucide:loader-2" width={14} height={14} style={{ animation: 'spin 1s linear infinite' }} />
                   抓取中...
                 </>
               ) : (
                 <>
-                  <span className="iconify icon-sm" data-icon="lucide:download"></span>
+                  <Icon icon="lucide:download" width={14} height={14} />
                   抓取内容
                 </>
               )}

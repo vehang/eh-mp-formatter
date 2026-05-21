@@ -1,3 +1,5 @@
+import { Icon } from '@iconify/react'
+
 interface KeyboardShortcutsModalProps {
   isOpen: boolean
   onClose: () => void
@@ -63,7 +65,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
         {/* 头部 */}
         <div className="theme-picker-header">
           <h2 id="shortcuts-title" className="theme-picker-title">
-            <span className="iconify" data-icon="lucide:keyboard" style={{ marginRight: '8px' }}></span>
+            <Icon icon="lucide:keyboard" style={{ marginRight: '8px' }} />
             键盘快捷键
           </h2>
           <button
@@ -71,7 +73,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
             onClick={onClose}
             aria-label="关闭"
           >
-            <span className="iconify" data-icon="lucide:x"></span>
+            <Icon icon="lucide:x" />
           </button>
         </div>
 
@@ -140,7 +142,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
 
         {/* 底部提示 */}
         <div className="theme-picker-footer">
-          <span className="iconify" data-icon="lucide:info" style={{ marginRight: '6px' }}></span>
+          <Icon icon="lucide:info" style={{ marginRight: '6px' }} />
           <span>
             Mac 用户使用{' '}
             <kbd style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '2px 4px', background: 'var(--bg-base)', borderRadius: '3px' }}>⌘</kbd>

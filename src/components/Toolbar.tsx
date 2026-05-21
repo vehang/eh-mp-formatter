@@ -1,5 +1,6 @@
 import { type EditorHandle } from './CodeMirrorEditor'
 import type { Theme } from '../themes/types'
+import { Icon } from '@iconify/react'
 
 interface ToolbarProps {
   // Editor controls
@@ -72,11 +73,7 @@ export function Toolbar({
       >
         {!isMobile && (
           <>
-            <span
-              className="iconify icon-sm"
-              data-icon="lucide:file-text"
-              style={{ marginRight: '4px', color: 'var(--text-muted)' }}
-            ></span>
+            <Icon icon="lucide:file-text" width={14} height={14} style={{ marginRight: '4px', color: 'var(--text-muted)' }} />
             <span className="panel-title">Markdown</span>
             <div className="toolbar-divider" style={{ margin: '0 4px' }} />
           </>
@@ -91,7 +88,7 @@ export function Toolbar({
               className="btn btn-ghost btn-icon"
               title="撤销 (Ctrl+Z)"
             >
-              <span className="iconify icon-sm" data-icon="lucide:undo-2"></span>
+              <Icon icon="lucide:undo-2" width={14} height={14} />
             </button>
             <button
               onClick={redo}
@@ -99,7 +96,7 @@ export function Toolbar({
               className="btn btn-ghost btn-icon"
               title="重做 (Ctrl+Shift+Z)"
             >
-              <span className="iconify icon-sm" data-icon="lucide:redo-2"></span>
+              <Icon icon="lucide:redo-2" width={14} height={14} />
             </button>
             <button
               onClick={onClear}
@@ -107,7 +104,7 @@ export function Toolbar({
               title="清空内容"
               style={{ color: 'var(--red-500)' }}
             >
-              <span className="iconify icon-sm" data-icon="lucide:trash-2"></span>
+              <Icon icon="lucide:trash-2" width={14} height={14} />
             </button>
             <div className="toolbar-divider" style={{ margin: '0 4px' }} />
           </>
@@ -128,7 +125,7 @@ export function Toolbar({
             border: '1px solid var(--border-default)',
           }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:palette"></span>
+          <Icon icon="lucide:palette" width={14} height={14} />
           {!isNarrow && currentTheme.name}
         </button>
 
@@ -147,7 +144,7 @@ export function Toolbar({
             border: '1px solid var(--border-default)',
           }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:code-2"></span>
+          <Icon icon="lucide:code-2" width={14} height={14} />
           {!isNarrow && (codeStyles.find((s) => s.id === codeStyle)?.name || '代码样式')}
         </button>
 
@@ -166,7 +163,7 @@ export function Toolbar({
             border: '1px solid var(--border-default)',
           }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:image-up"></span>
+          <Icon icon="lucide:image-up" width={14} height={14} />
           {!isNarrow && '图床'}
         </button>
 
@@ -186,10 +183,7 @@ export function Toolbar({
               border: '1px solid var(--border-default)',
             }}
           >
-            <span
-              className="iconify icon-sm"
-              data-icon={syncScroll ? 'lucide:link' : 'lucide:link-off'}
-            ></span>
+            <Icon icon={syncScroll ? 'lucide:link' : 'lucide:link-off'} width={14} height={14} />
             {syncScroll ? '跟随开' : '跟随关'}
           </button>
         )}
@@ -210,7 +204,7 @@ export function Toolbar({
               border: '1px solid var(--border-default)',
             }}
           >
-            <span className="iconify icon-sm" data-icon="lucide:keyboard"></span>
+            <Icon icon="lucide:keyboard" width={14} height={14} />
           </button>
         )}
 
@@ -230,7 +224,7 @@ export function Toolbar({
               fontSize: '12px',
             }}
           >
-            <span className="iconify icon-sm" data-icon="lucide:link"></span>
+            <Icon icon="lucide:link" width={14} height={14} />
             抓取链接
           </button>
         )}
@@ -261,11 +255,7 @@ export function Toolbar({
           title="加粗 (Ctrl+B)"
           style={{ padding: '4px' }}
         >
-          <span
-            className="iconify icon-sm"
-            data-icon="lucide:bold"
-            style={{ fontWeight: 700 }}
-          ></span>
+          <Icon icon="lucide:bold" width={14} height={14} style={{ fontWeight: 700 }} />
         </button>
         <button
           onClick={() => editorRef.current?.insertItalic()}
@@ -273,7 +263,7 @@ export function Toolbar({
           title="斜体 (Ctrl+I)"
           style={{ padding: '4px' }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:italic"></span>
+          <Icon icon="lucide:italic" width={14} height={14} />
         </button>
         <button
           onClick={() => editorRef.current?.insertLink()}
@@ -281,7 +271,7 @@ export function Toolbar({
           title="插入链接 (Ctrl+K)"
           style={{ padding: '4px' }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:link"></span>
+          <Icon icon="lucide:link" width={14} height={14} />
         </button>
         <button
           onClick={() => editorRef.current?.insertImage()}
@@ -289,7 +279,7 @@ export function Toolbar({
           title="插入图片 (Ctrl+Shift+I)"
           style={{ padding: '4px' }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:image"></span>
+          <Icon icon="lucide:image" width={14} height={14} />
         </button>
         <button
           onClick={() => editorRef.current?.insertCode()}
@@ -297,7 +287,7 @@ export function Toolbar({
           title="行内代码 (Ctrl+`)"
           style={{ padding: '4px' }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:code"></span>
+          <Icon icon="lucide:code" width={14} height={14} />
         </button>
         <button
           onClick={() => editorRef.current?.insertCodeBlock()}
@@ -305,7 +295,7 @@ export function Toolbar({
           title="代码块 (Ctrl+Shift+C)"
           style={{ padding: '4px' }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:file-code"></span>
+          <Icon icon="lucide:file-code" width={14} height={14} />
         </button>
         <button
           onClick={() => editorRef.current?.insertHr()}
@@ -313,7 +303,7 @@ export function Toolbar({
           title="分割线"
           style={{ padding: '4px' }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:minus"></span>
+          <Icon icon="lucide:minus" width={14} height={14} />
         </button>
         <button
           onClick={() => editorRef.current?.insertQuote()}
@@ -321,7 +311,7 @@ export function Toolbar({
           title="引用"
           style={{ padding: '4px' }}
         >
-          <span className="iconify icon-sm" data-icon="lucide:quote"></span>
+          <Icon icon="lucide:quote" width={14} height={14} />
         </button>
 
         <div className="toolbar-divider" style={{ margin: '0 4px', height: '16px' }} />
@@ -338,11 +328,7 @@ export function Toolbar({
             onChange={onImageUpload}
             style={{ display: 'none' }}
           />
-          <span
-            className="iconify icon-sm"
-            data-icon="lucide:upload"
-            style={{ color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-muted)' }}
-          ></span>
+          <Icon icon="lucide:upload" width={14} height={14} style={{ color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-muted)' }} />
         </label>
       </div>
     </>

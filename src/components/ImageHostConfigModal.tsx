@@ -30,6 +30,7 @@ import {
   NETEASE_REGIONS,
 } from '../types/imageHost'
 import { uploadImage } from '../utils/imageUploader'
+import { Icon } from '@iconify/react'
 
 // 图标映射（品牌图标 + 通用图标）
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>> = {
@@ -358,7 +359,7 @@ export function ImageHostConfigModal({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="iconify icon-sm" data-icon="lucide:zap" style={{ color: 'var(--green-500)' }}></span>
+              <Icon icon="lucide:zap" width={14} height={14} style={{ color: 'var(--green-500)' }} />
               <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{hostInfo.name}</span>
             </div>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
@@ -853,7 +854,7 @@ export function ImageHostConfigModal({
                 color: 'var(--text-primary)',
               }}
             >
-              <span className="iconify" data-icon="lucide:cloud-upload"></span>
+              <Icon icon="lucide:cloud-upload" />
               图床配置
             </h2>
           </div>
@@ -958,7 +959,7 @@ export function ImageHostConfigModal({
               }}
               aria-label="关闭"
             >
-              <span className="iconify" data-icon="lucide:x" style={{ fontSize: '20px' }}></span>
+              <Icon icon="lucide:x" style={{ fontSize: '20px' }} />
             </button>
           </div>
 
@@ -989,7 +990,7 @@ export function ImageHostConfigModal({
                 transition: 'color 0.15s',
               }}
             >
-              <span className="iconify" data-icon="lucide:globe" style={{ fontSize: '14px' }}></span>
+              <Icon icon="lucide:globe" style={{ fontSize: '14px' }} />
               官网
             </a>
             {hostInfo.links.console && (
@@ -1009,7 +1010,7 @@ export function ImageHostConfigModal({
                   textDecoration: 'none',
                 }}
               >
-                <span className="iconify" data-icon="lucide:layout-dashboard" style={{ fontSize: '14px' }}></span>
+                <Icon icon="lucide:layout-dashboard" style={{ fontSize: '14px' }} />
                 控制台
               </a>
             )}
@@ -1029,7 +1030,7 @@ export function ImageHostConfigModal({
                 textDecoration: 'none',
               }}
             >
-              <span className="iconify" data-icon="lucide:book-open" style={{ fontSize: '14px' }}></span>
+              <Icon icon="lucide:book-open" style={{ fontSize: '14px' }} />
               API 文档
             </a>
           </div>
@@ -1061,7 +1062,7 @@ export function ImageHostConfigModal({
                   fontSize: '13px',
                 }}
               >
-                <span className="iconify icon-sm" data-icon={isDefault ? 'lucide:star' : 'lucide:check-circle'}></span>
+                <Icon icon={isDefault ? 'lucide:star' : 'lucide:check-circle'} width={14} height={14} />
                 {isDefault ? '当前默认图床' : '已配置'}
               </div>
             )}
@@ -1084,7 +1085,7 @@ export function ImageHostConfigModal({
                   fontSize: '13px',
                 }}
               >
-                <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
+                <Icon icon="lucide:loader-2" width={14} height={14} style={{ animation: 'spin 1s linear infinite' }} />
                 正在验证配置...
               </div>
             )}
@@ -1103,7 +1104,7 @@ export function ImageHostConfigModal({
                   fontSize: '13px',
                 }}
               >
-                <span className="iconify icon-sm" data-icon="lucide:check-circle"></span>
+                <Icon icon="lucide:check-circle" width={14} height={14} />
                 验证成功！
               </div>
             )}
@@ -1122,7 +1123,7 @@ export function ImageHostConfigModal({
                   fontSize: '13px',
                 }}
               >
-                <span className="iconify icon-sm" data-icon="lucide:x-circle"></span>
+                <Icon icon="lucide:x-circle" width={14} height={14} />
                 {validationError || '验证失败'}
               </div>
             )}
@@ -1148,7 +1149,7 @@ export function ImageHostConfigModal({
                 fontSize: '12px',
               }}
             >
-              <span className="iconify" data-icon="lucide:alert-triangle" style={{ color: 'var(--amber-500)' }}></span>
+              <Icon icon="lucide:alert-triangle" style={{ color: 'var(--amber-500)' }} />
               图片将上传到第三方平台，请注意隐私保护
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -1158,7 +1159,7 @@ export function ImageHostConfigModal({
                   className="btn btn-danger"
                   style={{ padding: '8px 16px' }}
                 >
-                  <span className="iconify icon-sm" data-icon="lucide:trash-2"></span>
+                  <Icon icon="lucide:trash-2" width={14} height={14} />
                   清除
                 </button>
               )}
@@ -1168,7 +1169,7 @@ export function ImageHostConfigModal({
                   className="btn btn-secondary"
                   style={{ padding: '8px 16px' }}
                 >
-                  <span className="iconify icon-sm" data-icon="lucide:star"></span>
+                  <Icon icon="lucide:star" width={14} height={14} />
                   设为默认
                 </button>
               )}
@@ -1180,12 +1181,12 @@ export function ImageHostConfigModal({
               >
                 {validationStatus === 'validating' ? (
                   <>
-                    <span className="iconify icon-sm" data-icon="lucide:loader-2" style={{ animation: 'spin 1s linear infinite' }}></span>
+                    <Icon icon="lucide:loader-2" width={14} height={14} style={{ animation: 'spin 1s linear infinite' }} />
                     验证中...
                   </>
                 ) : (
                   <>
-                    <span className="iconify icon-sm" data-icon="lucide:save"></span>
+                    <Icon icon="lucide:save" width={14} height={14} />
                     验证并保存
                   </>
                 )}

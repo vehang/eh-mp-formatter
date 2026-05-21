@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { Theme, ThemeColor } from '../themes/types'
+import { Icon } from '@iconify/react'
 
 interface ThemePickerModalProps {
   isOpen: boolean
@@ -191,7 +192,7 @@ export function ThemePickerModal({
         {/* 头部 */}
         <div className="theme-picker-header">
           <h2 id="theme-picker-title" className="theme-picker-title">
-            <span className="iconify" data-icon="lucide:palette" style={{ marginRight: '8px' }}></span>
+            <Icon icon="lucide:palette" style={{ marginRight: '8px' }} />
             选择配色主题
           </h2>
           <button
@@ -199,7 +200,7 @@ export function ThemePickerModal({
             onClick={onClose}
             aria-label="关闭"
           >
-            <span className="iconify" data-icon="lucide:x"></span>
+            <Icon icon="lucide:x" />
           </button>
         </div>
 
@@ -220,7 +221,7 @@ export function ThemePickerModal({
                 {/* 选中指示器 */}
                 {isSelected && (
                   <div className="theme-card-selected-badge">
-                    <span className="iconify" data-icon="lucide:check"></span>
+                    <Icon icon="lucide:check" />
                   </div>
                 )}
 
@@ -245,7 +246,7 @@ export function ThemePickerModal({
 
         {/* 底部提示 */}
         <div className="theme-picker-footer">
-          <span className="iconify" data-icon="lucide:info" style={{ marginRight: '6px' }}></span>
+          <Icon icon="lucide:info" style={{ marginRight: '6px' }} />
           点击卡片即可切换主题，设置会自动保存
         </div>
       </div>
