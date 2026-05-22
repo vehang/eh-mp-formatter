@@ -110,6 +110,9 @@ function forceStyleInheritance(section: HTMLElement, containerStyle: string): vo
     // 跳过代码块内的 span（section 包裹 pre 的结构）
     if (htmlEl.tagName === 'SPAN' && htmlEl.closest('pre.hljs, code')) return
 
+    // 跳过 KaTeX/MathJax 数学公式元素（它们有自己的精确排版字体，不能被覆盖）
+    if (htmlEl.closest('.katex, .katex-display, .katex-block, mjx-container, [class*="math"]')) return
+
     // 跳过伪元素转换生成的装饰 span（它们不需要继承字体样式）
     if (htmlEl.tagName === 'SPAN' && htmlEl.getAttribute('style')?.includes('pointer-events: none')) return
 
@@ -334,10 +337,58 @@ function convertPseudoElements(
       const dHeading = docHeadings[index] as HTMLElement | undefined
       if (!dHeading) return
 
-      // ═══ ::before — 跳过 ═══
-      // 原因：☀/◇ 等伪元素使用 position:absolute 定位作为半透明装饰，
-      // 公众号不支持 absolute 定位，无法还原位置。转为 inline-block 内联
-      // 会导致文字前多出图标，效果错误。直接跳过。
+      // ═══ ::before — 转 inline 文字 ═══
+      // ☀/◇ 等伪元素在预览中用 position:absolute 定位（公众号不支持 absolute），
+      // 降级方案：转成 inline 文字前缀，保留图标但去掉绝对定位。
+      // 对于默认样式的 ::before（content:'' 的装饰条/圆点），保持原有 block 级处理。
+      const beforeComputed = window.getComputedStyle(pHeading, '::before')
+      const beforeRawContent = beforeComputed.getPropertyValue('content')
+
+      if (beforeRawContent !== 'none' && pseudoHasVisual(beforeComputed, beforeRawContent)) {
+        const beforeText = extractPseudoContent(beforeRawContent)
+
+        if (beforeText) {
+          // 有文字内容的伪元素（☀/◇ 等）→ inline 文字前缀
+          const span = doc.createElement('span')
+          span.textContent = beforeText
+          const color = beforeComputed.getPropertyValue('color').trim()
+          const fontSize = beforeComputed.getPropertyValue('font-size').trim()
+          const opacity = beforeComputed.getPropertyValue('opacity').trim()
+          const styles: string[] = []
+          if (color) styles.push(`color: ${normalizeCssValue(color)}`)
+          if (fontSize) styles.push(`font-size: ${fontSize}`)
+          if (opacity && opacity !== '1') styles.push(`opacity: ${opacity}`)
+          if (styles.length > 0) span.setAttribute('style', styles.join('; '))
+          dHeading.insertBefore(span, dHeading.firstChild)
+        } else {
+          // 无文字的装饰（装饰条/圆点）→ block 级元素
+          const span = doc.createElement('span')
+          const styles: string[] = ['display: block']
+
+          const bgImage = beforeComputed.getPropertyValue('background-image').trim()
+          const bgColor = beforeComputed.getPropertyValue('background-color').trim()
+
+          if (bgImage && bgImage !== 'none' && bgImage.includes('linear-gradient')) {
+            const downgraded = downgradeGradient(bgImage)
+            if (downgraded) {
+              styles.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
+            }
+          } else if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+            styles.push(`background-color: ${normalizeCssValue(bgColor)}`)
+          }
+
+          const w = beforeComputed.getPropertyValue('width').trim()
+          const h = beforeComputed.getPropertyValue('height').trim()
+          if (w && w !== 'auto' && w !== '0px') styles.push(`width: ${w}`)
+          if (h && h !== 'auto' && h !== '0px') styles.push(`height: ${h}`)
+
+          const borderRadius = beforeComputed.getPropertyValue('border-radius').trim()
+          if (borderRadius && borderRadius !== '0px') styles.push(`border-radius: ${borderRadius}`)
+
+          span.setAttribute('style', styles.join('; '))
+          dHeading.insertBefore(span, dHeading.firstChild)
+        }
+      }
 
       // 处理 ::after
       const afterComputed = window.getComputedStyle(pHeading, '::after')
