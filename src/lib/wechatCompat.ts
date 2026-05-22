@@ -361,31 +361,11 @@ function convertPseudoElements(
           if (styles.length > 0) span.setAttribute('style', styles.join('; '))
           dHeading.insertBefore(span, dHeading.firstChild)
         } else {
-          // 无文字的装饰（装饰条/圆点）→ block 级元素
+          // 无文字的装饰（装饰条/圆点）→ 隐藏（公众号不支持 absolute 定位，
+          // display:block 会变成独立行导致大间隔，直接隐藏让 padding-left 保留缩进效果）
           const span = doc.createElement('span')
-          const styles: string[] = ['display: block']
+          span.setAttribute('style', 'display: none;')
 
-          const bgImage = beforeComputed.getPropertyValue('background-image').trim()
-          const bgColor = beforeComputed.getPropertyValue('background-color').trim()
-
-          if (bgImage && bgImage !== 'none' && bgImage.includes('linear-gradient')) {
-            const downgraded = downgradeGradient(bgImage)
-            if (downgraded) {
-              styles.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
-            }
-          } else if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
-            styles.push(`background-color: ${normalizeCssValue(bgColor)}`)
-          }
-
-          const w = beforeComputed.getPropertyValue('width').trim()
-          const h = beforeComputed.getPropertyValue('height').trim()
-          if (w && w !== 'auto' && w !== '0px') styles.push(`width: ${w}`)
-          if (h && h !== 'auto' && h !== '0px') styles.push(`height: ${h}`)
-
-          const borderRadius = beforeComputed.getPropertyValue('border-radius').trim()
-          if (borderRadius && borderRadius !== '0px') styles.push(`border-radius: ${borderRadius}`)
-
-          span.setAttribute('style', styles.join('; '))
           dHeading.insertBefore(span, dHeading.firstChild)
         }
       }
@@ -690,22 +670,25 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   convertPseudoElements(previewEl, doc)
 
   // 恢复列表标记（Tailwind preflight 会移除）
-  doc.querySelectorAll('ul').forEach((ul) => {
-    const currentStyle = ul.getAttribute('style') || ''
-    ul.setAttribute('style', `${currentStyle}; list-style-type: disc !important; list-style-position: outside; padding-left: 24px;`)
-  })
-  doc.querySelectorAll('ul ul').forEach((ul) => {
-    const currentStyle = ul.getAttribute('style') || ''
-    ul.setAttribute('style', `${currentStyle}; list-style-type: circle !important;`)
-  })
-  doc.querySelectorAll('ul ul ul').forEach((ul) => {
-    const currentStyle = ul.getAttribute('style') || ''
-    ul.setAttribute('style', `${currentStyle}; list-style-type: square !important;`)
-  })
-  doc.querySelectorAll('ol').forEach((ol) => {
-    const currentStyle = ol.getAttribute('style') || ''
-    ol.setAttribute('style', `${currentStyle}; list-style-type: decimal !important; list-style-position: outside; padding-left: 24px;`)
-  })
+  // 递归处理所有 ul，按深度设置不同的 list-style-type 和缩进
+  const ulStyles = ['disc', 'circle', 'square']
+  function processListDepth(el: Element, isOl: boolean) {
+    let depth = 0
+    let parent = el.parentElement
+    while (parent) {
+      if (parent.tagName === 'UL' || parent.tagName === 'OL') depth++
+      parent = parent.parentElement
+    }
+    const currentStyle = el.getAttribute('style') || ''
+    if (isOl) {
+      el.setAttribute('style', `${currentStyle}; list-style-type: decimal !important; list-style-position: outside; padding-left: 24px;${depth > 0 ? ' margin-left: 20px;' : ''}`)
+    } else {
+      const styleType = ulStyles[depth % ulStyles.length]
+      el.setAttribute('style', `${currentStyle}; list-style-type: ${styleType} !important; list-style-position: outside; padding-left: 24px;${depth > 0 ? ' margin-left: 20px;' : ''}`)
+    }
+  }
+  doc.querySelectorAll('ul').forEach(ul => processListDepth(ul, false))
+  doc.querySelectorAll('ol').forEach(ol => processListDepth(ol, true))
 
   // 处理标题内的内联元素
   const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6')
