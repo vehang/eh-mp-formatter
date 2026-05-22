@@ -1,4 +1,4 @@
-import { type RefObject } from 'react'
+import { type RefObject, useEffect } from 'react'
 import type { Theme } from '../themes/types'
 import { Icon } from '@iconify/react'
 
@@ -25,6 +25,25 @@ export function Preview({
   onCopyHTML,
   onPreviewModeChange,
 }: PreviewProps) {
+  // MathJax 渲染后隐藏 SVG，预览区只显示 MathML 文本
+  // 不用 CSS（会影响复制输出），用 JS 直接操作 DOM
+  useEffect(() => {
+    const hideSvg = () => {
+      const preview = previewRef.current?.querySelector('.mp-preview')
+      if (!preview) return
+      preview.querySelectorAll('mjx-container').forEach((mjx) => {
+        const svg = mjx.querySelector('svg')
+        if (svg) {
+          (svg as HTMLElement).style.display = 'none'
+        }
+      })
+    }
+    // MathJax 异步渲染，延迟执行
+    const t1 = setTimeout(hideSvg, 2000)
+    const t2 = setTimeout(hideSvg, 4000)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [html])
+
   return (
     <div
       className="flex flex-col"
