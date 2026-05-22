@@ -656,30 +656,47 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
 
       const computed = window.getComputedStyle(previewSpan)
 
-      // 收集关键布局属性
+      // 保留已有的 inline style（如 strut 的 height, mspace 的 margin-right）
+      // 先解析已有 inline style 中的属性名，避免 computedStyle 重复覆盖
+      const existingStyle = docSpan.getAttribute('style')?.trim() || ''
+      const existingProps = new Set<string>()
+      if (existingStyle) {
+        existingStyle.split(';').forEach((part) => {
+          const colonIdx = part.indexOf(':')
+          if (colonIdx > 0) {
+            existingProps.add(part.substring(0, colonIdx).trim())
+          }
+        })
+      }
+
+      // 收集关键布局属性（包括 KaTeX 布局所需的 table/overflow 属性）
+      // 注意：不读取 bottom/left/right，因为 KaTeX 只用 top 做定位，
+      // computedStyle 会自动算出 bottom 值（= -top），这在公众号中会造成额外偏移
       const layoutProps = [
-        'display', 'position', 'top', 'bottom', 'left', 'right',
+        'display', 'position', 'top',
         'vertical-align', 'text-align',
         'font-size', 'font-style', 'font-weight',
         'line-height', 'letter-spacing',
         'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
         'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
         'border-top-width', 'border-bottom-width',
+        'border-collapse', 'border-spacing',
+        'overflow',
         'width', 'height',
       ]
 
       const skipDefaults: Record<string, string[]> = {
         'position': ['static'],
         'top': ['auto'],
-        'bottom': ['auto'],
-        'left': ['auto'],
-        'right': ['auto'],
         'vertical-align': ['baseline'],
         'text-align': ['start', 'left'],
         'font-style': ['normal'],
         'letter-spacing': ['normal'],
         'border-top-width': ['0px'],
         'border-bottom-width': ['0px'],
+        'border-collapse': ['separate'],
+        'border-spacing': ['0px 0px', 'normal'],
+        'overflow': ['visible'],
         'width': ['auto'],
         'height': ['auto'],
       }
@@ -687,6 +704,8 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
       const parts: string[] = []
 
       for (const prop of layoutProps) {
+        // 如果已有 inline style 中包含此属性，跳过（保留原始值，如 top:-3.063em）
+        if (existingProps.has(prop)) continue
         const val = computed.getPropertyValue(prop).trim()
         if (!val) continue
         const defaults = skipDefaults[prop] || []
@@ -695,31 +714,33 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
       }
 
       // 字体降级：KaTeX_Math / KaTeX_Main → serif
-      const fontFamily = computed.getPropertyValue('font-family').trim()
-      const downgradedFont = fontFamily
-        .replace(/KaTeX_Math[^,]*,?\s*/g, '')
-        .replace(/KaTeX_Main[^,]*,?\s*/g, '')
-        .replace(/KaTeX_Size[^,]*,?\s*/g, '')
-        .replace(/KaTeX_AMS[^,]*,?\s*/g, '')
-        .replace(/,\s*$/, '')
-        .trim()
-      // 如果替换后为空或只剩引号，用 serif
-      if (downgradedFont && downgradedFont !== 'serif') {
-        parts.push(`font-family: ${downgradedFont}`)
-      } else {
-        parts.push('font-family: serif')
+      if (!existingProps.has('font-family')) {
+        const fontFamily = computed.getPropertyValue('font-family').trim()
+        const downgradedFont = fontFamily
+          .replace(/KaTeX_Math[^,]*,?\s*/g, '')
+          .replace(/KaTeX_Main[^,]*,?\s*/g, '')
+          .replace(/KaTeX_Size[^,]*,?\s*/g, '')
+          .replace(/KaTeX_AMS[^,]*,?\s*/g, '')
+          .replace(/,\s*$/, '')
+          .trim()
+        if (downgradedFont && downgradedFont !== 'serif') {
+          parts.push(`font-family: ${downgradedFont}`)
+        } else {
+          parts.push('font-family: serif')
+        }
       }
 
       // 颜色
-      const color = computed.getPropertyValue('color').trim()
-      if (color && color !== 'rgb(0, 0, 0)') {
-        parts.push(`color: ${color}`)
+      if (!existingProps.has('color')) {
+        const color = computed.getPropertyValue('color').trim()
+        if (color && color !== 'rgb(0, 0, 0)') {
+          parts.push(`color: ${color}`)
+        }
       }
 
       const newStyle = parts.join('; ')
 
-      // 保留已有的 inline style（如 strut 的 height, mspace 的 margin-right）
-      const existingStyle = docSpan.getAttribute('style')?.trim()
+      // 合并：computedStyle 的新属性在前，原始 inline style 在后
       if (existingStyle) {
         docSpan.setAttribute('style', `${newStyle}; ${existingStyle}`)
       } else {
