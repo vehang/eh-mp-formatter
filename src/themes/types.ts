@@ -128,7 +128,7 @@ export function generateThemeStyles(theme: Theme): string {
 // 生成内联样式的辅助函数
 export function generateInlineStyles(c: ThemeColor): ThemeStyles {
   return {
-    container: `color: ${c.text}; font-size: 16px; line-height: 1.8; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;`,
+    container: `color: ${c.text}; font-size: 16px; line-height: 1.8; padding: 20px; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;`,
     h1: `color: ${c.primary}; font-size: 28px; font-weight: 700; margin: 24px 0 16px 0; line-height: 1.3;`,
     h2: `color: ${c.primary}; font-size: 24px; font-weight: 600; margin: 20px 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid ${c.border}; line-height: 1.4;`,
     h3: `color: ${c.primary}; font-size: 20px; font-weight: 600; margin: 18px 0 10px 0; line-height: 1.4;`,
