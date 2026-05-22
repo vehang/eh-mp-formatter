@@ -659,6 +659,12 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
       svg.style.verticalAlign = 'middle'
     }
 
+    // 隐藏 MathML fallback 文本（公众号会把它显示出来，导致出现两份公式）
+    const mathEl = el.querySelector('math')
+    if (mathEl) {
+      mathEl.setAttribute('style', 'display: none;')
+    }
+
     // 块级公式居中
     if (el.hasAttribute('display') || el.classList.contains('math-display')) {
       el.setAttribute('style', 'display: block; text-align: center; margin: 0.5em 0;')
