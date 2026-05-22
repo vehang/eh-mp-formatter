@@ -882,3 +882,8 @@
   font-style: italic;
   color: inherit;
 }
+
+/* MathJax: 预览区隐藏SVG只显示MathML文本（复制时wechatCompat会设display:inline） */
+.mp-preview mjx-container > svg {
+  display: none;
+}
