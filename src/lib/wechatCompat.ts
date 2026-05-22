@@ -675,6 +675,7 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
       const layoutProps = [
         'display', 'position', 'top',
         'vertical-align', 'text-align',
+        'white-space',
         'font-size', 'font-style', 'font-weight',
         'line-height', 'letter-spacing',
         'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
@@ -690,6 +691,7 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
         'top': ['auto'],
         'vertical-align': ['baseline'],
         'text-align': ['start', 'left'],
+        'white-space': ['normal'],
         'font-style': ['normal'],
         'letter-spacing': ['normal'],
         'border-top-width': ['0px'],
