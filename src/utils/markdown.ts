@@ -1,8 +1,8 @@
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import DOMPurify from 'dompurify'
-// @ts-ignore - katex 模块没有类型定义
-import katex from '@traptitech/markdown-it-katex'
+// @ts-ignore - mathjax 模块没有类型定义
+import mathjax from 'markdown-it-mathjax3'
 
 // 常用语言列表，用于自动检测时提高准确率
 const COMMON_LANGUAGES = [
@@ -44,8 +44,8 @@ const md: MarkdownIt = new MarkdownIt({
       return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
     }
   }
-// @ts-ignore - katex 插件类型不兼容
-}).use(katex)
+// @ts-ignore - mathjax 插件类型不兼容
+}).use(mathjax)
 
 /**
  * 解析 Markdown 并进行安全清理
@@ -72,7 +72,8 @@ export function parseMarkdown(content: string): string {
       'table', 'thead', 'tbody', 'tr', 'th', 'td',
       // 其他
       'sup', 'sub', 'abbr', 'cite', 'q', 'dfn', 'kbd', 'samp', 'var',
-      // 数学公式（KaTeX 生成）
+      // 数学公式（MathJax SVG 输出）
+      'mjx-container', 'svg', 'path', 'g', 'rect', 'use', 'defs',
       'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'mfrac', 'msup', 'msub',
       'munder', 'mover', 'munderover', 'mtext', 'mspace', 'mstyle', 'merror',
       'mpadded', 'mphantom', 'mfenced', 'msqrt', 'mroot', 'mtable', 'mtr', 'mtd',
@@ -91,8 +92,14 @@ export function parseMarkdown(content: string): string {
       'data-language',
       // 表格属性
       'colspan', 'rowspan', 'align', 'valign',
-      // 数学公式属性（KaTeX）
-      'xmlns', 'display', 'mathvariant', 'mathsize', 'mathcolor', 'mathbackground',
+      // SVG 属性（MathJax 输出）
+      'viewBox', 'preserveAspectRatio', 'd', 'transform', 'fill', 'stroke',
+      'stroke-width', 'opacity', 'x', 'y', 'rx', 'ry', 'cx', 'cy', 'r',
+      'xlink:href', 'xmlns:xlink', 'focusable', 'role',
+      // MathJax 属性
+      'jax', 'display', 'tabindex', 'ctxtmenu_counter',
+      // 数学公式属性
+      'xmlns', 'mathvariant', 'mathsize', 'mathcolor', 'mathbackground',
       'stretchy', 'symmetric', 'maxsize', 'minsize', 'largeop', 'movablelimits',
       'accent', 'accentunder', 'delimiterheight', 'linethickness', 'scriptlevel',
       'scriptminfontsize', 'scriptsizemultiplier', 'fence', 'separator', 'form',

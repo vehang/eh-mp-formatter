@@ -110,8 +110,8 @@ function forceStyleInheritance(section: HTMLElement, containerStyle: string): vo
     // 跳过代码块内的 span（section 包裹 pre 的结构）
     if (htmlEl.tagName === 'SPAN' && htmlEl.closest('pre.hljs, code')) return
 
-    // 跳过 KaTeX/MathJax 数学公式元素（它们有自己的精确排版字体，不能被覆盖）
-    if (htmlEl.closest('.katex, .katex-display, .katex-block, mjx-container, [class*="math"]')) return
+    // 跳过 MathJax 数学公式元素（SVG 有自己的样式系统）
+    if (htmlEl.closest('mjx-container, mjx-assistive-mml, [class*="math"]')) return
 
     // 跳过伪元素转换生成的装饰 span（它们不需要继承字体样式）
     if (htmlEl.tagName === 'SPAN' && htmlEl.getAttribute('style')?.includes('pointer-events: none')) return
@@ -452,7 +452,7 @@ function convertPseudoElements(
  * @param previewEl 预览区域的 DOM 元素，用于读取计算后的样式
  * @param theme 主题对象
  */
-export async function applyInlineStyles(previewEl: HTMLElement, theme: Theme): Promise<string> {
+export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string {
   // ⭐ 使用 cloneNode 而不是 DOMParser，确保空格和换行符不丢失
   // DOMParser 会合并多个空格，导致代码格式错误
   const clone = previewEl.cloneNode(true) as HTMLElement
@@ -626,58 +626,52 @@ export async function applyInlineStyles(previewEl: HTMLElement, theme: Theme): P
   })
 
   // ═══════════════════════════════════════════════════════════════
-  // KaTeX 数学公式处理：截图为图片（公众号不支持 CSS table 布局）
-  // KaTeX 的上下标定位依赖 display:inline-table/table-row/table-cell，
-  // 公众号编辑器不支持这些 display 值，导致公式排版完全错乱。
-  // 唯一可靠方案：用 html2canvas 截图每个公式，替换为 base64 PNG 图片。
+  // MathJax 数学公式处理：SVG 内联样式适配公众号
+  // MathJax 输出 SVG，公众号支持 SVG，但需要：
+  // 1. 移除 mjx-container 的辅助属性（jax/tabindex 等）
+  // 2. 把 SVG 的 width/height 属性转为内联 style（公众号不识别属性只识别 style）
+  // 参考：Markdown2Html (mdnice) 的 solveWeChatMath 方案
   // ═══════════════════════════════════════════════════════════════
 
-  const katexEls = previewEl.querySelectorAll('.katex')
-  const docKatexEls = doc.querySelectorAll('.katex')
+  const mjxContainers = doc.querySelectorAll('mjx-container')
+  mjxContainers.forEach((mjx) => {
+    const el = mjx as HTMLElement
+    // 移除 MathJax 辅助属性
+    el.removeAttribute('jax')
+    el.removeAttribute('tabindex')
+    el.removeAttribute('ctxtmenu_counter')
 
-  if (katexEls.length > 0 && docKatexEls.length > 0) {
-    // 动态加载 html2canvas（如果尚未加载）
-    const html2canvasLib = (window as any).html2canvas
-    if (html2canvasLib) {
-      for (let i = 0; i < katexEls.length && i < docKatexEls.length; i++) {
-        const previewKatex = katexEls[i] as HTMLElement
-        const docKatex = docKatexEls[i] as HTMLElement
-
-        try {
-          const canvas = await html2canvasLib(previewKatex, {
-            backgroundColor: '#ffffff',
-            scale: 2,
-            logging: false,
-            useCORS: true,
-          })
-
-          const dataUrl = canvas.toDataURL('image/png')
-          const rect = previewKatex.getBoundingClientRect()
-          const w = Math.ceil(rect.width)
-          const h = Math.ceil(rect.height)
-
-          // 判断是行内公式还是块级公式
-          const isBlock = previewKatex.classList.contains('katex-display')
-            || previewKatex.classList.contains('katex-block')
-
-          // 用 <img> 替换整个 .katex 元素
-          const img = doc.createElement('img')
-          img.setAttribute('src', dataUrl)
-          img.setAttribute('alt', docKatex.textContent || 'formula')
-          if (isBlock) {
-            img.setAttribute('style', `display: block; margin: 0 auto; max-width: 100%; height: auto;`)
-          } else {
-            img.setAttribute('style', `display: inline; vertical-align: middle; height: ${h}px;`)
-          }
-
-          docKatex.replaceWith(img)
-        } catch {
-          // html2canvas 失败时保留原始元素（降级处理）
-          console.warn(`html2canvas failed for katex element ${i}`)
-        }
+    // 处理 SVG：把 width/height 属性转为内联 style
+    const svg = el.querySelector('svg')
+    if (svg) {
+      const width = svg.getAttribute('width')
+      const height = svg.getAttribute('height')
+      if (width) {
+        svg.style.width = width
+        svg.removeAttribute('width')
       }
+      if (height) {
+        svg.style.height = height
+        svg.removeAttribute('height')
+      }
+      // 确保内联显示
+      svg.style.display = 'inline'
+      svg.style.verticalAlign = 'middle'
     }
-  }
+
+    // 块级公式居中
+    if (el.hasAttribute('display') || el.classList.contains('math-display')) {
+      el.setAttribute('style', 'display: block; text-align: center; margin: 0.5em 0;')
+      el.removeAttribute('display')
+    } else {
+      el.setAttribute('style', 'display: inline;')
+    }
+  })
+
+  // 兼容：如果还有残留的 KaTeX 元素（旧版），也做处理
+  doc.querySelectorAll('.katex-mathml').forEach((el) => {
+    el.setAttribute('style', 'display: none;')
+  })
 
   // HR 单独处理（预览区没有直接对应的渲染元素）
   doc.querySelectorAll('hr').forEach((el) => {
