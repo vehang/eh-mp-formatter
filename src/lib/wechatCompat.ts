@@ -110,7 +110,15 @@ function forceStyleInheritance(section: HTMLElement, containerStyle: string): vo
     // 跳过代码块内的 span（section 包裹 pre 的结构）
     if (htmlEl.tagName === 'SPAN' && htmlEl.closest('pre.hljs, code')) return
 
+    // 跳过伪元素转换生成的装饰 span（它们不需要继承字体样式）
+    if (htmlEl.tagName === 'SPAN' && htmlEl.getAttribute('style')?.includes('pointer-events: none')) return
+
     let currentStyle = htmlEl.getAttribute('style') || ''
+
+    // 确保以分号结尾再追加，防止属性粘连
+    if (currentStyle && !currentStyle.trimEnd().endsWith(';')) {
+      currentStyle += ';'
+    }
 
     if (fontMatch && !currentStyle.includes('font-family:')) {
       currentStyle += ` font-family: ${fontMatch[1]};`
@@ -173,6 +181,24 @@ function normalizeCssValue(value: string): string {
 }
 
 /**
+ * 将 linear-gradient 降级为纯色（公众号不支持渐变）
+ * 提取第一个色值作为 background-color
+ */
+function downgradeGradient(value: string): { cssProp: string; cssValue: string } | null {
+  // 匹配 linear-gradient(角度/direction, color1 ..., color2 ...)
+  const match = value.match(/linear-gradient\(\s*[^,]+,\s*([^,)]+)/)
+  if (!match) return null
+
+  let firstColor = match[1].trim()
+  // 处理带透明度格式：rgba(0, 0, 0, 0) → 透明，跳过
+  if (firstColor === 'rgba(0, 0, 0, 0)' || firstColor === 'transparent') return null
+
+  // 可能包含百分比: "rgb(146, 64, 14) 0%" → 提取颜色部分
+  const colorOnly = firstColor.replace(/\s+\d+%?\s*$/, '').trim()
+  return { cssProp: 'background-color', cssValue: normalizeCssValue(colorOnly) }
+}
+
+/**
  * 从预览元素的计算样式中提取有意义的属性，生成公众号兼容的内联样式
  */
 function extractInlineStyles(computed: CSSStyleDeclaration): string {
@@ -218,6 +244,19 @@ function extractInlineStyles(computed: CSSStyleDeclaration): string {
     // 跳过 border 默认值（如 "0px none rgb(0, 0, 0)"）
     // 注意：border-radius 值如 "0px 12px 12px 0px" 不应被跳过，只跳过 border-left/top/bottom
     if (name.startsWith('border-') && name !== 'border-radius' && (val.startsWith('0px') || val === 'none')) continue
+
+    // 公众号不支持 linear-gradient → 降级为纯色 background-color
+    if (name === 'background-image' && val.includes('linear-gradient')) {
+      const downgraded = downgradeGradient(val)
+      if (downgraded) {
+        // 避免与已有 background-color 重复
+        if (!parts.some(p => p.startsWith('background-color:'))) {
+          parts.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
+        }
+      }
+      continue // 不输出 background-image: linear-gradient(...)
+    }
+
     parts.push(`${name}: ${normalizeCssValue(val)}`)
   }
 
@@ -282,54 +321,65 @@ function convertPseudoElements(
       const dHeading = docHeadings[index] as HTMLElement | undefined
       if (!dHeading) return
 
-      // 确保标题有 position: relative（伪元素转的 span 需要 absolute 定位参考）
-      const headingComputed = window.getComputedStyle(pHeading)
-      if (headingComputed.getPropertyValue('position') === 'static' || !headingComputed.getPropertyValue('position')) {
-        const currentStyle = dHeading.getAttribute('style') || ''
-        if (!currentStyle.includes('position:')) {
-          dHeading.setAttribute('style', currentStyle + '; position: relative')
-        }
-      }
-
       // 处理 ::before
       const beforeComputed = window.getComputedStyle(pHeading, '::before')
       const beforeRawContent = beforeComputed.getPropertyValue('content')
 
       if (beforeRawContent !== 'none' && pseudoHasVisual(beforeComputed, beforeRawContent)) {
         const span = doc.createElement('span')
-        const styles: string[] = ['position: absolute', 'pointer-events: none']
-
-        // 提取文字内容
         const textContent = extractPseudoContent(beforeRawContent)
+
         if (textContent) {
-          span.textContent = textContent
-        }
+          // ═══ 文字型伪元素（如 ☀、◇）→ 内联显示，公众号兼容 ═══
+          span.textContent = textContent + ' '
+          const styles: string[] = ['display: inline-block', 'vertical-align: middle']
 
-        // 提取关键定位和视觉属性
-        const pseudoProps = [
-          'height', 'top', 'left', 'bottom', 'right',
-          'width',
-          'background-color', 'background-image',
-          'border-radius', 'border',
-          'opacity', 'box-shadow',
-          'color', 'font-size', 'font-weight', 'font-style',
-          'text-shadow',
-          'transform',
-          'display', 'margin-top', 'margin-left',
-        ]
-        for (const prop of pseudoProps) {
-          const val = beforeComputed.getPropertyValue(prop).trim()
-          if (!val || val === 'none' || val === 'auto' || val === '0px' ||
-              val === 'rgba(0, 0, 0, 0)' || val === 'transparent') continue
-          // 跳过默认值
-          if (prop === 'opacity' && val === '1') continue
-          if (prop === 'font-weight' && (val === '400' || val === 'normal')) continue
-          if (prop === 'font-style' && val === 'normal') continue
-          styles.push(`${prop}: ${normalizeCssValue(val)}`)
-        }
+          // 提取视觉属性（只取公众号支持的）
+          const textProps = ['color', 'font-size', 'font-weight', 'font-style', 'opacity']
+          for (const prop of textProps) {
+            const val = beforeComputed.getPropertyValue(prop).trim()
+            if (!val || val === 'none' || val === 'auto') continue
+            if (prop === 'opacity' && val === '1') continue
+            if (prop === 'font-weight' && (val === '400' || val === 'normal')) continue
+            if (prop === 'font-style' && val === 'normal') continue
+            styles.push(`${prop}: ${normalizeCssValue(val)}`)
+          }
 
-        span.setAttribute('style', styles.join('; '))
-        dHeading.insertBefore(span, dHeading.firstChild)
+          span.setAttribute('style', styles.join('; '))
+          dHeading.insertBefore(span, dHeading.firstChild)
+        } else {
+          // ═══ 非文字型装饰（如背景色块）→ block 级降级显示 ═══
+          const styles: string[] = ['display: inline-block', 'vertical-align: middle']
+
+          // 尝试提取背景色（linear-gradient 降级）
+          const bgImage = beforeComputed.getPropertyValue('background-image').trim()
+          const bgColor = beforeComputed.getPropertyValue('background-color').trim()
+
+          if (bgImage && bgImage !== 'none' && bgImage.includes('linear-gradient')) {
+            const downgraded = downgradeGradient(bgImage)
+            if (downgraded) {
+              styles.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
+            }
+          } else if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+            styles.push(`background-color: ${normalizeCssValue(bgColor)}`)
+          }
+
+          const width = beforeComputed.getPropertyValue('width').trim()
+          const height = beforeComputed.getPropertyValue('height').trim()
+          if (width && width !== 'auto' && width !== '0px') styles.push(`width: ${width}`)
+          if (height && height !== 'auto' && height !== '0px') styles.push(`height: ${height}`)
+
+          const opacity = beforeComputed.getPropertyValue('opacity').trim()
+          if (opacity && opacity !== '1') styles.push(`opacity: ${opacity}`)
+
+          const borderRadius = beforeComputed.getPropertyValue('border-radius').trim()
+          if (borderRadius && borderRadius !== '0px') styles.push(`border-radius: ${borderRadius}`)
+
+          if (styles.length > 2) { // 不只是 display + vertical-align
+            span.setAttribute('style', styles.join('; '))
+            dHeading.insertBefore(span, dHeading.firstChild)
+          }
+        }
       }
 
       // 处理 ::after
@@ -338,43 +388,51 @@ function convertPseudoElements(
 
       if (afterRawContent !== 'none' && pseudoHasVisual(afterComputed, afterRawContent)) {
         const span = doc.createElement('span')
-        const styles: string[] = ['pointer-events: none']
-
-        // 提取文字内容
         const textContent = extractPseudoContent(afterRawContent)
+
         if (textContent) {
           span.textContent = textContent
         }
 
-        // ::after 可能是 block 级别的底部装饰条
-        const display = afterComputed.getPropertyValue('display').trim()
-        if (display === 'block') {
-          // block 级装饰条：用 left:0; right:0 铺满父元素宽度，不用固定 width
-          styles.push('display: block', 'position: absolute', 'left: 0', 'right: 0')
-        } else {
-          styles.push('position: absolute')
+        // ═══ 底部装饰条 → block 级，不用 absolute 定位 ═══
+        const styles: string[] = ['display: block']
+
+        // 处理 background-image (linear-gradient → 降级纯色)
+        const bgImage = afterComputed.getPropertyValue('background-image').trim()
+        const bgColor = afterComputed.getPropertyValue('background-color').trim()
+
+        if (bgImage && bgImage !== 'none' && bgImage.includes('linear-gradient')) {
+          const downgraded = downgradeGradient(bgImage)
+          if (downgraded) {
+            styles.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
+          }
+        } else if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+          styles.push(`background-color: ${normalizeCssValue(bgColor)}`)
         }
 
-        const pseudoProps = [
-          'height', 'top', 'left', 'bottom', 'right',
-          'width',
-          'background-color', 'background-image',
-          'border-radius', 'border',
-          'opacity', 'box-shadow',
-          'color', 'font-size', 'font-weight', 'font-style',
-          'text-shadow',
-          'transform',
-          'margin-top', 'margin-left',
-        ]
-        for (const prop of pseudoProps) {
-          const val = afterComputed.getPropertyValue(prop).trim()
-          if (!val || val === 'none' || val === 'auto' || val === '0px' ||
-              val === 'rgba(0, 0, 0, 0)' || val === 'transparent') continue
-          if (prop === 'opacity' && val === '1') continue
-          if (prop === 'font-weight' && (val === '400' || val === 'normal')) continue
-          if (prop === 'font-style' && val === 'normal') continue
-          styles.push(`${prop}: ${normalizeCssValue(val)}`)
+        // 高度（装饰条的关键属性）
+        const height = afterComputed.getPropertyValue('height').trim()
+        if (height && height !== 'auto' && height !== '0px') {
+          styles.push(`height: ${height}`)
         }
+
+        // 宽度
+        const width = afterComputed.getPropertyValue('width').trim()
+        if (width && width !== 'auto' && width !== '0px') {
+          styles.push(`width: ${width}`)
+        }
+
+        // 透明度
+        const opacity = afterComputed.getPropertyValue('opacity').trim()
+        if (opacity && opacity !== '1') styles.push(`opacity: ${opacity}`)
+
+        // 圆角
+        const borderRadius = afterComputed.getPropertyValue('border-radius').trim()
+        if (borderRadius && borderRadius !== '0px') styles.push(`border-radius: ${borderRadius}`)
+
+        // 上下间距
+        const marginTop = afterComputed.getPropertyValue('margin-top').trim()
+        if (marginTop && marginTop !== '0px') styles.push(`margin-top: ${marginTop}`)
 
         span.setAttribute('style', styles.join('; '))
         dHeading.appendChild(span)
