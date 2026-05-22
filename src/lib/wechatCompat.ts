@@ -185,11 +185,28 @@ function normalizeCssValue(value: string): string {
  * 提取第一个色值作为 background-color
  */
 function downgradeGradient(value: string): { cssProp: string; cssValue: string } | null {
-  // 匹配 linear-gradient(角度/direction, color1 ..., color2 ...)
-  const match = value.match(/linear-gradient\(\s*[^,]+,\s*([^,)]+)/)
-  if (!match) return null
+  // 匹配 linear-gradient 的第一个色值
+  // 注意：色值可能是 color(srgb R G B / A) 格式，包含括号嵌套
+  // 策略：找到第一个逗号后，提取到下一个逗号或末尾括号
+  const commaIdx = value.indexOf(',')
+  if (commaIdx === -1) return null
 
-  let firstColor = match[1].trim()
+  const afterComma = value.substring(commaIdx + 1).trim()
+
+  // 提取第一个色值（可能包含括号嵌套如 color(srgb ...)）
+  let depth = 0
+  let endIdx = 0
+  for (let i = 0; i < afterComma.length; i++) {
+    if (afterComma[i] === '(') depth++
+    else if (afterComma[i] === ')') {
+      if (depth > 0) depth--
+      else { endIdx = i; break } // 外层闭括号 = gradient 结束
+    }
+    else if (afterComma[i] === ',' && depth === 0) { endIdx = i; break }
+  }
+  if (endIdx === 0) endIdx = afterComma.length
+
+  let firstColor = afterComma.substring(0, endIdx).trim()
   // 处理带透明度格式：rgba(0, 0, 0, 0) → 透明，跳过
   if (firstColor === 'rgba(0, 0, 0, 0)' || firstColor === 'transparent') return null
 
