@@ -98,10 +98,11 @@ function flattenListItems(section: HTMLElement, doc: Document): void {
  * 强制样式继承 - 将字体属性应用到所有文本元素
  */
 function forceStyleInheritance(section: HTMLElement, containerStyle: string): void {
-  const fontMatch = containerStyle.match(/font-family:\s*([^;]+);/)
-  const sizeMatch = containerStyle.match(/font-size:\s*([^;]+);/)
-  const colorMatch = containerStyle.match(/color:\s*([^;]+);/)
-  const lineHeightMatch = containerStyle.match(/line-height:\s*([^;]+);/)
+  const fontMatch = containerStyle.match(/(?:^|;\s*)font-family:\s*([^;]+);/)
+  const sizeMatch = containerStyle.match(/(?:^|;\s*)font-size:\s*([^;]+);/)
+  // 注意：用 (?:^|;\s*) 前缀避免匹配到 background-color 中的 color
+  const colorMatch = containerStyle.match(/(?:^|;\s*)color:\s*([^;]+);/)
+  const lineHeightMatch = containerStyle.match(/(?:^|;\s*)line-height:\s*([^;]+);/)
 
   section.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, blockquote, span').forEach((el) => {
     const htmlEl = el as HTMLElement
@@ -154,6 +155,233 @@ function forceStyleInheritance(section: HTMLElement, containerStyle: string): vo
 //     }
 //   })
 // }
+
+/**
+ * 将 CSS color(srgb R G B / A) 函数转换为 rgba() —— 公众号不支持 color() 语法
+ */
+function normalizeCssValue(value: string): string {
+  return value.replace(
+    /color\(srgb\s+([\d.]+(?:e[+-]?\d+)?)\s+([\d.]+(?:e[+-]?\d+)?)\s+([\d.]+(?:e[+-]?\d+)?)(?:\s*\/\s*([\d.]+(?:e[+-]?\d+)?))?\)/g,
+    (_match: string, r: string, g: string, b: string, a?: string) => {
+      const ri = Math.round(parseFloat(r) * 255)
+      const gi = Math.round(parseFloat(g) * 255)
+      const bi = Math.round(parseFloat(b) * 255)
+      const ai = a !== undefined ? parseFloat(a) : 1
+      return `rgba(${ri}, ${gi}, ${bi}, ${ai})`
+    }
+  )
+}
+
+/**
+ * 从预览元素的计算样式中提取有意义的属性，生成公众号兼容的内联样式
+ */
+function extractInlineStyles(computed: CSSStyleDeclaration): string {
+  const parts: string[] = []
+
+  // 需要提取的属性列表
+  const props: Array<{ name: string; skipDefaults: string[] }> = [
+    { name: 'color', skipDefaults: [] },
+    { name: 'font-size', skipDefaults: [] },
+    { name: 'font-weight', skipDefaults: ['400', 'normal'] },
+    { name: 'font-family', skipDefaults: [] },
+    { name: 'font-style', skipDefaults: ['normal'] },
+    { name: 'line-height', skipDefaults: [] },
+    { name: 'letter-spacing', skipDefaults: ['normal'] },
+    { name: 'text-align', skipDefaults: ['start', 'left'] },
+    { name: 'text-decoration', skipDefaults: ['none'] },
+    { name: 'text-shadow', skipDefaults: ['none'] },
+    { name: 'word-spacing', skipDefaults: ['normal'] },
+    { name: 'background-color', skipDefaults: ['rgba(0, 0, 0, 0)', 'transparent'] },
+    { name: 'background-image', skipDefaults: ['none'] },
+    { name: 'border-left', skipDefaults: [] },
+    { name: 'border-top', skipDefaults: [] },
+    { name: 'border-bottom', skipDefaults: [] },
+    { name: 'border-radius', skipDefaults: ['0px'] },
+    { name: 'margin-top', skipDefaults: [] },
+    { name: 'margin-bottom', skipDefaults: [] },
+    { name: 'margin-left', skipDefaults: [] },
+    { name: 'margin-right', skipDefaults: [] },
+    { name: 'padding-top', skipDefaults: ['0px'] },
+    { name: 'padding-bottom', skipDefaults: ['0px'] },
+    { name: 'padding-left', skipDefaults: ['0px'] },
+    { name: 'padding-right', skipDefaults: ['0px'] },
+    { name: 'box-shadow', skipDefaults: ['none'] },
+    { name: 'display', skipDefaults: [] },
+    // 不提取 width/max-width —— 内部元素应自动铺满容器宽度，硬编码 width 会导致背景色不铺满
+  ]
+
+  for (const { name, skipDefaults } of props) {
+    const val = computed.getPropertyValue(name).trim()
+    if (!val) continue
+    // 跳过默认值
+    if (skipDefaults.some(dv => val === dv)) continue
+    // 跳过 border 默认值（如 "0px none rgb(0, 0, 0)"）
+    // 注意：border-radius 值如 "0px 12px 12px 0px" 不应被跳过，只跳过 border-left/top/bottom
+    if (name.startsWith('border-') && name !== 'border-radius' && (val.startsWith('0px') || val === 'none')) continue
+    parts.push(`${name}: ${normalizeCssValue(val)}`)
+  }
+
+  return parts.join('; ')
+}
+
+/**
+ * 将标题的 ::before / ::after 伪元素转换为真实 <span> 元素（公众号不支持伪元素）
+ */
+/**
+ * 从 CSS content 属性值中提取纯文本（去掉引号）
+ */
+function extractPseudoContent(raw: string): string {
+  if (!raw || raw === 'none') return ''
+  // content 可能是 "text", 'text', 或混合值
+  // 去掉外层引号
+  const match = raw.match(/^["'](.+?)["']$/)
+  return match ? match[1] : raw.replace(/["']/g, '')
+}
+
+/**
+ * 判断伪元素是否有视觉效果
+ * 支持：背景色/渐变、固定尺寸（装饰条）、文字内容+颜色/字号
+ */
+function pseudoHasVisual(cs: CSSStyleDeclaration, rawContent: string): boolean {
+  // 1. 有非透明背景色
+  const bg = cs.getPropertyValue('background-color').trim()
+  if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') return true
+
+  // 2. 有背景图片（渐变等）
+  const bgImage = cs.getPropertyValue('background-image').trim()
+  if (bgImage && bgImage !== 'none') return true
+
+  // 3. 有非零尺寸的装饰元素（装饰条/圆点等）
+  const w = cs.getPropertyValue('width').trim()
+  const h = cs.getPropertyValue('height').trim()
+  if ((w && w !== 'auto' && w !== '0px') || (h && h !== 'auto' && h !== '0px')) return true
+
+  // 4. 有文字内容 + 可见样式（颜色/字号/阴影）
+  const text = extractPseudoContent(rawContent)
+  if (text) {
+    const color = cs.getPropertyValue('color').trim()
+    const fontSize = cs.getPropertyValue('font-size').trim()
+    const textShadow = cs.getPropertyValue('text-shadow').trim()
+    // 有文字且有颜色或字号说明是装饰文字
+    if (color || fontSize || textShadow !== 'none') return true
+  }
+
+  return false
+}
+
+function convertPseudoElements(
+  previewEl: HTMLElement,
+  doc: Document
+): void {
+  const headingSelectors = ['h1', 'h2']
+  headingSelectors.forEach(selector => {
+    const previewHeadings = previewEl.querySelectorAll(selector)
+    const docHeadings = doc.querySelectorAll(selector)
+
+    previewHeadings.forEach((pHeading, index) => {
+      const dHeading = docHeadings[index] as HTMLElement | undefined
+      if (!dHeading) return
+
+      // 确保标题有 position: relative（伪元素转的 span 需要 absolute 定位参考）
+      const headingComputed = window.getComputedStyle(pHeading)
+      if (headingComputed.getPropertyValue('position') === 'static' || !headingComputed.getPropertyValue('position')) {
+        const currentStyle = dHeading.getAttribute('style') || ''
+        if (!currentStyle.includes('position:')) {
+          dHeading.setAttribute('style', currentStyle + '; position: relative')
+        }
+      }
+
+      // 处理 ::before
+      const beforeComputed = window.getComputedStyle(pHeading, '::before')
+      const beforeRawContent = beforeComputed.getPropertyValue('content')
+
+      if (beforeRawContent !== 'none' && pseudoHasVisual(beforeComputed, beforeRawContent)) {
+        const span = doc.createElement('span')
+        const styles: string[] = ['position: absolute', 'pointer-events: none']
+
+        // 提取文字内容
+        const textContent = extractPseudoContent(beforeRawContent)
+        if (textContent) {
+          span.textContent = textContent
+        }
+
+        // 提取关键定位和视觉属性
+        const pseudoProps = [
+          'height', 'top', 'left', 'bottom', 'right',
+          'width',
+          'background-color', 'background-image',
+          'border-radius', 'border',
+          'opacity', 'box-shadow',
+          'color', 'font-size', 'font-weight', 'font-style',
+          'text-shadow',
+          'transform',
+          'display', 'margin-top', 'margin-left',
+        ]
+        for (const prop of pseudoProps) {
+          const val = beforeComputed.getPropertyValue(prop).trim()
+          if (!val || val === 'none' || val === 'auto' || val === '0px' ||
+              val === 'rgba(0, 0, 0, 0)' || val === 'transparent') continue
+          // 跳过默认值
+          if (prop === 'opacity' && val === '1') continue
+          if (prop === 'font-weight' && (val === '400' || val === 'normal')) continue
+          if (prop === 'font-style' && val === 'normal') continue
+          styles.push(`${prop}: ${normalizeCssValue(val)}`)
+        }
+
+        span.setAttribute('style', styles.join('; '))
+        dHeading.insertBefore(span, dHeading.firstChild)
+      }
+
+      // 处理 ::after
+      const afterComputed = window.getComputedStyle(pHeading, '::after')
+      const afterRawContent = afterComputed.getPropertyValue('content')
+
+      if (afterRawContent !== 'none' && pseudoHasVisual(afterComputed, afterRawContent)) {
+        const span = doc.createElement('span')
+        const styles: string[] = ['pointer-events: none']
+
+        // 提取文字内容
+        const textContent = extractPseudoContent(afterRawContent)
+        if (textContent) {
+          span.textContent = textContent
+        }
+
+        // ::after 可能是 block 级别的底部装饰条
+        const display = afterComputed.getPropertyValue('display').trim()
+        if (display === 'block') {
+          // block 级装饰条：用 left:0; right:0 铺满父元素宽度，不用固定 width
+          styles.push('display: block', 'position: absolute', 'left: 0', 'right: 0')
+        } else {
+          styles.push('position: absolute')
+        }
+
+        const pseudoProps = [
+          'height', 'top', 'left', 'bottom', 'right',
+          'width',
+          'background-color', 'background-image',
+          'border-radius', 'border',
+          'opacity', 'box-shadow',
+          'color', 'font-size', 'font-weight', 'font-style',
+          'text-shadow',
+          'transform',
+          'margin-top', 'margin-left',
+        ]
+        for (const prop of pseudoProps) {
+          const val = afterComputed.getPropertyValue(prop).trim()
+          if (!val || val === 'none' || val === 'auto' || val === '0px' ||
+              val === 'rgba(0, 0, 0, 0)' || val === 'transparent') continue
+          if (prop === 'opacity' && val === '1') continue
+          if (prop === 'font-weight' && (val === '400' || val === 'normal')) continue
+          if (prop === 'font-style' && val === 'normal') continue
+          styles.push(`${prop}: ${normalizeCssValue(val)}`)
+        }
+
+        span.setAttribute('style', styles.join('; '))
+        dHeading.appendChild(span)
+      }
+    })
+  })
+}
 
 /**
  * 将样式内联到 HTML 元素（关键函数）
@@ -296,26 +524,52 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   })
 
   // ═══════════════════════════════════════════════════════════════
-  // 常规元素处理：使用主题样式
+  // 常规元素处理：从预览 DOM 读取真实渲染样式（保证预览=复制效果）
   // ═══════════════════════════════════════════════════════════════
-  const selectors: (keyof typeof style)[] = [
+  const computedStyleSelectors = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'p', 'li', 'blockquote', 'code', 'a', 'hr', 'th', 'td', 'table', 'strong', 'em'
+    'p', 'li', 'blockquote', 'code', 'a', 'th', 'td', 'table', 'tr', 'strong', 'em'
   ]
 
-  selectors.forEach((selector) => {
-    const elements = doc.querySelectorAll(selector)
-    elements.forEach((el) => {
-      // 跳过代码块内的 code（代码块已单独处理）
-      if (selector === 'code' && el.closest('pre.hljs')) return
+  computedStyleSelectors.forEach((selector) => {
+    const previewEls = previewEl.querySelectorAll(selector)
+    const docEls = doc.querySelectorAll(selector)
 
-      const currentStyle = el.getAttribute('style') || ''
-      const newStyle = style[selector]
-      if (newStyle) {
-        el.setAttribute('style', currentStyle + '; ' + newStyle)
+    previewEls.forEach((pEl, index) => {
+      const dEl = docEls[index] as HTMLElement | undefined
+      if (!dEl) return
+
+      // 跳过代码块内的 code（代码块已单独处理）
+      if (selector === 'code' && dEl.closest('pre.hljs')) return
+
+      const computed = window.getComputedStyle(pEl)
+
+      // tr 特殊处理：只需提取 background-color 用于交替行背景
+      if (selector === 'tr') {
+        const bg = computed.getPropertyValue('background-color').trim()
+        if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+          dEl.setAttribute('style', `background-color: ${normalizeCssValue(bg)}`)
+        }
+        return
+      }
+
+      const inlineStyle = extractInlineStyles(computed)
+
+      if (inlineStyle) {
+        dEl.setAttribute('style', inlineStyle)
       }
     })
   })
+
+  // HR 单独处理（预览区没有直接对应的渲染元素）
+  doc.querySelectorAll('hr').forEach((el) => {
+    el.setAttribute('style', style.hr)
+  })
+
+  // ═══════════════════════════════════════════════════════════════
+  // 伪元素转换：将 h1/h2 的 ::before/::after 装饰转为真实 <span>
+  // ═══════════════════════════════════════════════════════════════
+  convertPseudoElements(previewEl, doc)
 
   // 恢复列表标记（Tailwind preflight 会移除）
   doc.querySelectorAll('ul').forEach((ul) => {

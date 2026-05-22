@@ -456,14 +456,39 @@ function App() {
       // 步骤 2: 公众号兼容性处理
       const processedHtml = await makeWeChatCompatible(htmlWithInlineStyles, currentTheme)
 
-      // 步骤 3: 使用 ClipboardItem API 复制
-      const clipboardItem = new ClipboardItem({
-        'text/html': new Blob([processedHtml], { type: 'text/html' }),
-        'text/plain': new Blob([previewEl.innerText], { type: 'text/plain' }),
-      })
+      // 步骤 3: 复制到剪贴板（优先 ClipboardItem API，fallback 到 execCommand）
+      try {
+        const clipboardItem = new ClipboardItem({
+          'text/html': new Blob([processedHtml], { type: 'text/html' }),
+          'text/plain': new Blob([previewEl.innerText], { type: 'text/plain' }),
+        })
+        await navigator.clipboard.write([clipboardItem])
+        toast.showToast('排版已复制，直接粘贴到公众号', 'success')
+      } catch {
+        // ClipboardItem API 失败（HTTP 环境 / 浏览器不支持）→ fallback execCommand
+        const tmpDiv = document.createElement('div')
+        tmpDiv.innerHTML = processedHtml
+        tmpDiv.style.position = 'fixed'
+        tmpDiv.style.left = '-9999px'
+        tmpDiv.style.opacity = '0'
+        document.body.appendChild(tmpDiv)
 
-      await navigator.clipboard.write([clipboardItem])
-      toast.showToast('排版已复制，直接粘贴到公众号', 'success')
+        const range = document.createRange()
+        range.selectNodeContents(tmpDiv)
+        const selection = window.getSelection()
+        selection?.removeAllRanges()
+        selection?.addRange(range)
+
+        const ok = document.execCommand('copy')
+        selection?.removeAllRanges()
+        document.body.removeChild(tmpDiv)
+
+        if (ok) {
+          toast.showToast('排版已复制，直接粘贴到公众号', 'success')
+        } else {
+          toast.showToast('复制失败，请重试', 'error')
+        }
+      }
     } catch {
       toast.showToast('复制失败，请重试', 'error')
     }
