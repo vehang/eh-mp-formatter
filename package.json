@@ -20,6 +20,7 @@
     "crypto-js": "^4.2.0",
     "dompurify": "^3.3.2",
     "highlight.js": "^11.11.1",
+    "html-to-image": "^1.11.13",
     "html2pdf.js": "^0.14.0",
     "juice": "^10.0.1",
     "katex": "^0.16.37",

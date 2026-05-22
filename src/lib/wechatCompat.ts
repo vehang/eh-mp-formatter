@@ -625,6 +625,118 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     })
   })
 
+  // ═══════════════════════════════════════════════════════════════
+  // KaTeX 数学公式处理：内联布局样式（公众号不支持 KaTeX CSS 类）
+  // 策略：为 .katex-html 内每个元素内联 display/position/font-size/margin
+  // 等布局属性，确保公众号中排版结构正确。
+  // 字体降级为 serif（公众号无法加载 KaTeX 专用字体）
+  // ═══════════════════════════════════════════════════════════════
+
+  // 隐藏 .katex-mathml（辅助阅读，公众号不需要）
+  doc.querySelectorAll('.katex-mathml').forEach((el) => {
+    el.setAttribute('style', 'display: none;')
+  })
+
+  // 为 .katex-html 内每个元素内联关键布局样式
+  const katexHtmlBlocks = doc.querySelectorAll('.katex-html')
+  katexHtmlBlocks.forEach((katexHtmlBlock) => {
+    const previewKatexHtmlBlocks = previewEl.querySelectorAll('.katex-html')
+    // 找到对应的预览区 .katex-html（通过索引匹配）
+    const blockIndex = Array.from(doc.querySelectorAll('.katex-html')).indexOf(katexHtmlBlock)
+    const previewKatexHtml = previewKatexHtmlBlocks[blockIndex]
+    if (!previewKatexHtml) return
+
+    // 遍历 doc 中 .katex-html 内的所有 span
+    const docSpans = katexHtmlBlock.querySelectorAll('span')
+    const previewSpans = previewKatexHtml.querySelectorAll('span')
+
+    docSpans.forEach((docSpan, spanIndex) => {
+      const previewSpan = previewSpans[spanIndex] as HTMLElement | undefined
+      if (!previewSpan) return
+
+      const computed = window.getComputedStyle(previewSpan)
+
+      // 收集关键布局属性
+      const layoutProps = [
+        'display', 'position', 'top', 'bottom', 'left', 'right',
+        'vertical-align', 'text-align',
+        'font-size', 'font-style', 'font-weight',
+        'line-height', 'letter-spacing',
+        'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+        'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+        'border-top-width', 'border-bottom-width',
+        'width', 'height',
+      ]
+
+      const skipDefaults: Record<string, string[]> = {
+        'position': ['static'],
+        'top': ['auto'],
+        'bottom': ['auto'],
+        'left': ['auto'],
+        'right': ['auto'],
+        'vertical-align': ['baseline'],
+        'text-align': ['start', 'left'],
+        'font-style': ['normal'],
+        'letter-spacing': ['normal'],
+        'border-top-width': ['0px'],
+        'border-bottom-width': ['0px'],
+        'width': ['auto'],
+        'height': ['auto'],
+      }
+
+      const parts: string[] = []
+
+      for (const prop of layoutProps) {
+        const val = computed.getPropertyValue(prop).trim()
+        if (!val) continue
+        const defaults = skipDefaults[prop] || []
+        if (defaults.some(d => val === d)) continue
+        parts.push(`${prop}: ${val}`)
+      }
+
+      // 字体降级：KaTeX_Math / KaTeX_Main → serif
+      const fontFamily = computed.getPropertyValue('font-family').trim()
+      const downgradedFont = fontFamily
+        .replace(/KaTeX_Math[^,]*,?\s*/g, '')
+        .replace(/KaTeX_Main[^,]*,?\s*/g, '')
+        .replace(/KaTeX_Size[^,]*,?\s*/g, '')
+        .replace(/KaTeX_AMS[^,]*,?\s*/g, '')
+        .replace(/,\s*$/, '')
+        .trim()
+      // 如果替换后为空或只剩引号，用 serif
+      if (downgradedFont && downgradedFont !== 'serif') {
+        parts.push(`font-family: ${downgradedFont}`)
+      } else {
+        parts.push('font-family: serif')
+      }
+
+      // 颜色
+      const color = computed.getPropertyValue('color').trim()
+      if (color && color !== 'rgb(0, 0, 0)') {
+        parts.push(`color: ${color}`)
+      }
+
+      const newStyle = parts.join('; ')
+
+      // 保留已有的 inline style（如 strut 的 height, mspace 的 margin-right）
+      const existingStyle = docSpan.getAttribute('style')?.trim()
+      if (existingStyle) {
+        docSpan.setAttribute('style', `${newStyle}; ${existingStyle}`)
+      } else {
+        docSpan.setAttribute('style', newStyle)
+      }
+    })
+
+    // .katex-html 自身也需要样式
+    const previewKatexHtmlComputed = window.getComputedStyle(previewKatexHtml)
+    const katexHtmlDisplay = previewKatexHtmlComputed.getPropertyValue('display').trim()
+    const katexHtmlStyle = doc.querySelector(`.katex-html:nth-of-type(${blockIndex + 1})`)
+    if (katexHtmlBlock) {
+      const currentStyle = (katexHtmlBlock as HTMLElement).getAttribute('style') || ''
+      ;(katexHtmlBlock as HTMLElement).setAttribute('style', `${currentStyle}; display: ${katexHtmlDisplay};`.replace(/^;\s*/, ''))
+    }
+  })
+
   // HR 单独处理（预览区没有直接对应的渲染元素）
   doc.querySelectorAll('hr').forEach((el) => {
     el.setAttribute('style', style.hr)
