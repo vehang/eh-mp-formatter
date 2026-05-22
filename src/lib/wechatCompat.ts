@@ -262,16 +262,12 @@ function extractInlineStyles(computed: CSSStyleDeclaration): string {
     // 注意：border-radius 值如 "0px 12px 12px 0px" 不应被跳过，只跳过 border-left/top/bottom
     if (name.startsWith('border-') && name !== 'border-radius' && (val.startsWith('0px') || val === 'none')) continue
 
-    // 公众号不支持 linear-gradient → 降级为纯色 background-color
+    // 公众号不支持 linear-gradient → 直接跳过
+    // 原因：降级为纯色 background-color 效果完全不同（渐变有方向性），
+    // 例如 h1 的 135deg 渐变降级后变成整个块都有背景色，预览中却是透明。
+    // 与其输出错误的纯色背景，不如跳过让标题保持无背景。
     if (name === 'background-image' && val.includes('linear-gradient')) {
-      const downgraded = downgradeGradient(val)
-      if (downgraded) {
-        // 避免与已有 background-color 重复
-        if (!parts.some(p => p.startsWith('background-color:'))) {
-          parts.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
-        }
-      }
-      continue // 不输出 background-image: linear-gradient(...)
+      continue
     }
 
     parts.push(`${name}: ${normalizeCssValue(val)}`)
@@ -338,66 +334,10 @@ function convertPseudoElements(
       const dHeading = docHeadings[index] as HTMLElement | undefined
       if (!dHeading) return
 
-      // 处理 ::before
-      const beforeComputed = window.getComputedStyle(pHeading, '::before')
-      const beforeRawContent = beforeComputed.getPropertyValue('content')
-
-      if (beforeRawContent !== 'none' && pseudoHasVisual(beforeComputed, beforeRawContent)) {
-        const span = doc.createElement('span')
-        const textContent = extractPseudoContent(beforeRawContent)
-
-        if (textContent) {
-          // ═══ 文字型伪元素（如 ☀、◇）→ 内联显示，公众号兼容 ═══
-          span.textContent = textContent + ' '
-          const styles: string[] = ['display: inline-block', 'vertical-align: middle']
-
-          // 提取视觉属性（只取公众号支持的）
-          const textProps = ['color', 'font-size', 'font-weight', 'font-style', 'opacity']
-          for (const prop of textProps) {
-            const val = beforeComputed.getPropertyValue(prop).trim()
-            if (!val || val === 'none' || val === 'auto') continue
-            if (prop === 'opacity' && val === '1') continue
-            if (prop === 'font-weight' && (val === '400' || val === 'normal')) continue
-            if (prop === 'font-style' && val === 'normal') continue
-            styles.push(`${prop}: ${normalizeCssValue(val)}`)
-          }
-
-          span.setAttribute('style', styles.join('; '))
-          dHeading.insertBefore(span, dHeading.firstChild)
-        } else {
-          // ═══ 非文字型装饰（如背景色块）→ block 级降级显示 ═══
-          const styles: string[] = ['display: inline-block', 'vertical-align: middle']
-
-          // 尝试提取背景色（linear-gradient 降级）
-          const bgImage = beforeComputed.getPropertyValue('background-image').trim()
-          const bgColor = beforeComputed.getPropertyValue('background-color').trim()
-
-          if (bgImage && bgImage !== 'none' && bgImage.includes('linear-gradient')) {
-            const downgraded = downgradeGradient(bgImage)
-            if (downgraded) {
-              styles.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
-            }
-          } else if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
-            styles.push(`background-color: ${normalizeCssValue(bgColor)}`)
-          }
-
-          const width = beforeComputed.getPropertyValue('width').trim()
-          const height = beforeComputed.getPropertyValue('height').trim()
-          if (width && width !== 'auto' && width !== '0px') styles.push(`width: ${width}`)
-          if (height && height !== 'auto' && height !== '0px') styles.push(`height: ${height}`)
-
-          const opacity = beforeComputed.getPropertyValue('opacity').trim()
-          if (opacity && opacity !== '1') styles.push(`opacity: ${opacity}`)
-
-          const borderRadius = beforeComputed.getPropertyValue('border-radius').trim()
-          if (borderRadius && borderRadius !== '0px') styles.push(`border-radius: ${borderRadius}`)
-
-          if (styles.length > 2) { // 不只是 display + vertical-align
-            span.setAttribute('style', styles.join('; '))
-            dHeading.insertBefore(span, dHeading.firstChild)
-          }
-        }
-      }
+      // ═══ ::before — 跳过 ═══
+      // 原因：☀/◇ 等伪元素使用 position:absolute 定位作为半透明装饰，
+      // 公众号不支持 absolute 定位，无法还原位置。转为 inline-block 内联
+      // 会导致文字前多出图标，效果错误。直接跳过。
 
       // 处理 ::after
       const afterComputed = window.getComputedStyle(pHeading, '::after')
@@ -433,11 +373,9 @@ function convertPseudoElements(
           styles.push(`height: ${height}`)
         }
 
-        // 宽度
-        const width = afterComputed.getPropertyValue('width').trim()
-        if (width && width !== 'auto' && width !== '0px') {
-          styles.push(`width: ${width}`)
-        }
+        // 宽度 — 使用 100% 自适应，不硬编码像素值
+        // （computed style 返回的是渲染后的像素值如 504px，公众号中容器宽度不同会错位）
+        styles.push('width: 100%')
 
         // 透明度
         const opacity = afterComputed.getPropertyValue('opacity').trim()
