@@ -452,7 +452,7 @@ function convertPseudoElements(
  * @param previewEl 预览区域的 DOM 元素，用于读取计算后的样式
  * @param theme 主题对象
  */
-export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string {
+export async function applyInlineStyles(previewEl: HTMLElement, theme: Theme): Promise<string> {
   // ⭐ 使用 cloneNode 而不是 DOMParser，确保空格和换行符不丢失
   // DOMParser 会合并多个空格，导致代码格式错误
   const clone = previewEl.cloneNode(true) as HTMLElement
@@ -626,139 +626,58 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   })
 
   // ═══════════════════════════════════════════════════════════════
-  // KaTeX 数学公式处理：内联布局样式（公众号不支持 KaTeX CSS 类）
-  // 策略：为 .katex-html 内每个元素内联 display/position/font-size/margin
-  // 等布局属性，确保公众号中排版结构正确。
-  // 字体降级为 serif（公众号无法加载 KaTeX 专用字体）
+  // KaTeX 数学公式处理：截图为图片（公众号不支持 CSS table 布局）
+  // KaTeX 的上下标定位依赖 display:inline-table/table-row/table-cell，
+  // 公众号编辑器不支持这些 display 值，导致公式排版完全错乱。
+  // 唯一可靠方案：用 html2canvas 截图每个公式，替换为 base64 PNG 图片。
   // ═══════════════════════════════════════════════════════════════
 
-  // 隐藏 .katex-mathml（辅助阅读，公众号不需要）
-  doc.querySelectorAll('.katex-mathml').forEach((el) => {
-    el.setAttribute('style', 'display: none;')
-  })
+  const katexEls = previewEl.querySelectorAll('.katex')
+  const docKatexEls = doc.querySelectorAll('.katex')
 
-  // 为 .katex-html 内每个元素内联关键布局样式
-  const katexHtmlBlocks = doc.querySelectorAll('.katex-html')
-  katexHtmlBlocks.forEach((katexHtmlBlock) => {
-    const previewKatexHtmlBlocks = previewEl.querySelectorAll('.katex-html')
-    // 找到对应的预览区 .katex-html（通过索引匹配）
-    const blockIndex = Array.from(doc.querySelectorAll('.katex-html')).indexOf(katexHtmlBlock)
-    const previewKatexHtml = previewKatexHtmlBlocks[blockIndex]
-    if (!previewKatexHtml) return
+  if (katexEls.length > 0 && docKatexEls.length > 0) {
+    // 动态加载 html2canvas（如果尚未加载）
+    const html2canvasLib = (window as any).html2canvas
+    if (html2canvasLib) {
+      for (let i = 0; i < katexEls.length && i < docKatexEls.length; i++) {
+        const previewKatex = katexEls[i] as HTMLElement
+        const docKatex = docKatexEls[i] as HTMLElement
 
-    // 遍历 doc 中 .katex-html 内的所有 span
-    const docSpans = katexHtmlBlock.querySelectorAll('span')
-    const previewSpans = previewKatexHtml.querySelectorAll('span')
+        try {
+          const canvas = await html2canvasLib(previewKatex, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            logging: false,
+            useCORS: true,
+          })
 
-    docSpans.forEach((docSpan, spanIndex) => {
-      const previewSpan = previewSpans[spanIndex] as HTMLElement | undefined
-      if (!previewSpan) return
+          const dataUrl = canvas.toDataURL('image/png')
+          const rect = previewKatex.getBoundingClientRect()
+          const w = Math.ceil(rect.width)
+          const h = Math.ceil(rect.height)
 
-      const computed = window.getComputedStyle(previewSpan)
+          // 判断是行内公式还是块级公式
+          const isBlock = previewKatex.classList.contains('katex-display')
+            || previewKatex.classList.contains('katex-block')
 
-      // 保留已有的 inline style（如 strut 的 height, mspace 的 margin-right）
-      // 先解析已有 inline style 中的属性名，避免 computedStyle 重复覆盖
-      const existingStyle = docSpan.getAttribute('style')?.trim() || ''
-      const existingProps = new Set<string>()
-      if (existingStyle) {
-        existingStyle.split(';').forEach((part) => {
-          const colonIdx = part.indexOf(':')
-          if (colonIdx > 0) {
-            existingProps.add(part.substring(0, colonIdx).trim())
+          // 用 <img> 替换整个 .katex 元素
+          const img = doc.createElement('img')
+          img.setAttribute('src', dataUrl)
+          img.setAttribute('alt', docKatex.textContent || 'formula')
+          if (isBlock) {
+            img.setAttribute('style', `display: block; margin: 0 auto; max-width: 100%; height: auto;`)
+          } else {
+            img.setAttribute('style', `display: inline; vertical-align: middle; height: ${h}px;`)
           }
-        })
-      }
 
-      // 收集关键布局属性（包括 KaTeX 布局所需的 table/overflow 属性）
-      // 注意：不读取 bottom/left/right，因为 KaTeX 只用 top 做定位，
-      // computedStyle 会自动算出 bottom 值（= -top），这在公众号中会造成额外偏移
-      const layoutProps = [
-        'display', 'position', 'top',
-        'vertical-align', 'text-align',
-        'white-space',
-        'font-size', 'font-style', 'font-weight',
-        'line-height', 'letter-spacing',
-        'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-        'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-        'border-top-width', 'border-bottom-width',
-        'border-collapse', 'border-spacing',
-        'overflow',
-        'width', 'height',
-      ]
-
-      const skipDefaults: Record<string, string[]> = {
-        'position': ['static'],
-        'top': ['auto'],
-        'vertical-align': ['baseline'],
-        'text-align': ['start', 'left'],
-        'white-space': ['normal'],
-        'font-style': ['normal'],
-        'letter-spacing': ['normal'],
-        'border-top-width': ['0px'],
-        'border-bottom-width': ['0px'],
-        'border-collapse': ['separate'],
-        'border-spacing': ['0px 0px', 'normal'],
-        'overflow': ['visible'],
-        'width': ['auto'],
-        'height': ['auto'],
-      }
-
-      const parts: string[] = []
-
-      for (const prop of layoutProps) {
-        // 如果已有 inline style 中包含此属性，跳过（保留原始值，如 top:-3.063em）
-        if (existingProps.has(prop)) continue
-        const val = computed.getPropertyValue(prop).trim()
-        if (!val) continue
-        const defaults = skipDefaults[prop] || []
-        if (defaults.some(d => val === d)) continue
-        parts.push(`${prop}: ${val}`)
-      }
-
-      // 字体降级：KaTeX_Math / KaTeX_Main → serif
-      if (!existingProps.has('font-family')) {
-        const fontFamily = computed.getPropertyValue('font-family').trim()
-        const downgradedFont = fontFamily
-          .replace(/KaTeX_Math[^,]*,?\s*/g, '')
-          .replace(/KaTeX_Main[^,]*,?\s*/g, '')
-          .replace(/KaTeX_Size[^,]*,?\s*/g, '')
-          .replace(/KaTeX_AMS[^,]*,?\s*/g, '')
-          .replace(/,\s*$/, '')
-          .trim()
-        if (downgradedFont && downgradedFont !== 'serif') {
-          parts.push(`font-family: ${downgradedFont}`)
-        } else {
-          parts.push('font-family: serif')
+          docKatex.replaceWith(img)
+        } catch {
+          // html2canvas 失败时保留原始元素（降级处理）
+          console.warn(`html2canvas failed for katex element ${i}`)
         }
       }
-
-      // 颜色
-      if (!existingProps.has('color')) {
-        const color = computed.getPropertyValue('color').trim()
-        if (color && color !== 'rgb(0, 0, 0)') {
-          parts.push(`color: ${color}`)
-        }
-      }
-
-      const newStyle = parts.join('; ')
-
-      // 合并：computedStyle 的新属性在前，原始 inline style 在后
-      if (existingStyle) {
-        docSpan.setAttribute('style', `${newStyle}; ${existingStyle}`)
-      } else {
-        docSpan.setAttribute('style', newStyle)
-      }
-    })
-
-    // .katex-html 自身也需要样式
-    const previewKatexHtmlComputed = window.getComputedStyle(previewKatexHtml)
-    const katexHtmlDisplay = previewKatexHtmlComputed.getPropertyValue('display').trim()
-    const katexHtmlStyle = doc.querySelector(`.katex-html:nth-of-type(${blockIndex + 1})`)
-    if (katexHtmlBlock) {
-      const currentStyle = (katexHtmlBlock as HTMLElement).getAttribute('style') || ''
-      ;(katexHtmlBlock as HTMLElement).setAttribute('style', `${currentStyle}; display: ${katexHtmlDisplay};`.replace(/^;\s*/, ''))
     }
-  })
+  }
 
   // HR 单独处理（预览区没有直接对应的渲染元素）
   doc.querySelectorAll('hr').forEach((el) => {

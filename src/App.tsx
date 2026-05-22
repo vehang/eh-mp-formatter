@@ -451,7 +451,7 @@ function App() {
       }
 
       // 步骤 1: 内联样式（关键！公众号不保留 CSS 类）
-      const htmlWithInlineStyles = applyInlineStyles(previewEl, currentTheme)
+      const htmlWithInlineStyles = await applyInlineStyles(previewEl, currentTheme)
 
       // 步骤 2: 公众号兼容性处理
       const processedHtml = await makeWeChatCompatible(htmlWithInlineStyles, currentTheme)
