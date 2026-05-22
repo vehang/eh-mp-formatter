@@ -1,4 +1,4 @@
-import { type RefObject, useEffect } from 'react'
+import { type RefObject } from 'react'
 import type { Theme } from '../themes/types'
 import { Icon } from '@iconify/react'
 
@@ -25,8 +25,6 @@ export function Preview({
   onCopyHTML,
   onPreviewModeChange,
 }: PreviewProps) {
-
-
   return (
     <div
       className="flex flex-col"
