@@ -382,28 +382,34 @@ function convertPseudoElements(
         const beforeText = extractPseudoContent(beforeRawContent)
 
         if (beforeText) {
-          // 有文字内容的伪元素（☀/◇ 等）
-          // 判断是否应该保留：如果 opacity 很低(< 0.5)，说明只是装饰背景，
-          // 公众号不尊重 opacity，直接隐藏避免占据空间
+          // 有文字内容的伪元素（☀/◇ 等）→ 保留为 inline 前缀
+          // 公众号不支持 opacity，用颜色混合模拟透明效果
           const opacity = parseFloat(beforeComputed.getPropertyValue('opacity').trim() || '1')
           const fontSize = beforeComputed.getPropertyValue('font-size').trim()
-          
-          if (opacity < 0.5) {
-            // 半透明装饰 → 公众号不支持 opacity，隐藏
-            const span = doc.createElement('span')
-            span.setAttribute('style', 'display: none;')
-            dHeading.insertBefore(span, dHeading.firstChild)
-          } else {
-            // 可见装饰（如 ◇）→ 保留为 inline 前缀
-            const span = doc.createElement('span')
-            span.textContent = beforeText + ' '
-            const color = beforeComputed.getPropertyValue('color').trim()
-            const styles: string[] = []
-            if (color) styles.push(`color: ${normalizeCssValue(color)}`)
-            if (fontSize) styles.push(`font-size: ${fontSize}`)
-            if (styles.length > 0) span.setAttribute('style', styles.join('; '))
-            dHeading.insertBefore(span, dHeading.firstChild)
+          const color = beforeComputed.getPropertyValue('color').trim()
+          const textShadow = beforeComputed.getPropertyValue('text-shadow').trim()
+
+          const span = doc.createElement('span')
+          span.textContent = beforeText + ' '
+          const styles: string[] = []
+
+          if (color) {
+            const normalizedColor = normalizeCssValue(color)
+            if (opacity < 1) {
+              const blended = blendWithWhite(normalizedColor, opacity)
+              styles.push(`color: ${blended || normalizedColor}`)
+            } else {
+              styles.push(`color: ${normalizedColor}`)
+            }
           }
+          if (fontSize) styles.push(`font-size: ${fontSize}`)
+          if (textShadow && textShadow !== 'none') {
+            styles.push(`text-shadow: ${textShadow}`)
+          }
+          styles.push('margin-right: 4px')
+
+          span.setAttribute('style', styles.join('; '))
+          dHeading.insertBefore(span, dHeading.firstChild)
         } else {
           // 无文字的装饰（content:'' 的装饰条/圆点）
           const beforeTag = dHeading.tagName.toLowerCase()
