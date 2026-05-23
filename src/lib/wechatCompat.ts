@@ -405,12 +405,58 @@ function convertPseudoElements(
             dHeading.insertBefore(span, dHeading.firstChild)
           }
         } else {
-          // 无文字的装饰（装饰条/圆点）→ 隐藏（公众号不支持 absolute 定位，
-          // display:block 会变成独立行导致大间隔，直接隐藏让 padding-left 保留缩进效果）
-          const span = doc.createElement('span')
-          span.setAttribute('style', 'display: none;')
+          // 无文字的装饰（content:'' 的装饰条/圆点）
+          const beforeTag = dHeading.tagName.toLowerCase()
+          const pointerEvents = beforeComputed.getPropertyValue('pointer-events').trim()
 
-          dHeading.insertBefore(span, dHeading.firstChild)
+          if (beforeTag === 'h1' && pointerEvents !== 'none') {
+            // H1 ::before 有视觉属性但无文字（如默认主题的左侧竖条装饰）
+            // pointer-events:none 的是 mask 边框效果，无法在公众号复制，跳过
+            const span = doc.createElement('span')
+            const bStyles: string[] = ['display: inline-block', 'vertical-align: middle']
+
+            const bw = beforeComputed.getPropertyValue('width').trim()
+            const bh = beforeComputed.getPropertyValue('height').trim()
+            if (bw && bw !== 'auto' && bw !== '0px') bStyles.push(`width: ${bw}`)
+            if (bh && bh !== 'auto' && bh !== '0px') bStyles.push(`height: ${bh}`)
+
+            // Background: gradient → solid color，混合 opacity
+            const bBgImage = beforeComputed.getPropertyValue('background-image').trim()
+            const bBgColor = beforeComputed.getPropertyValue('background-color').trim()
+            const bOpacity = parseFloat(beforeComputed.getPropertyValue('opacity').trim() || '1')
+
+            if (bBgImage && bBgImage !== 'none' && bBgImage.includes('linear-gradient')) {
+              const downgraded = downgradeGradient(bBgImage)
+              if (downgraded) {
+                if (bOpacity < 1 && downgraded.cssValue) {
+                  const blended = blendWithWhite(downgraded.cssValue, bOpacity)
+                  bStyles.push(`background-color: ${blended || downgraded.cssValue}`)
+                } else {
+                  bStyles.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
+                }
+              }
+            } else if (bBgColor && bBgColor !== 'rgba(0, 0, 0, 0)' && bBgColor !== 'transparent') {
+              const colorValue = normalizeCssValue(bBgColor)
+              if (bOpacity < 1) {
+                const blended = blendWithWhite(colorValue, bOpacity)
+                bStyles.push(`background-color: ${blended || colorValue}`)
+              } else {
+                bStyles.push(`background-color: ${colorValue}`)
+              }
+            }
+
+            const bBr = beforeComputed.getPropertyValue('border-radius').trim()
+            if (bBr && bBr !== '0px') bStyles.push(`border-radius: ${bBr}`)
+
+            bStyles.push('margin-right: 8px')
+            span.setAttribute('style', bStyles.join('; '))
+            dHeading.insertBefore(span, dHeading.firstChild)
+          } else {
+            // 非 H1 或 pointer-events:none → 隐藏
+            const span = doc.createElement('span')
+            span.setAttribute('style', 'display: none;')
+            dHeading.insertBefore(span, dHeading.firstChild)
+          }
         }
       }
 
@@ -468,30 +514,143 @@ function convertPseudoElements(
           styles.push(`height: ${height}`)
         }
 
-        // 宽度 — 使用 100% 自适应，不硬编码像素值
-        styles.push('width: 100%')
+        // 宽度 — H1/H2 装饰条特殊处理
+        const tagName = dHeading.tagName.toLowerCase()
+        const afterWidth = afterComputed.getPropertyValue('width').trim()
+        if (tagName === 'h2') {
+          // H2 装饰条应该跟标题文字对齐，用固定宽度或 auto
+          // 预览中 position:absolute 的 width 就是实际宽度
+          styles.push(`width: ${afterWidth !== 'auto' && afterWidth !== '0px' ? afterWidth : '80px'}`)
+        } else {
+          // H1 装饰条撑满宽度
+          styles.push('width: calc(100% - 20px)')
+        }
 
         // 不输出 opacity（公众号不支持），已在颜色中混合
 
-        // 圆角
-        const borderRadius = afterComputed.getPropertyValue('border-radius').trim()
-        if (borderRadius && borderRadius !== '0px') styles.push(`border-radius: ${borderRadius}`)
+        // 圆角处理
+        let borderRadius = afterComputed.getPropertyValue('border-radius').trim()
+        if (borderRadius && borderRadius !== '0px') {
+          const radii = borderRadius.split(/\s+/).map(v => parseFloat(v) || 0)
+          if (radii.length === 4 && tagName !== 'h1') {
+            // H2 等：限制圆角不超过装饰条高度
+            const decoHeight = height && height !== 'auto' && height !== '0px' ? parseFloat(height) : 3
+            const clamped = radii.map(r => Math.min(r, decoHeight))
+            borderRadius = clamped.join('px ') + 'px'
+          }
+          // H1: 保留原始 border-radius（如 0 0 16px 16px），不增大高度
+          styles.push(`border-radius: ${borderRadius}`)
+        }
 
-        // 上下间距
-        const marginTop = afterComputed.getPropertyValue('margin-top').trim()
-        if (marginTop && marginTop !== '0px') styles.push(`margin-top: ${marginTop}`)
+        // 上下间距 — 装饰条要紧贴标题底部
+        // H1 装饰条用负 margin-top 紧贴标题；H2 装饰条覆盖在 border-bottom 上
+        if (tagName === 'h1') {
+          styles.push('margin: 0 auto')
+        } else if (tagName === 'h2') {
+          // H2 装饰条在外部，需要负 margin-top 抵消 H2 的 padding-bottom + margin-bottom
+          // 把装饰条拉到 border-bottom 位置重叠
+          const h2Computed = window.getComputedStyle(pHeading)
+          const h2PaddingBottom = parseFloat(h2Computed.getPropertyValue('padding-bottom')) || 0
+          const h2MarginBottom = parseFloat(h2Computed.getPropertyValue('margin-bottom')) || 0
+          const decoH = height && height !== 'auto' && height !== '0px' ? parseFloat(height) : 3
+          // 居中重叠：抵消 padding + margin + 装饰条高度/2
+          const offset = h2PaddingBottom + h2MarginBottom + decoH / 2
+          styles.push(`margin-top: -${offset}px`)
+        } else {
+          const marginTop = afterComputed.getPropertyValue('margin-top').trim()
+          if (marginTop && marginTop !== '0px') styles.push(`margin-top: ${marginTop}`)
+        }
 
         span.setAttribute('style', styles.join('; '))
-        // 公众号可能忽略 h1/h2 内部的 block 元素
-        // 改为在 h1/h2 外部后面插入独立的 <section>，公众号对 section 支持好
+        
         const decoSection = doc.createElement('section')
-        // 把装饰条的所有样式复制到 section 上
         decoSection.setAttribute('style', styles.join('; ') + '; font-size: 0; line-height: 0; overflow: hidden;')
-        // 公众号会丢弃完全空的元素，需要放一个零高度的内容
         decoSection.innerHTML = '&nbsp;'
-        // 在 h1/h2 后面插入
+        
         if (dHeading.parentElement) {
-          dHeading.parentElement.insertBefore(decoSection, dHeading.nextSibling)
+          if (tagName === 'h2') {
+            // H2 特殊处理：把虚线和装饰条放进同一个容器内重叠，避免被 H2 遮挡
+            const h2Computed = window.getComputedStyle(pHeading)
+            const borderW = parseFloat(h2Computed.getPropertyValue('border-bottom-width')) || 0
+            const borderStyle = h2Computed.getPropertyValue('border-bottom-style').trim()
+            const borderColor = normalizeCssValue(h2Computed.getPropertyValue('border-bottom-color').trim())
+
+            // 去掉 H2 自身的 border-bottom 和 padding-bottom（在容器内重建虚线）
+            const h2Style = dHeading.getAttribute('style') || ''
+            const h2NewStyle = h2Style
+              .replace(/border-bottom:\s*[^;]+;?/gi, '')
+              .replace(/padding-bottom:\s*[^;]+;?/gi, '')
+              .trim()
+            dHeading.setAttribute('style', h2NewStyle)
+
+            const decoH = parseFloat(height) || 3
+            const bgColorMatch = styles.find(s => s.startsWith('background-color'))
+            const bgColor = bgColorMatch ? bgColorMatch.split(':')[1].trim() : 'rgb(245, 158, 11)'
+
+            // 测量 H2 文本的实际渲染宽度（用 Range API 精确测量文字宽度）
+            const range = document.createRange()
+            range.selectNodeContents(pHeading)
+            const textWidth = Math.round(range.getBoundingClientRect().width)
+            // 加上 ::before 伪元素（如◇图标）的宽度，Range API 无法测量伪元素
+            const h2Before = window.getComputedStyle(pHeading, '::before')
+            const h2BeforeContent = h2Before.getPropertyValue('content')
+            let beforeExtra = 0
+            if (h2BeforeContent && h2BeforeContent !== 'none') {
+              const bText = h2BeforeContent.replace(/^["']|["']$/g, '')
+              if (bText) {
+                beforeExtra = (parseFloat(h2Before.getPropertyValue('width')) || 0)
+                  + (parseFloat(h2Before.getPropertyValue('margin-right')) || 0)
+                  + (parseFloat(h2Before.getPropertyValue('padding-left')) || 0)
+                  + (parseFloat(h2Before.getPropertyValue('padding-right')) || 0)
+              }
+            }
+            // 当 ::before 是 position:absolute 时，它不占文本流空间
+            // 但 padding-left 为图标预留了位置，装饰条需要覆盖整个 padding+文本 区域
+            // 预览区 fit-content 宽度 = paddingLeft + textWidth（::before absolute 不影响 fit-content）
+            // 所以装饰条宽度应该用 paddingLeft + textWidth 而不是 textWidth + beforeWidth
+            const h2CS = window.getComputedStyle(pHeading)
+            const h2PaddingLeft = parseFloat(h2CS.paddingLeft) || 0
+            let decoWidth: number
+            if (beforeExtra > 0 && h2Before.getPropertyValue('position') === 'absolute') {
+              // ::before 是 absolute（如 warm-sun 的 ◇ 图标），padding-left 为图标预留空间
+              // 装饰条宽度 = padding-left + textWidth（匹配预览区 fit-content 宽度）
+              decoWidth = Math.max(h2PaddingLeft + textWidth, 40)
+            } else if (beforeExtra > 0) {
+              // ::before 是 inline/非 absolute，直接加宽度
+              decoWidth = Math.max(textWidth + beforeExtra, 40)
+            } else {
+              // 无 ::before 图标，纯文本宽度
+              decoWidth = Math.max(textWidth, 40)
+            }
+
+            if (borderW > 0 && borderStyle && borderStyle !== 'none') {
+              // 容器：虚线 + 装饰条在同一层内重叠
+              const container = doc.createElement('section')
+              container.setAttribute('style', 'margin: 0 0 14px 0; padding: 0; line-height: 0; font-size: 0;')
+
+              // 虚线（100% 宽度）
+              const dashLine = doc.createElement('section')
+              dashLine.setAttribute('style', `border-bottom: ${borderW}px ${borderStyle} ${borderColor}; height: 0;`)
+              container.appendChild(dashLine)
+
+              // 装饰条（宽度跟随文本，margin-top: 0 与虚线重叠）
+              const decoLine = doc.createElement('section')
+              decoLine.setAttribute('style', `height: ${decoH}px; background-color: ${bgColor}; width: ${decoWidth}px; border-radius: 2px; margin-top: 0; padding: 0; font-size: 0; line-height: 0;`)
+              decoLine.innerHTML = '&nbsp;'
+              container.appendChild(decoLine)
+
+              dHeading.parentElement.insertBefore(container, dHeading.nextSibling)
+            } else {
+              // 无虚线：只输出装饰条（宽度跟随文本）
+              const decoLine = doc.createElement('section')
+              decoLine.setAttribute('style', `height: ${decoH}px; background-color: ${bgColor}; width: ${decoWidth}px; border-radius: 2px; margin: 0 0 14px 0; padding: 0; font-size: 0; line-height: 0;`)
+              decoLine.innerHTML = '&nbsp;'
+              dHeading.parentElement.insertBefore(decoLine, dHeading.nextSibling)
+            }
+          } else {
+            // H1 等其他标题：放在外部后面
+            dHeading.parentElement.insertBefore(decoSection, dHeading.nextSibling)
+          }
         }
       }
     })
@@ -827,11 +986,15 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
       .replace(/list-style[^;]*;?/gi, '')
       .replace(/display:\s*list-item;?/gi, '')
       .replace(/padding-left:\s*[^;]+;?/gi, '') // 先移除旧的 padding-left（来自 extractInlineStyles）
+      .replace(/margin-top:\s*[^;]+;?/gi, '') // 移除 li 默认 margin，避免列表项间空白行
+      .replace(/margin-bottom:\s*[^;]+;?/gi, '')
       .trim()
 
-    // 缩进：每层 20px + 基础 8px
-    const indent = (depth * 20 + 8) + 'px'
-    newStyle += `; padding-left: ${indent}; margin-left: 0; list-style: none;`
+    // 第一级贴边，之后每级递增 16px（1个字宽）
+    // 悬挂缩进：padding-left 包含 bullet 宽度，text-indent 负值让 bullet 突出
+    const baseIndent = (depth - 1) * 16
+    const bulletWidth = isOl ? 22 : 16
+    newStyle += `; padding-left: ${baseIndent + bulletWidth}px; margin-left: 0; list-style: none; text-indent: -${bulletWidth}px;`
 
     // 移除 li 上可能被之前的 color 设置（marker 颜色模拟用 span 的 color）
     newStyle = newStyle.replace(/color:\s*[^;]+;?/gi, '').trim()
@@ -886,6 +1049,87 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     } else {
       // 顶层列表：完全清零
       list.setAttribute('style', `${cleaned}; list-style: none; margin-left: 0; padding-left: 0;`)
+    }
+  })
+
+  // ═══════════════════════════════════════════════════════════════
+  // 将 ul/ol/li 替换为 section，并打平嵌套结构
+  // 公众号会给嵌套 block 元素加默认间距，每多一层就多缩进
+  // 解决方案：li 直接挂到其顶层 ul/ol 的父级，中间的嵌套 section 移除
+  // ═══════════════════════════════════════════════════════════════
+  
+  // 第一步：替换所有 ul/ol/li 为 section（保留属性和子节点）
+  const listElements = doc.querySelectorAll('ul, ol, li')
+  listElements.forEach(el => {
+    const section = doc.createElement('section')
+    for (const attr of Array.from(el.attributes)) {
+      section.setAttribute(attr.name, attr.value)
+    }
+    while (el.firstChild) {
+      section.appendChild(el.firstChild)
+    }
+    el.parentNode?.replaceChild(section, el)
+  })
+
+  // 第二步：打平嵌套
+  // 策略：找到每个"顶层列表容器"（有 list-style 的 section 且父元素不是 section），
+  // 把它下面的所有 text-indent section（原 li）提升到该容器的父级，
+  // 然后移除空的中间容器
+  const allSections = Array.from(doc.querySelectorAll('section'))
+  
+  // 找所有容器 section（有 list-style 无 text-indent）
+  const containers = allSections.filter(s => {
+    const style = s.getAttribute('style') || ''
+    return /list-style/.test(style) && !/text-indent/.test(style)
+  })
+  
+  // 找顶层容器：父元素不是 section 的那些（即紧挨 H2/p 等的 ul/ol）
+  const topContainers = containers.filter(c => {
+    const parent = c.parentElement
+    return !parent || parent.tagName !== 'SECTION'
+  })
+  
+  // 对每个顶层容器：把里面所有 text-indent section 提升到它的父级
+  topContainers.forEach(topContainer => {
+    const listItemSections = topContainer.querySelectorAll('section')
+    const items = Array.from(listItemSections).filter(s => {
+      const style = s.getAttribute('style') || ''
+      return /text-indent/.test(style)
+    })
+    
+    const parent = topContainer.parentElement
+    if (!parent) return
+    
+    // 在顶层容器后面依次插入所有列表项（保持顺序）
+    let insertRef = topContainer.nextSibling
+    items.forEach(item => {
+      parent.insertBefore(item, insertRef)
+    })
+    
+    // 移除所有空的中间容器 section（列表项已移走，容器无意义）
+    // 条件：没有 text-indent（不是列表项）且内容为空
+    const middleContainers = topContainer.querySelectorAll('section')
+    Array.from(middleContainers).forEach(c => {
+      const style = c.getAttribute('style') || ''
+      if (!/text-indent/.test(style)) {
+        c.parentNode?.removeChild(c)
+      }
+    })
+    
+    // 移除顶层容器本身（如果已空）
+    if (!topContainer.textContent?.trim()) {
+      topContainer.parentNode?.removeChild(topContainer)
+    }
+  })
+
+  // 最终清理：移除所有内容为空且不含 text-indent 的 section（可能残留）
+  // 但保留装饰条：装饰条 section 有 font-size: 0 或 line-height: 0
+  const allSectionsFinal = Array.from(doc.querySelectorAll('section'))
+  allSectionsFinal.forEach(s => {
+    const style = s.getAttribute('style') || ''
+    const isDeco = /font-size:\s*0/.test(style) || /line-height:\s*0/.test(style)
+    if (!/text-indent/.test(style) && !s.textContent?.trim() && !isDeco) {
+      s.parentNode?.removeChild(s)
     }
   })
 
@@ -998,6 +1242,35 @@ export async function makeWeChatCompatible(html: string, theme: Theme): Promise<
   outputHtml = outputHtml.replace(
     /(<\/(?:strong|b|em|span|a|code)>)\s*([：；，。！？、:.!?,])/g,
     '$1\u2060$2'
+  )
+
+  // H2 修复：移除 border-bottom/padding-bottom/margin-bottom（虚线已移到容器内）
+  // 显式设为 0 覆盖公众号默认样式
+  outputHtml = outputHtml.replace(
+    /(<h2\b[^>]*style=")([^"]*)(")/gi,
+    (_match, prefix, style, suffix) => {
+      let cleaned = style
+        .replace(/border-bottom:\s*[^;]+;?/gi, '')
+        .replace(/padding-bottom:\s*[^;]+;?/gi, '')
+        .replace(/margin-bottom:\s*[^;]+;?/gi, '')
+        .trim()
+      if (cleaned && !cleaned.endsWith(';')) cleaned += ';'
+      cleaned += ' padding-bottom: 0; margin-bottom: 0;'
+      return prefix + cleaned + suffix
+    }
+  )
+
+  // H1 修复：只移除 margin-bottom，保留 padding-bottom（文字垂直居中需要）
+  outputHtml = outputHtml.replace(
+    /(<h1\b[^>]*style=")([^"]*)(")/gi,
+    (_match, prefix, style, suffix) => {
+      let cleaned = style
+        .replace(/margin-bottom:\s*[^;]+;?/gi, '')
+        .trim()
+      if (cleaned && !cleaned.endsWith(';')) cleaned += ';'
+      cleaned += ' margin-bottom: 0;'
+      return prefix + cleaned + suffix
+    }
   )
 
   return outputHtml

@@ -25,6 +25,7 @@ export function Preview({
   onCopyHTML,
   onPreviewModeChange,
 }: PreviewProps) {
+
   return (
     <div
       className="flex flex-col"

@@ -65,6 +65,7 @@
   letter-spacing: -0.01em;
   position: relative;
   border-bottom: 1px solid var(--theme-border, #E5E7EB);
+  width: fit-content;
 }
 
 .mp-preview h2::before {
@@ -84,7 +85,7 @@
   position: absolute;
   bottom: -1px;
   left: 0;
-  width: 80px;
+  width: 100%;
   height: 3px;
   background: var(--theme-primary);
   border-radius: 1.5px;
@@ -254,7 +255,7 @@
 }
 
 .mp-preview[data-heading-style="soft"] h2::after {
-  width: 40px;
+  width: 100%;
   height: 3px;
   background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
   border-radius: 2px;

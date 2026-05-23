@@ -67,7 +67,7 @@
 }
 
 .mp-preview[data-heading-style="warm-sun"] h2::after {
-  width: 80px;
+  width: 100%;
   height: 3px;
   background: linear-gradient(90deg, var(--theme-secondary), var(--theme-primary));
   border-radius: 2px;
@@ -145,7 +145,7 @@
 }
 
 .mp-preview[data-heading-style="tech"] h2::after {
-  width: 60px;
+  width: 100%;
   height: 2px;
   background: var(--theme-primary);
   border-radius: 1px;
@@ -237,7 +237,7 @@
 }
 
 .mp-preview[data-heading-style="nature"] h2::after {
-  width: 70px;
+  width: 100%;
   height: 3px;
   background: linear-gradient(90deg, var(--theme-secondary), var(--theme-primary));
   border-radius: 2px;
@@ -547,7 +547,7 @@
 }
 
 .mp-preview[data-heading-style="night-forest"] h2::after {
-  width: 60px;
+  width: 100%;
   height: 2px;
   background: var(--theme-secondary);
   border-radius: 1px;
@@ -634,7 +634,7 @@
 }
 
 .mp-preview[data-heading-style="rose-pine"] h2::after {
-  width: 50px;
+  width: 100%;
   height: 3px;
   background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
   border-radius: 2px;
@@ -706,7 +706,7 @@
 }
 
 .mp-preview[data-heading-style="gothic"] h2::after {
-  width: 50px;
+  width: 100%;
   height: 2px;
   background: var(--theme-primary);
   border-radius: 0;
@@ -871,7 +871,7 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 60px;
+  width: 100%;
   height: 4px;
   background: var(--theme-secondary);
   border-radius: 2px 2px 0 0;
@@ -946,7 +946,7 @@
 }
 
 .mp-preview[data-heading-style="cute"] h2::after {
-  width: 40px;
+  width: 100%;
   height: 3px;
   background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
   border-radius: 2px;
@@ -1268,7 +1268,7 @@
 }
 
 .mp-preview[data-heading-style="code"] h2::after {
-  width: 50px;
+  width: 100%;
   height: 2px;
   background: var(--theme-primary);
   opacity: 0.5;
