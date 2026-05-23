@@ -184,6 +184,40 @@ function normalizeCssValue(value: string): string {
 }
 
 /**
+ * 将颜色与白色背景混合，模拟 opacity 在白色背景上的视觉效果
+ * 公众号不支持 opacity，用混合后的不透明颜色替代
+ * @param color CSS 颜色值，如 "rgb(146, 64, 14)" 或 "#92400E"
+ * @param opacity 透明度 0-1
+ * @returns 混合后的 rgb() 颜色字符串，解析失败返回 null
+ */
+function blendWithWhite(color: string, opacity: number): string | null {
+  const rgb = parseRgbColor(color)
+  if (!rgb) return null
+  // 混合公式：result = color * opacity + 255 * (1 - opacity)
+  const r = Math.round(rgb.r * opacity + 255 * (1 - opacity))
+  const g = Math.round(rgb.g * opacity + 255 * (1 - opacity))
+  const b = Math.round(rgb.b * opacity + 255 * (1 - opacity))
+  return `rgb(${r}, ${g}, ${b})`
+}
+
+/**
+ * 解析 CSS 颜色值为 {r, g, b}
+ */
+function parseRgbColor(color: string): { r: number; g: number; b: number } | null {
+  // rgb(r, g, b)
+  const rgbMatch = color.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/)
+  if (rgbMatch) {
+    return { r: parseInt(rgbMatch[1]), g: parseInt(rgbMatch[2]), b: parseInt(rgbMatch[3]) }
+  }
+  // #RRGGBB
+  const hexMatch = color.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i)
+  if (hexMatch) {
+    return { r: parseInt(hexMatch[1], 16), g: parseInt(hexMatch[2], 16), b: parseInt(hexMatch[3], 16) }
+  }
+  return null
+}
+
+/**
  * 将 linear-gradient 降级为纯色（公众号不支持渐变）
  * 提取第一个色值作为 background-color
  */
@@ -276,7 +310,7 @@ function extractInlineStyles(computed: CSSStyleDeclaration): string {
     parts.push(`${name}: ${normalizeCssValue(val)}`)
   }
 
-  return parts.join('; ')
+  return parts.length > 0 ? parts.join('; ') + ';' : ''
 }
 
 /**
@@ -348,18 +382,28 @@ function convertPseudoElements(
         const beforeText = extractPseudoContent(beforeRawContent)
 
         if (beforeText) {
-          // 有文字内容的伪元素（☀/◇ 等）→ inline 文字前缀
-          const span = doc.createElement('span')
-          span.textContent = beforeText
-          const color = beforeComputed.getPropertyValue('color').trim()
+          // 有文字内容的伪元素（☀/◇ 等）
+          // 判断是否应该保留：如果 opacity 很低(< 0.5)，说明只是装饰背景，
+          // 公众号不尊重 opacity，直接隐藏避免占据空间
+          const opacity = parseFloat(beforeComputed.getPropertyValue('opacity').trim() || '1')
           const fontSize = beforeComputed.getPropertyValue('font-size').trim()
-          const opacity = beforeComputed.getPropertyValue('opacity').trim()
-          const styles: string[] = []
-          if (color) styles.push(`color: ${normalizeCssValue(color)}`)
-          if (fontSize) styles.push(`font-size: ${fontSize}`)
-          if (opacity && opacity !== '1') styles.push(`opacity: ${opacity}`)
-          if (styles.length > 0) span.setAttribute('style', styles.join('; '))
-          dHeading.insertBefore(span, dHeading.firstChild)
+          
+          if (opacity < 0.5) {
+            // 半透明装饰 → 公众号不支持 opacity，隐藏
+            const span = doc.createElement('span')
+            span.setAttribute('style', 'display: none;')
+            dHeading.insertBefore(span, dHeading.firstChild)
+          } else {
+            // 可见装饰（如 ◇）→ 保留为 inline 前缀
+            const span = doc.createElement('span')
+            span.textContent = beforeText + ' '
+            const color = beforeComputed.getPropertyValue('color').trim()
+            const styles: string[] = []
+            if (color) styles.push(`color: ${normalizeCssValue(color)}`)
+            if (fontSize) styles.push(`font-size: ${fontSize}`)
+            if (styles.length > 0) span.setAttribute('style', styles.join('; '))
+            dHeading.insertBefore(span, dHeading.firstChild)
+          }
         } else {
           // 无文字的装饰（装饰条/圆点）→ 隐藏（公众号不支持 absolute 定位，
           // display:block 会变成独立行导致大间隔，直接隐藏让 padding-left 保留缩进效果）
@@ -389,13 +433,33 @@ function convertPseudoElements(
         const bgImage = afterComputed.getPropertyValue('background-image').trim()
         const bgColor = afterComputed.getPropertyValue('background-color').trim()
 
+        // 公众号不支持 opacity，需要把 opacity 混合到颜色中
+        const afterOpacity = parseFloat(afterComputed.getPropertyValue('opacity').trim() || '1')
+
         if (bgImage && bgImage !== 'none' && bgImage.includes('linear-gradient')) {
           const downgraded = downgradeGradient(bgImage)
           if (downgraded) {
-            styles.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
+            // 如果有 opacity，把颜色混合到不透明
+            if (afterOpacity < 1 && downgraded.cssValue) {
+              const blended = blendWithWhite(downgraded.cssValue, afterOpacity)
+              if (blended) {
+                styles.push(`${downgraded.cssProp}: ${blended}`)
+              } else {
+                styles.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
+              }
+            } else {
+              styles.push(`${downgraded.cssProp}: ${downgraded.cssValue}`)
+            }
           }
         } else if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
-          styles.push(`background-color: ${normalizeCssValue(bgColor)}`)
+          // 把 opacity 混合进 background-color
+          const colorValue = normalizeCssValue(bgColor)
+          if (afterOpacity < 1) {
+            const blended = blendWithWhite(colorValue, afterOpacity)
+            styles.push(`background-color: ${blended || colorValue}`)
+          } else {
+            styles.push(`background-color: ${colorValue}`)
+          }
         }
 
         // 高度（装饰条的关键属性）
@@ -405,12 +469,9 @@ function convertPseudoElements(
         }
 
         // 宽度 — 使用 100% 自适应，不硬编码像素值
-        // （computed style 返回的是渲染后的像素值如 504px，公众号中容器宽度不同会错位）
         styles.push('width: 100%')
 
-        // 透明度
-        const opacity = afterComputed.getPropertyValue('opacity').trim()
-        if (opacity && opacity !== '1') styles.push(`opacity: ${opacity}`)
+        // 不输出 opacity（公众号不支持），已在颜色中混合
 
         // 圆角
         const borderRadius = afterComputed.getPropertyValue('border-radius').trim()
@@ -421,7 +482,17 @@ function convertPseudoElements(
         if (marginTop && marginTop !== '0px') styles.push(`margin-top: ${marginTop}`)
 
         span.setAttribute('style', styles.join('; '))
-        dHeading.appendChild(span)
+        // 公众号可能忽略 h1/h2 内部的 block 元素
+        // 改为在 h1/h2 外部后面插入独立的 <section>，公众号对 section 支持好
+        const decoSection = doc.createElement('section')
+        // 把装饰条的所有样式复制到 section 上
+        decoSection.setAttribute('style', styles.join('; ') + '; font-size: 0; line-height: 0; overflow: hidden;')
+        // 公众号会丢弃完全空的元素，需要放一个零高度的内容
+        decoSection.innerHTML = '&nbsp;'
+        // 在 h1/h2 后面插入
+        if (dHeading.parentElement) {
+          dHeading.parentElement.insertBefore(decoSection, dHeading.nextSibling)
+        }
       }
     })
   })
@@ -602,6 +673,36 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
       if (inlineStyle) {
         dEl.setAttribute('style', inlineStyle)
       }
+
+      // h1/h2 移除 padding-left：预览中 padding-left 是给 ::before 装饰条留的空间，
+      // 公众号不支持 absolute 定位，装饰条已被转为 display:none 或 inline 文字，
+      // 保留 padding-left 会导致左侧出现空白间隔
+      // 同时显式设置 padding-left: 0 覆盖公众号默认样式
+      if (selector === 'h1' || selector === 'h2') {
+        const currentStyle = dEl.getAttribute('style') || ''
+        // 移除 padding-left 属性值（可能从 extractInlineStyles 或 computed style 来）
+        let cleaned = currentStyle
+          .replace(/padding-left:\s*[^;]+;?/g, '')
+          .replace(/padding:\s*([^;]+)/g, (match, val) => {
+            // 如果有 padding shorthand，把 left 值改为 0
+            const parts = val.trim().split(/\s+/)
+            if (parts.length === 4) {
+              return `padding: ${parts[0]} ${parts[1]} ${parts[2]} 0px`
+            } else if (parts.length === 3) {
+              return `padding: ${parts[0]} ${parts[1]} ${parts[2]}`
+            } else if (parts.length === 2) {
+              return `padding: ${parts[0]} ${parts[1]}`
+            }
+            return match
+          })
+        // 显式添加 padding-left: 0 和 margin-left: 0 覆盖公众号默认值
+        cleaned += ' padding-left: 0; margin-left: 0;'
+        // H1: 移除 border-radius（公众号不支持渐变背景，圆角无意义且可能导致间距问题）
+        if (selector === 'h1') {
+          cleaned = cleaned.replace(/border-radius:\s*[^;]+;?/g, '')
+        }
+        dEl.setAttribute('style', cleaned)
+      }
     })
   })
 
@@ -669,26 +770,124 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
   // ═══════════════════════════════════════════════════════════════
   convertPseudoElements(previewEl, doc)
 
-  // 恢复列表标记（Tailwind preflight 会移除）
-  // 递归处理所有 ul，按深度设置不同的 list-style-type 和缩进
-  const ulStyles = ['disc', 'circle', 'square']
-  function processListDepth(el: Element, isOl: boolean) {
+  // ═══════════════════════════════════════════════════════════════
+  // 列表处理：微信公众号对 list-style 支持极差，需要完全模拟
+  // 策略：关闭原生 list-style，用字符前缀（• ◦ ▪ / 数字.）+ padding-left 模拟
+  // ═══════════════════════════════════════════════════════════════
+
+  // 收集所有 li 及其对应的预览 li（一次性建立索引，避免重复查询）
+  const allDocLis = Array.from(doc.querySelectorAll('li'))
+  const allPreviewLis = Array.from(previewEl.querySelectorAll('li'))
+
+  // 为每个 li 计算嵌套深度
+  function getListDepth(li: Element): number {
     let depth = 0
-    let parent = el.parentElement
+    let parent = li.parentElement
     while (parent) {
       if (parent.tagName === 'UL' || parent.tagName === 'OL') depth++
       parent = parent.parentElement
     }
-    const currentStyle = el.getAttribute('style') || ''
-    if (isOl) {
-      el.setAttribute('style', `${currentStyle}; list-style-type: decimal !important; list-style-position: outside; padding-left: 24px;${depth > 0 ? ' margin-left: 20px;' : ''}`)
-    } else {
-      const styleType = ulStyles[depth % ulStyles.length]
-      el.setAttribute('style', `${currentStyle}; list-style-type: ${styleType} !important; list-style-position: outside; padding-left: 24px;${depth > 0 ? ' margin-left: 20px;' : ''}`)
-    }
+    return depth
   }
-  doc.querySelectorAll('ul').forEach(ul => processListDepth(ul, false))
-  doc.querySelectorAll('ol').forEach(ol => processListDepth(ol, true))
+
+  // 获取 li 的有序序号（在同级 li 中的位置）
+  function getOlIndex(li: Element): number {
+    const parent = li.parentElement
+    if (!parent) return 1
+    let index = 0
+    for (const child of Array.from(parent.children)) {
+      if (child.tagName === 'LI') {
+        index++
+        if (child === li) return index
+      }
+    }
+    return 1
+  }
+
+  // 每个嵌套层级的 bullet 字符
+  const ulBullets = ['•', '◦', '▪', '▫']
+
+  allDocLis.forEach((li, liIndex) => {
+    const previewLi = allPreviewLis[liIndex]
+    const parentList = li.parentElement
+    if (!parentList) return
+
+    const isOl = parentList.tagName === 'OL'
+    const depth = getListDepth(li)
+    const olIndex = getOlIndex(li)
+
+    // 读取 marker 颜色（从预览区的 ::marker）
+    const markerColor = previewLi
+      ? normalizeCssValue(window.getComputedStyle(previewLi, '::marker').getPropertyValue('color').trim())
+      : ''
+
+    // 关闭原生 list-style（公众号不支持）
+    const currentStyle = li.getAttribute('style') || ''
+    let newStyle = currentStyle
+      .replace(/list-style[^;]*;?/gi, '')
+      .replace(/display:\s*list-item;?/gi, '')
+      .replace(/padding-left:\s*[^;]+;?/gi, '') // 先移除旧的 padding-left（来自 extractInlineStyles）
+      .trim()
+
+    // 缩进：每层 20px + 基础 8px
+    const indent = (depth * 20 + 8) + 'px'
+    newStyle += `; padding-left: ${indent}; margin-left: 0; list-style: none;`
+
+    // 移除 li 上可能被之前的 color 设置（marker 颜色模拟用 span 的 color）
+    newStyle = newStyle.replace(/color:\s*[^;]+;?/gi, '').trim()
+
+    li.setAttribute('style', newStyle)
+
+    // 创建 bullet 前缀 span
+    const bulletSpan = doc.createElement('span')
+    const bulletChar = isOl ? `${olIndex}.` : (ulBullets[(depth - 1) % ulBullets.length] || '•')
+    bulletSpan.textContent = bulletChar + ' '
+    bulletSpan.setAttribute('style', `color: ${markerColor || '#F59E0B'}; font-weight: bold;`)
+
+    // 把 li 的非子列表内容包裹起来
+    const childNodes = Array.from(li.childNodes)
+    const contentWrapper = doc.createElement('span')
+    const textColor = previewLi
+      ? normalizeCssValue(window.getComputedStyle(previewLi).getPropertyValue('color').trim())
+      : '#1E293B'
+    contentWrapper.setAttribute('style', `color: ${textColor};`)
+
+    childNodes.forEach(node => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as Element
+        if (el.tagName !== 'UL' && el.tagName !== 'OL') {
+          contentWrapper.appendChild(el.cloneNode(true))
+          li.removeChild(el)
+        }
+      } else if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+        contentWrapper.appendChild(node.cloneNode(true))
+        li.removeChild(node)
+      }
+    })
+
+    // 插入：bullet + 内容
+    li.insertBefore(contentWrapper, li.firstChild)
+    li.insertBefore(bulletSpan, li.firstChild)
+  })
+
+  // 处理 ul/ol 本身：区分顶层和嵌套
+  doc.querySelectorAll('ul, ol').forEach(list => {
+    // 判断是否是嵌套列表（父元素是 li）
+    const isNested = list.parentElement?.tagName === 'LI'
+    const currentStyle = list.getAttribute('style') || ''
+    const cleaned = currentStyle
+      .replace(/list-style[^;]*;?/gi, '')
+      .replace(/padding-left:\s*[^;]+;?/gi, '')
+      .replace(/margin-left:\s*[^;]+;?/gi, '')
+      .trim()
+    if (isNested) {
+      // 嵌套子列表：保留缩进空间，不设 padding-left（缩进由 li 控制）
+      list.setAttribute('style', `${cleaned}; list-style: none; margin-left: 0; padding-left: 0; margin-top: 0; margin-bottom: 0;`)
+    } else {
+      // 顶层列表：完全清零
+      list.setAttribute('style', `${cleaned}; list-style: none; margin-left: 0; padding-left: 0;`)
+    }
+  })
 
   // 处理标题内的内联元素
   const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6')
