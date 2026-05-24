@@ -362,7 +362,7 @@ function convertPseudoElements(
   previewEl: HTMLElement,
   doc: Document
 ): void {
-  const headingSelectors = ['h1', 'h2']
+  const headingSelectors = ['h1', 'h2', 'h3']
   headingSelectors.forEach(selector => {
     const previewHeadings = previewEl.querySelectorAll(selector)
     const docHeadings = doc.querySelectorAll(selector)
@@ -475,11 +475,31 @@ function convertPseudoElements(
         const textContent = extractPseudoContent(afterRawContent)
 
         if (textContent) {
-          span.textContent = textContent
-        }
+          // 有文字内容的 ::after（✿/☽/❀/◆ 等装饰图标）
+          // 跟 ::before 图标一样处理：转成 inline span + blendWithWhite 模拟 opacity
+          const afterOpacity = parseFloat(afterComputed.getPropertyValue('opacity').trim() || '1')
+          const afterFontSize = afterComputed.getPropertyValue('font-size').trim()
+          const afterColor = afterComputed.getPropertyValue('color').trim()
+          const afterStyles: string[] = []
 
-        // ═══ 底部装饰条 → block 级，不用 absolute 定位 ═══
-        const styles: string[] = ['display: block']
+          if (afterColor) {
+            const normalizedColor = normalizeCssValue(afterColor)
+            if (afterOpacity < 1) {
+              const blended = blendWithWhite(normalizedColor, afterOpacity)
+              afterStyles.push(`color: ${blended || normalizedColor}`)
+            } else {
+              afterStyles.push(`color: ${normalizedColor}`)
+            }
+          }
+          if (afterFontSize) afterStyles.push(`font-size: ${afterFontSize}`)
+          afterStyles.push('margin-left: 4px')
+
+          span.textContent = ' ' + textContent
+          span.setAttribute('style', afterStyles.join('; '))
+          dHeading.appendChild(span)
+        } else {
+          // ═══ 底部装饰条 → block 级，不用 absolute 定位 ═══
+          const styles: string[] = ['display: block']
 
         // 处理 background-image (linear-gradient → 降级纯色)
         const bgImage = afterComputed.getPropertyValue('background-image').trim()
@@ -534,18 +554,18 @@ function convertPseudoElements(
 
         // 不输出 opacity（公众号不支持），已在颜色中混合
 
-        // 圆角处理
-        let borderRadius = afterComputed.getPropertyValue('border-radius').trim()
-        if (borderRadius && borderRadius !== '0px') {
-          const radii = borderRadius.split(/\s+/).map(v => parseFloat(v) || 0)
-          if (radii.length === 4 && tagName !== 'h1') {
-            // H2 等：限制圆角不超过装饰条高度
-            const decoHeight = height && height !== 'auto' && height !== '0px' ? parseFloat(height) : 3
-            const clamped = radii.map(r => Math.min(r, decoHeight))
-            borderRadius = clamped.join('px ') + 'px'
+        // 圆角处理（仅 H2，H1 改用 border-bottom 方案不需要圆角处理）
+        if (tagName !== 'h1') {
+          let borderRadius = afterComputed.getPropertyValue('border-radius').trim()
+          if (borderRadius && borderRadius !== '0px') {
+            const radii = borderRadius.split(/\s+/).map(v => parseFloat(v) || 0)
+            if (radii.length === 4) {
+              const decoHeight = height && height !== 'auto' && height !== '0px' ? parseFloat(height) : 3
+              const clamped = radii.map(r => Math.min(r, decoHeight))
+              borderRadius = clamped.join('px ') + 'px'
+            }
+            styles.push(`border-radius: ${borderRadius}`)
           }
-          // H1: 保留原始 border-radius（如 0 0 16px 16px），不增大高度
-          styles.push(`border-radius: ${borderRadius}`)
         }
 
         // 上下间距 — 装饰条要紧贴标题底部
@@ -636,7 +656,8 @@ function convertPseudoElements(
 
               // 虚线（100% 宽度）
               const dashLine = doc.createElement('section')
-              dashLine.setAttribute('style', `border-bottom: ${borderW}px ${borderStyle} ${borderColor}; height: 0;`)
+              dashLine.setAttribute('style', `border-bottom: ${borderW}px ${borderStyle} ${borderColor}; height: 0; width: 100%; font-size: 0; line-height: 0; overflow: hidden;`)
+              dashLine.innerHTML = '&nbsp;'
               container.appendChild(dashLine)
 
               // 装饰条（宽度跟随文本，margin-top: 0 与虚线重叠）
@@ -654,9 +675,19 @@ function convertPseudoElements(
               dHeading.parentElement.insertBefore(decoLine, dHeading.nextSibling)
             }
           } else {
-            // H1 等其他标题：放在外部后面
-            dHeading.parentElement.insertBefore(decoSection, dHeading.nextSibling)
+            // H1：不用 section 做装饰条，改用 border-bottom 方案
+            // H1 本身有 border-radius（卡片圆角），底边自然带圆角，3px 高度也能完美弧度
+            const decoH = height && height !== 'auto' && height !== '0px' ? parseFloat(height) : 3
+            // 找到装饰条的背景色
+            const bgColorMatch = styles.find(s => s.startsWith('background-color:'))
+            const decoBgColor = bgColorMatch ? bgColorMatch.split(':').slice(1).join(':').trim() : ''
+            if (decoBgColor && decoH > 0) {
+              // 给 H1 添加 border-bottom，圆角由 H1 自身的 border-radius 决定
+              const h1Style = dHeading.getAttribute('style') || ''
+              dHeading.setAttribute('style', h1Style + `; border-bottom: ${decoH}px solid ${decoBgColor}`)
+            }
           }
+        }
         }
       }
     })
@@ -1266,15 +1297,17 @@ export async function makeWeChatCompatible(html: string, theme: Theme): Promise<
     }
   )
 
-  // H1 修复：只移除 margin-bottom，保留 padding-bottom（文字垂直居中需要）
+  // H1 修复：减小 padding-top/padding-bottom，移除 margin-bottom
   outputHtml = outputHtml.replace(
     /(<h1\b[^>]*style=")([^"]*)(")/gi,
     (_match, prefix, style, suffix) => {
       let cleaned = style
         .replace(/margin-bottom:\s*[^;]+;?/gi, '')
+        .replace(/padding-top:\s*[^;]+;?/gi, '')
+        .replace(/padding-bottom:\s*[^;]+;?/gi, '')
         .trim()
       if (cleaned && !cleaned.endsWith(';')) cleaned += ';'
-      cleaned += ' margin-bottom: 0;'
+      cleaned += ' padding-top: 4px; padding-bottom: 4px; margin-bottom: 0;'
       return prefix + cleaned + suffix
     }
   )

@@ -1,4 +1,4 @@
-import { type RefObject } from 'react'
+import { useEffect, type RefObject } from 'react'
 import type { Theme } from '../themes/types'
 import { Icon } from '@iconify/react'
 
@@ -25,6 +25,33 @@ export function Preview({
   onCopyHTML,
   onPreviewModeChange,
 }: PreviewProps) {
+
+  // 测量 H2 文字宽度并设置 CSS 变量，让 ::after 装饰条跟文字宽度一致
+  useEffect(() => {
+    const previewEl = previewRef.current
+    if (!previewEl) return
+    const h2s = previewEl.querySelectorAll('.mp-preview h2')
+    h2s.forEach((h2) => {
+      const el = h2 as HTMLElement
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      const textWidth = Math.round(range.getBoundingClientRect().width)
+      // 加上 ::before 图标宽度和 padding-left
+      const cs = window.getComputedStyle(el)
+      const paddingLeft = parseFloat(cs.paddingLeft) || 0
+      const before = window.getComputedStyle(el, '::before')
+      const beforeContent = before.getPropertyValue('content')
+      let beforeWidth = 0
+      if (beforeContent && beforeContent !== 'none') {
+        const bText = beforeContent.replace(/^["']|["']$/g, '')
+        if (bText && before.getPropertyValue('position') !== 'absolute') {
+          beforeWidth = (parseFloat(before.width) || 0) + (parseFloat(before.marginRight) || 0)
+        }
+      }
+      const totalWidth = textWidth + beforeWidth + (beforeWidth === 0 ? paddingLeft : 0)
+      el.style.setProperty('--h2-deco-width', Math.max(totalWidth, 40) + 'px')
+    })
+  })
 
   return (
     <div

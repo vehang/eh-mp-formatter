@@ -65,7 +65,7 @@
   letter-spacing: -0.01em;
   position: relative;
   border-bottom: 1px solid var(--theme-border, #E5E7EB);
-  width: fit-content;
+  width: 100%;
 }
 
 .mp-preview h2::before {
@@ -85,7 +85,7 @@
   position: absolute;
   bottom: -1px;
   left: 0;
-  width: 100%;
+  width: var(--h2-deco-width, 100%);
   height: 3px;
   background: var(--theme-primary);
   border-radius: 1.5px;
