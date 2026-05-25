@@ -140,6 +140,52 @@ async function uploadToTraditionalHost(
 }
 
 // ═══════════════════════════════════════════════════════════════
+// ImgBB 免费图床上传
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 上传到 ImgBB 免费图床
+ * 无需 API Key，无需注册，直接 POST 上传
+ */
+async function uploadToImgBB(
+  file: File,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  onProgress?.({
+    isUploading: true,
+    progress: 0,
+    statusText: '正在上传到 ImgBB...',
+  })
+
+  try {
+    const formData = new FormData()
+    formData.append('source', file)
+    formData.append('action', 'upload')
+    formData.append('type', 'file')
+
+    const resp = await fetch('https://imgbb.com/json', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const data = await resp.json()
+
+    if (data.status_code === 200 && data.image?.url) {
+      onProgress?.({
+        isUploading: false,
+        progress: 100,
+        statusText: '上传成功',
+      })
+      return { success: true, url: data.image.url }
+    }
+
+    return { success: false, error: data.error?.message || '上传失败' }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'ImgBB 上传失败' }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // 阿里云 OSS 上传
 // ═══════════════════════════════════════════════════════════════
 
@@ -856,6 +902,9 @@ export async function uploadImage(
     case 'dk':
     case 'bolt':
       return uploadToTraditionalHost(file, hostType, config?.token, onProgress)
+
+    case 'imgbb':
+      return uploadToImgBB(file, onProgress)
 
     case 'aliyun':
       return uploadToAliyunOSS(file, config, onProgress)

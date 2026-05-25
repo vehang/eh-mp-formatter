@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // 传统图床
-type TraditionalHostType = 'dk' | 'bolt'
+type TraditionalHostType = 'dk' | 'bolt' | 'imgbb'
 
 // OSS 云存储平台
 type OSSHostType = 'aliyun' | 'tencent' | 'qiniu' | 'aws' | 'upyun' | 'huawei' | 'netease' | 'jd'
@@ -129,6 +129,7 @@ export type ImageHostConfig =
   | { type: 'huawei'; config: HuaweiOBSConfig }
   | { type: 'netease'; config: NeteaseNOSConfig }
   | { type: 'jd'; config: JDOSSConfig }
+  | { type: 'imgbb' }
 
 // ═══════════════════════════════════════════════════════════════
 // 存储结构
@@ -139,6 +140,7 @@ export interface ImageHostSettings {
   // 传统图床
   dk: { token: string; isConfigured: boolean }
   bolt: { token?: string; isConfigured: boolean }
+  imgbb: { isConfigured: boolean }
 
   // OSS 云存储
   aliyun: { config: Partial<AliyunOSSConfig>; isConfigured: boolean }
@@ -200,6 +202,18 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
     links: {
       official: 'https://www.boltp.com',
       docs: 'https://www.boltp.com/pages/api-docs',
+    },
+    requiresToken: false,
+    requiredFields: [],
+  },
+  imgbb: {
+    name: 'ImgBB（免费图床）',
+    description: '免费图床，32MB限制，永久存储',
+    icon: 'lucide:image',
+    category: 'traditional',
+    links: {
+      official: 'https://imgbb.com',
+      docs: 'https://imgbb.com',
     },
     requiresToken: false,
     requiredFields: [],
@@ -318,6 +332,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
 export const HOST_REQUIRES_TOKEN: Record<ImageHostType, boolean> = {
   dk: true,
   bolt: false,
+  imgbb: false,
   aliyun: true,
   tencent: true,
   qiniu: true,

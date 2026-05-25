@@ -23,6 +23,7 @@ const defaultSettings: ImageHostSettings = {
   // 传统图床
   dk: { token: '', isConfigured: false },
   bolt: { token: '', isConfigured: false },
+  imgbb: { isConfigured: true },
 
   // OSS 云存储
   aliyun: { config: {}, isConfigured: false },
@@ -39,12 +40,12 @@ const defaultSettings: ImageHostSettings = {
 
 // 图床顺序（用于失败时的备选顺序）
 const HOST_ORDER: ImageHostType[] = [
-  'dk', 'bolt',
+  'imgbb', 'dk', 'bolt',
   'aliyun', 'tencent', 'qiniu', 'aws', 'upyun', 'huawei', 'netease', 'jd'
 ]
 
 // 传统图床列表
-const TRADITIONAL_HOSTS: ImageHostType[] = ['dk', 'bolt']
+const TRADITIONAL_HOSTS: ImageHostType[] = ['dk', 'bolt', 'imgbb']
 
 // 从 localStorage 读取设置
 function loadSettings(): ImageHostSettings {
@@ -102,9 +103,11 @@ export function useImageHost() {
 
       const newSettings: ImageHostSettings = {
         ...prev,
-        [hostType]: isTraditional
-          ? { token: (config as { token?: string }).token || '', isConfigured }
-          : { config: config as Record<string, string | undefined>, isConfigured },
+        [hostType]: hostType === 'imgbb'
+          ? { isConfigured }
+          : isTraditional
+            ? { token: (config as { token?: string }).token || '', isConfigured }
+            : { config: config as Record<string, string | undefined>, isConfigured },
       }
 
       // 如果这是第一个配置的图床，自动设为默认
@@ -255,9 +258,11 @@ export function useImageHost() {
 
       const newSettings: ImageHostSettings = {
         ...prev,
-        [hostType]: isTraditional
-          ? { token: '', isConfigured: false }
-          : { config: {}, isConfigured: false },
+        [hostType]: hostType === 'imgbb'
+          ? { isConfigured: false }
+          : isTraditional
+            ? { token: '', isConfigured: false }
+            : { config: {}, isConfigured: false },
       }
 
       // 如果清除的是默认图床，重新选择

@@ -12,6 +12,7 @@ import {
   UploadCloud,
   Server,
   ShoppingBag,
+  ImageIcon,
 } from 'lucide-react'
 // 品牌图标
 import { SiAlibabacloud, SiTencentqq, SiHuawei, SiNeteasecloudmusic } from 'react-icons/si'
@@ -42,6 +43,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   'lucide:upload-cloud': UploadCloud,
   'lucide:server': Server,
   'lucide:shopping-bag': ShoppingBag,
+  'lucide:image': ImageIcon,
   // 品牌图标
   'brand:aliyun': SiAlibabacloud,
   'brand:tencent': SiTencentqq,
@@ -363,7 +365,7 @@ export function ImageHostConfigModal({
               <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{hostInfo.name}</span>
             </div>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
-              {hostInfo.description}，无需配置 Token，点击保存即可直接使用。
+              {hostInfo.description}，{activeTab === 'imgbb' ? '无需任何配置' : '无需配置 Token'}，点击保存即可直接使用。
             </p>
           </div>
         )
