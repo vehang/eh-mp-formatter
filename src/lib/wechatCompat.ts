@@ -328,6 +328,30 @@ function extractPseudoContent(raw: string): string {
 }
 
 /**
+ * 从 SVG data URL 中提取 stroke 颜色
+ */
+function extractSvgStrokeColor(bgImage: string): string | null {
+  // URL-encoded: stroke%3D'%23XXXXXX'
+  let match = bgImage.match(/stroke%3D['"]?(%23[0-9A-Fa-f]{3,8})/i)
+  if (match) return decodeURIComponent(match[1])
+  // Decoded: stroke='#XXXXXX'
+  match = bgImage.match(/stroke=['"]?(#[0-9A-Fa-f]{3,8})/i)
+  if (match) return match[1]
+  return null
+}
+
+/**
+ * 从 SVG data URL 中提取 opacity
+ */
+function extractSvgOpacity(bgImage: string): number {
+  let match = bgImage.match(/opacity%3D['"]?([0-9.]+)/i)
+  if (match) return parseFloat(match[1])
+  match = bgImage.match(/opacity=['"]?([0-9.]+)/i)
+  if (match) return parseFloat(match[1])
+  return 1
+}
+
+/**
  * 判断伪元素是否有视觉效果
  * 支持：背景色/渐变、固定尺寸（装饰条）、文字内容+颜色/字号
  */
@@ -534,6 +558,17 @@ function convertPseudoElements(
           }
         }
 
+        // 检测 SVG URL 背景（公众号不支持 SVG 背景图，需降级为 unicode 波浪字符）
+        const isSvgWave = !!(bgImage && bgImage !== 'none' && !bgImage.includes('linear-gradient') && bgImage.includes('url('))
+        let svgWaveColor: string | null = null
+        if (isSvgWave) {
+          const strokeColor = extractSvgStrokeColor(bgImage)
+          if (strokeColor) {
+            const svgOpacity = extractSvgOpacity(bgImage)
+            svgWaveColor = svgOpacity < 1 ? (blendWithWhite(strokeColor, svgOpacity) || strokeColor) : strokeColor
+          }
+        }
+
         // 高度（装饰条的关键属性）
         const height = afterComputed.getPropertyValue('height').trim()
         if (height && height !== 'auto' && height !== '0px') {
@@ -668,11 +703,21 @@ function convertPseudoElements(
 
               dHeading.parentElement.insertBefore(container, dHeading.nextSibling)
             } else {
-              // 无虚线：只输出装饰条（宽度跟随文本）
-              const decoLine = doc.createElement('section')
-              decoLine.setAttribute('style', `height: ${decoH}px; background-color: ${bgColor}; width: ${decoWidth}px; border-radius: 2px; margin: 0 0 14px 0; padding: 0; font-size: 0; line-height: 0;`)
-              decoLine.innerHTML = '&nbsp;'
-              dHeading.parentElement.insertBefore(decoLine, dHeading.nextSibling)
+              if (isSvgWave && svgWaveColor) {
+                // SVG 波浪背景 → 降级为 unicode 波浪字符
+                const waveFontSize = Math.max(decoH + 2, 8)
+                const waveRepeat = Math.ceil(decoWidth / (waveFontSize * 0.6))
+                const waveSection = doc.createElement('section')
+                waveSection.setAttribute('style', `width: ${decoWidth}px; font-size: ${waveFontSize}px; line-height: 1.2; color: ${svgWaveColor}; letter-spacing: -2px; overflow: hidden; white-space: nowrap; margin: 0 0 14px 0; padding: 0;`)
+                waveSection.textContent = '〰'.repeat(Math.max(waveRepeat, 20))
+                dHeading.parentElement.insertBefore(waveSection, dHeading.nextSibling)
+              } else {
+                // 无虚线：只输出装饰条（宽度跟随文本）
+                const decoLine = doc.createElement('section')
+                decoLine.setAttribute('style', `height: ${decoH}px; background-color: ${bgColor}; width: ${decoWidth}px; border-radius: 2px; margin: 0 0 14px 0; padding: 0; font-size: 0; line-height: 0;`)
+                decoLine.innerHTML = '&nbsp;'
+                dHeading.parentElement.insertBefore(decoLine, dHeading.nextSibling)
+              }
             }
           } else {
             // H1：不用 section 做装饰条，改用 border-bottom 方案
@@ -1352,21 +1397,37 @@ export async function makeWeChatCompatible(html: string, theme: Theme): Promise<
     '$1\u2060$2'
   )
 
-  // H2 修复：移除 border-bottom/padding-bottom/margin-bottom（虚线已移到容器内）
-  // 显式设为 0 覆盖公众号默认样式
-  outputHtml = outputHtml.replace(
-    /(<h2\b[^>]*style=")([^"]*)(")/gi,
-    (_match, prefix, style, suffix) => {
-      let cleaned = style
-        .replace(/border-bottom:\s*[^;]+;?/gi, '')
-        .replace(/padding-bottom:\s*[^;]+;?/gi, '')
-        .replace(/margin-bottom:\s*[^;]+;?/gi, '')
-        .trim()
-      if (cleaned && !cleaned.endsWith(';')) cleaned += ';'
-      cleaned += ' padding-bottom: 0; margin-bottom: 0;'
-      return prefix + cleaned + suffix
-    }
-  )
+  // H2 修复：根据 headingStyle 决定是否保留 border-bottom
+  if (theme.headingStyle === 'nordic') {
+    // nordic 的 H2 装饰就是 border-bottom，不应删除
+    // 只覆盖 margin-bottom 防止公众号默认样式干扰
+    outputHtml = outputHtml.replace(
+      /(<h2\b[^>]*style=")([^"]*)(")/gi,
+      (_match, prefix, style, suffix) => {
+        let cleaned = style
+          .replace(/margin-bottom:\s*[^;]+;?/gi, '')
+          .trim()
+        if (cleaned && !cleaned.endsWith(';')) cleaned += ';'
+        cleaned += ' margin-bottom: 14px;'
+        return prefix + cleaned + suffix
+      }
+    )
+  } else {
+    // 其他主题：border-bottom 已移到容器内，移除并显式设为 0
+    outputHtml = outputHtml.replace(
+      /(<h2\b[^>]*style=")([^"]*)(")/gi,
+      (_match, prefix, style, suffix) => {
+        let cleaned = style
+          .replace(/border-bottom:\s*[^;]+;?/gi, '')
+          .replace(/padding-bottom:\s*[^;]+;?/gi, '')
+          .replace(/margin-bottom:\s*[^;]+;?/gi, '')
+          .trim()
+        if (cleaned && !cleaned.endsWith(';')) cleaned += ';'
+        cleaned += ' padding-bottom: 0; margin-bottom: 0;'
+        return prefix + cleaned + suffix
+      }
+    )
+  }
 
   // H1 修复：减小 padding-top/padding-bottom，移除 margin-bottom
   outputHtml = outputHtml.replace(
