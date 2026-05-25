@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react'
+import { useEffect, useMemo, type RefObject } from 'react'
 import type { Theme } from '../themes/types'
 import { Icon } from '@iconify/react'
 
@@ -27,6 +27,15 @@ export function Preview({
   onPreviewModeChange,
   showCodeTitle,
 }: PreviewProps) {
+
+  // 预处理 HTML：处理标题栏开关（颜色由 CSS 变量 --theme-code-block-bg 控制）
+  const processedHtml = useMemo(() => {
+    if (showCodeTitle) return html
+    // 关闭标题栏：加 no-title class + 去掉 header
+    return html
+      .replace(/<div class="code-block-wrapper">/g, '<div class="code-block-wrapper no-title">')
+      .replace(/<div class="code-block-header">[\s\S]*?<\/div>\s*(<pre)/g, '$1')
+  }, [html, showCodeTitle])
 
   // 测量 H2 文字宽度并设置 CSS 变量
   useEffect(() => {
@@ -94,34 +103,8 @@ export function Preview({
     return () => previewEl.removeEventListener('click', handler)
   }, [])
 
-  // 代码块：标题栏背景色（showCodeTitle 开关已在 dangerouslySetInnerHTML 层面处理）
-  useEffect(() => {
-    const previewEl = previewRef.current
-    if (!previewEl) return
-
-    const wrappers = previewEl.querySelectorAll('.code-block-wrapper')
-    wrappers.forEach((wrapper) => {
-      const wrapperEl = wrapper as HTMLElement
-      const header = wrapperEl.querySelector('.code-block-header') as HTMLElement
-      const pre = wrapperEl.querySelector('pre') as HTMLElement
-      if (!pre || !header) return
-
-      // 标题栏背景色跟随 hljs 主题（延迟读取确保 CSS 已加载）
-      if (showCodeTitle && header) {
-        setTimeout(() => {
-          const hljsEl = pre.classList.contains('hljs') ? pre : (pre.querySelector('.hljs') || pre)
-          const hljsStyle = window.getComputedStyle(hljsEl)
-          const bgColor = hljsStyle.backgroundColor
-          const textColor = hljsStyle.color
-          if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
-            header.style.backgroundColor = bgColor
-            header.style.color = textColor
-            wrapperEl.style.backgroundColor = bgColor
-          }
-        }, 200)
-      }
-    })
-  }, [html, showCodeTitle])
+  // 代码块颜色由 loadCodeStyle 追加的 CSS 规则控制（从 hljs 主题提取背景色）
+  // 此处无额外 DOM 操作
 
   return (
     <div
@@ -237,7 +220,7 @@ export function Preview({
             <div
               className="mp-preview"
               style={{ maxWidth: 'none' }}
-              dangerouslySetInnerHTML={{ __html: showCodeTitle ? html : html.replace(/<div class="code-block-wrapper">/g, '<div class="code-block-wrapper no-title">').replace(/<div class="code-block-header">[\s\S]*?<\/div>\s*(<pre)/g, '$1') }}
+              dangerouslySetInnerHTML={{ __html: processedHtml }}
             />
           </div>
         </div>

@@ -53,6 +53,13 @@ function loadCodeStyle(styleId: string) {
     // 并根据主题类型追加配置文件增强样式
     const isDark = styleId.includes('dark') || styleId === 'monokai' || styleId === 'tokyo-night'
     styleEl.textContent = prefixSelectors(style.css, '.mp-preview') + getConfigEnhanceStyles(isDark)
+    // 从 hljs CSS 提取背景色，同步给 wrapper 和 header
+    const hljsBgMatch = style.css.match(/\.hljs\s*\{[^}]*background:\s*([^;\s}]+)/)
+    const hljsColorMatch = style.css.match(/\.hljs\s*\{[^}]*color:\s*([^;\s}]+)/)
+    const hljsBg = hljsBgMatch ? hljsBgMatch[1] : (isDark ? '#0d1117' : '#ffffff')
+    const hljsColor = hljsColorMatch ? hljsColorMatch[1] : (isDark ? '#c9d1d9' : '#24292e')
+    styleEl.textContent += `\n.mp-preview .code-block-wrapper { background: ${hljsBg} !important; }`
+    styleEl.textContent += `\n.mp-preview .code-block-header { background: ${hljsBg} !important; color: ${hljsColor}; }`
     document.head.appendChild(styleEl)
     loadedStyleId = styleId
   }
