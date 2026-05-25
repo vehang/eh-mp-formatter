@@ -356,6 +356,10 @@ function extractSvgOpacity(bgImage: string): number {
  * 支持：背景色/渐变、固定尺寸（装饰条）、文字内容+颜色/字号
  */
 function pseudoHasVisual(cs: CSSStyleDeclaration, rawContent: string): boolean {
+  // display:none → 不可见，跳过
+  const display = cs.getPropertyValue('display').trim()
+  if (display === 'none') return false
+
   // 1. 有非透明背景色
   const bg = cs.getPropertyValue('background-color').trim()
   if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') return true
