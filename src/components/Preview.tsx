@@ -1,4 +1,4 @@
-import { useEffect, useCallback, type RefObject } from 'react'
+import { useEffect, type RefObject } from 'react'
 import type { Theme } from '../themes/types'
 import { Icon } from '@iconify/react'
 
