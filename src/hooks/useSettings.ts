@@ -7,7 +7,7 @@ import { useState, useCallback } from 'react'
 
 // 设置存储的 key
 const SETTINGS_KEY = 'mp-formatter-settings'
-const SETTINGS_VERSION = '2.1' // 缓存版本号
+const SETTINGS_VERSION = '2.2' // 缓存版本号
 
 // 设置项类型定义
 export interface AppSettings {
@@ -21,6 +21,8 @@ export interface AppSettings {
   syncScroll: boolean
   // 跟随系统主题（与 useUITheme 配合使用）
   followSystemTheme: boolean
+  // 代码块标题栏（苹果风格：三圆点+语言名+复制按钮）
+  showCodeTitle: boolean
 }
 
 // 默认设置
@@ -30,6 +32,7 @@ const defaultSettings: AppSettings = {
   previewMode: 'desktop',
   syncScroll: true,
   followSystemTheme: true,
+  showCodeTitle: true,
 }
 
 // 从 localStorage 读取设置
@@ -87,7 +90,11 @@ export function useSettings() {
   // 批量更新设置
   const updateSettings = useCallback((updates: Partial<AppSettings>) => {
     setSettingsState(prev => {
-      const newSettings = { ...prev, ...updates }
+      // 过滤掉 undefined 值，避免覆盖已有设置
+      const filtered = Object.fromEntries(
+        Object.entries(updates).filter(([, v]) => v !== undefined)
+      )
+      const newSettings = { ...prev, ...filtered }
       saveSettings(newSettings)
       return newSettings
     })
@@ -110,10 +117,12 @@ export function useSettings() {
     previewMode: settings.previewMode,
     syncScroll: settings.syncScroll,
     followSystemTheme: settings.followSystemTheme,
+    showCodeTitle: settings.showCodeTitle,
     setThemeId: (value: string) => updateSetting('themeId', value),
     setCodeStyle: (value: string) => updateSetting('codeStyle', value),
     setPreviewMode: (value: 'mobile' | 'pad' | 'desktop') => updateSetting('previewMode', value),
     setSyncScroll: (value: boolean) => updateSetting('syncScroll', value),
     setFollowSystemTheme: (value: boolean) => updateSetting('followSystemTheme', value),
+    setShowCodeTitle: (value: boolean) => updateSetting('showCodeTitle', value),
   }
 }

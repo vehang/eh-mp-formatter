@@ -14,6 +14,8 @@ interface CodeStylePickerModalProps {
   codeStyles: CodeStyle[]
   currentStyle: string
   onSelectStyle: (styleId: string) => void
+  showCodeTitle: boolean
+  onToggleCodeTitle: () => void
 }
 
 // Java Hello World 示例代码
@@ -87,7 +89,9 @@ export function CodeStylePickerModal({
   onClose,
   codeStyles,
   currentStyle,
-  onSelectStyle
+  onSelectStyle,
+  showCodeTitle,
+  onToggleCodeTitle
 }: CodeStylePickerModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
 
@@ -190,6 +194,41 @@ export function CodeStylePickerModal({
               </button>
             )
           })}
+        </div>
+
+        {/* 代码块标题栏开关 */}
+        <div className="theme-picker-footer" style={{ justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Icon icon="lucide:terminal" style={{ color: 'var(--text-secondary)' }} />
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>代码块标题栏</span>
+          </div>
+          <button
+            onClick={onToggleCodeTitle}
+            style={{
+              width: '40px',
+              height: '22px',
+              borderRadius: '11px',
+              border: 'none',
+              cursor: 'pointer',
+              position: 'relative',
+              transition: 'background-color 0.2s ease',
+              backgroundColor: showCodeTitle ? 'var(--orange-500, #F97316)' : 'var(--bg-muted, #D4D4D8)',
+              flexShrink: 0,
+            }}
+            title={showCodeTitle ? '关闭标题栏' : '开启标题栏'}
+          >
+            <span style={{
+              position: 'absolute',
+              top: '2px',
+              left: showCodeTitle ? '20px' : '2px',
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              backgroundColor: '#fff',
+              transition: 'left 0.2s ease',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            }} />
+          </button>
         </div>
 
         {/* 底部提示 */}

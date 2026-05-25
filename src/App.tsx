@@ -345,6 +345,7 @@ function App() {
   const [previewMode, setPreviewMode] = useState<'mobile' | 'pad' | 'desktop'>(settings.previewMode)
   const [codeStyle, setCodeStyle] = useState(settings.codeStyle)
   const [syncScroll, setSyncScroll] = useState(settings.syncScroll)
+  const [showCodeTitle, setShowCodeTitle] = useState(settings.showCodeTitle)
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
   const [isFetchingUrl, setIsFetchingUrl] = useState(false)
   const [isThemePickerOpen, setIsThemePickerOpen] = useState(false)
@@ -413,9 +414,10 @@ function App() {
       themeId: currentTheme.id,
       codeStyle,
       previewMode,
-      syncScroll
+      syncScroll,
+      showCodeTitle
     })
-  }, [previewMode, syncScroll, codeStyle, currentTheme.id])
+  }, [previewMode, syncScroll, codeStyle, currentTheme.id, showCodeTitle])
 
   const handleSelectTheme = (theme: Theme) => {
     setCurrentTheme(theme)
@@ -936,6 +938,7 @@ function App() {
             onDownloadPDF={handleDownloadPDF}
             onCopyHTML={handleCopyHTML}
             onPreviewModeChange={setPreviewMode}
+            showCodeTitle={showCodeTitle}
           />
         </div>
       </main>
@@ -1024,6 +1027,8 @@ function App() {
           codeStyles={codeStyles}
           currentStyle={codeStyle}
           onSelectStyle={setCodeStyle}
+          showCodeTitle={showCodeTitle}
+          onToggleCodeTitle={() => setShowCodeTitle(!showCodeTitle)}
         />
       </Suspense>
 

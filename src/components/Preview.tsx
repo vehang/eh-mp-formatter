@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react'
+import { useEffect, useCallback, type RefObject } from 'react'
 import type { Theme } from '../themes/types'
 import { Icon } from '@iconify/react'
 
@@ -12,6 +12,7 @@ interface PreviewProps {
   onDownloadPDF: () => void
   onCopyHTML: () => void
   onPreviewModeChange: (mode: 'mobile' | 'pad' | 'desktop') => void
+  showCodeTitle: boolean
 }
 
 export function Preview({
@@ -24,9 +25,10 @@ export function Preview({
   onDownloadPDF,
   onCopyHTML,
   onPreviewModeChange,
+  showCodeTitle,
 }: PreviewProps) {
 
-  // 测量 H2 文字宽度并设置 CSS 变量，让 ::after 装饰条跟文字宽度一致
+  // 测量 H2 文字宽度并设置 CSS 变量
   useEffect(() => {
     const previewEl = previewRef.current
     if (!previewEl) return
@@ -36,7 +38,6 @@ export function Preview({
       const range = document.createRange()
       range.selectNodeContents(el)
       const textWidth = Math.round(range.getBoundingClientRect().width)
-      // 加上 ::before 图标宽度和 padding-left
       const cs = window.getComputedStyle(el)
       const paddingLeft = parseFloat(cs.paddingLeft) || 0
       const before = window.getComputedStyle(el, '::before')
@@ -52,6 +53,75 @@ export function Preview({
       el.style.setProperty('--h2-deco-width', Math.max(totalWidth, 40) + 'px')
     })
   })
+
+  // 事件委托：复制按钮（只绑定一次，不受 React 重渲染影响）
+  useEffect(() => {
+    const previewEl = previewRef.current
+    if (!previewEl) return
+
+    const handler = async (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('.code-block-copy-btn') as HTMLElement | null
+      if (!target) return
+      e.preventDefault()
+      e.stopPropagation()
+
+      const wrapper = target.closest('.code-block-wrapper')
+      const code = wrapper?.querySelector('code')
+      const text = code?.textContent || ''
+      try {
+        // navigator.clipboard 在非 HTTPS 环境不可用，需 fallback
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text)
+        } else {
+          const textarea = document.createElement('textarea')
+          textarea.value = text
+          textarea.style.cssText = 'position:fixed;left:-9999px;top:-9999px'
+          document.body.appendChild(textarea)
+          textarea.select()
+          document.execCommand('copy')
+          document.body.removeChild(textarea)
+        }
+        target.textContent = '✓'
+        target.classList.add('copied')
+        setTimeout(() => {
+          target.textContent = '复制'
+          target.classList.remove('copied')
+        }, 2000)
+      } catch { /* fallback */ }
+    }
+
+    previewEl.addEventListener('click', handler)
+    return () => previewEl.removeEventListener('click', handler)
+  }, [])
+
+  // 代码块：标题栏背景色（showCodeTitle 开关已在 dangerouslySetInnerHTML 层面处理）
+  useEffect(() => {
+    const previewEl = previewRef.current
+    if (!previewEl) return
+
+    const wrappers = previewEl.querySelectorAll('.code-block-wrapper')
+    wrappers.forEach((wrapper) => {
+      const wrapperEl = wrapper as HTMLElement
+      const header = wrapperEl.querySelector('.code-block-header') as HTMLElement
+      const pre = wrapperEl.querySelector('pre') as HTMLElement
+      if (!pre || !header) return
+
+      // 标题栏背景色跟随 hljs 主题（延迟读取确保 CSS 已加载）
+      if (showCodeTitle && header) {
+        setTimeout(() => {
+          const hljsEl = pre.classList.contains('hljs') ? pre : (pre.querySelector('.hljs') || pre)
+          const hljsStyle = window.getComputedStyle(hljsEl)
+          const bgColor = hljsStyle.backgroundColor
+          const textColor = hljsStyle.color
+          if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+            header.style.backgroundColor = bgColor
+            header.style.color = textColor
+            wrapperEl.style.backgroundColor = bgColor
+          }
+        }, 200)
+      }
+    })
+  }, [html, showCodeTitle])
 
   return (
     <div
@@ -72,7 +142,6 @@ export function Preview({
           </>
         )}
 
-        {/* Preview mode toggle - Hidden on mobile */}
         {!isMobile && (
           <div
             className="toggle-group"
@@ -85,14 +154,7 @@ export function Preview({
               onClick={() => onPreviewModeChange('desktop')}
               className={`toggle-btn ${previewMode === 'desktop' ? 'active' : ''}`}
               title="宽屏模式"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '4px 8px',
-                fontSize: '13px',
-                whiteSpace: 'nowrap',
-              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', fontSize: '13px', whiteSpace: 'nowrap' }}
             >
               <Icon icon="lucide:monitor" width={14} height={14} />
               {previewMode !== 'mobile' && '宽屏'}
@@ -101,14 +163,7 @@ export function Preview({
               onClick={() => onPreviewModeChange('pad')}
               className={`toggle-btn ${previewMode === 'pad' ? 'active' : ''}`}
               title="Pad 模式"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '4px 8px',
-                fontSize: '13px',
-                whiteSpace: 'nowrap',
-              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', fontSize: '13px', whiteSpace: 'nowrap' }}
             >
               <Icon icon="lucide:tablet" width={14} height={14} />
               {previewMode !== 'mobile' && 'Pad'}
@@ -117,14 +172,7 @@ export function Preview({
               onClick={() => onPreviewModeChange('mobile')}
               className={`toggle-btn ${previewMode === 'mobile' ? 'active' : ''}`}
               title="手机模式"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '4px 8px',
-                fontSize: '13px',
-                whiteSpace: 'nowrap',
-              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', fontSize: '13px', whiteSpace: 'nowrap' }}
             >
               <Icon icon="lucide:smartphone" width={14} height={14} />
               {previewMode !== 'mobile' && '手机'}
@@ -134,20 +182,12 @@ export function Preview({
 
         <div className="flex-1" />
 
-        {/* Download PDF button - Icon only on mobile */}
         <button
           className="btn btn-ghost"
           onClick={onDownloadPDF}
           disabled={isDownloading}
           title="下载 PDF"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: isMobile ? '6px' : '4px 10px',
-            fontSize: '13px',
-            marginRight: '8px',
-          }}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: isMobile ? '6px' : '4px 10px', fontSize: '13px', marginRight: '8px' }}
         >
           {isDownloading ? (
             <Icon icon="lucide:loader-2" width={14} height={14} style={{ animation: 'spin 1s linear infinite' }} />
@@ -157,23 +197,15 @@ export function Preview({
           {!isMobile && previewMode !== 'mobile' && '下载 PDF'}
         </button>
 
-        {/* Copy formatting button */}
         <button
           className="btn btn-primary"
           onClick={onCopyHTML}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: isMobile ? '4px 10px' : '4px 10px',
-            fontSize: '13px',
-          }}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: isMobile ? '4px 10px' : '4px 10px', fontSize: '13px' }}
         >
           <Icon icon="lucide:copy" width={14} height={14} />
           复制排版
         </button>
 
-        {/* Size display - Hidden on mobile */}
         {!isMobile && previewMode !== 'mobile' && (
           <span className="panel-meta" style={{ marginLeft: '12px' }}>
             {previewMode === 'pad' ? '768px' : '自适应'}
@@ -183,17 +215,13 @@ export function Preview({
 
       <div
         className="flex-1 overflow-auto flex justify-center"
-        style={{
-          padding: isMobile ? '0' : 'var(--space-6)',
-          background: 'var(--bg-base)',
-        }}
+        style={{ padding: isMobile ? '0' : 'var(--space-6)', background: 'var(--bg-base)' }}
       >
         <div
           ref={previewRef}
           className="card"
           style={{
-            width:
-              previewMode === 'mobile' ? '375px' : previewMode === 'pad' ? '768px' : '100%',
+            width: previewMode === 'mobile' ? '375px' : previewMode === 'pad' ? '768px' : '100%',
             maxWidth: '100%',
             overflow: 'hidden',
             transition: 'width 0.3s ease-in-out',
@@ -209,7 +237,7 @@ export function Preview({
             <div
               className="mp-preview"
               style={{ maxWidth: 'none' }}
-              dangerouslySetInnerHTML={{ __html: html }}
+              dangerouslySetInnerHTML={{ __html: showCodeTitle ? html : html.replace(/<div class="code-block-wrapper">/g, '<div class="code-block-wrapper no-title">').replace(/<div class="code-block-header">[\s\S]*?<\/div>\s*(<pre)/g, '$1') }}
             />
           </div>
         </div>

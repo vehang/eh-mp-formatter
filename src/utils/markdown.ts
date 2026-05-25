@@ -30,7 +30,8 @@ const md: MarkdownIt = new MarkdownIt({
     // 如果指定了语言且支持，使用指定语言高亮
     if (lang && hljs.getLanguage(lang)) {
       try {
-        return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
+        const langLabel = lang.charAt(0).toUpperCase() + lang.slice(1)
+        return `<pre class="hljs" data-language="${langLabel}"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
       } catch {
         // ignore
       }
@@ -38,10 +39,12 @@ const md: MarkdownIt = new MarkdownIt({
     // 没有指定语言时，在常用语言中自动检测，提高准确率
     try {
       const result = hljs.highlightAuto(str, COMMON_LANGUAGES)
-      return `<pre class="hljs"><code>${result.value}</code></pre>`
+      const detectedLang = result.language || ''
+      const langLabel = detectedLang ? detectedLang.charAt(0).toUpperCase() + detectedLang.slice(1) : ''
+      return `<pre class="hljs" data-language="${langLabel}"><code>${result.value}</code></pre>`
     } catch {
       // 自动检测失败，返回纯文本
-      return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
+      return `<pre class="hljs" data-language=""><code>${md.utils.escapeHtml(str)}</code></pre>`
     }
   }
 // @ts-ignore - mathjax 插件类型不兼容
@@ -55,7 +58,7 @@ const md: MarkdownIt = new MarkdownIt({
 export function parseMarkdown(content: string): string {
   const rawHtml = md.render(content)
   // 使用 DOMPurify 清理 XSS 攻击向量，但保留必要的 HTML 标签
-  return DOMPurify.sanitize(rawHtml, {
+  const sanitized = DOMPurify.sanitize(rawHtml, {
     // 允许的标签（保留 markdown 渲染所需的所有标签）
     ALLOWED_TAGS: [
       // 基础标签
@@ -79,6 +82,8 @@ export function parseMarkdown(content: string): string {
       'mpadded', 'mphantom', 'mfenced', 'msqrt', 'mroot', 'mtable', 'mtr', 'mtd',
       // 脚注
       'section', 'article', 'aside', 'header', 'footer', 'nav',
+      // 按钮（代码块复制按钮）
+      'button',
     ],
     // 允许的属性
     ALLOWED_ATTR: [
@@ -108,6 +113,23 @@ export function parseMarkdown(content: string): string {
     // 允许 data-* 属性
     ALLOW_DATA_ATTR: true,
   })
+
+  // 后处理：给 <pre> 包裹代码块标题栏（苹果风格）
+  const wrapped = sanitized.replace(
+    /<pre\s+class="hljs"\s+data-language="([^"]*)">([\s\S]*?)<\/pre>/g,
+    (_match, lang, codeContent) => {
+      const lower = lang.toLowerCase()
+      const langMap: Record<string, string> = {
+        js: 'JavaScript', ts: 'TypeScript', py: 'Python', rb: 'Ruby',
+        sh: 'Shell', yml: 'YAML', yaml: 'YAML', md: 'Markdown',
+        json: 'JSON', html: 'HTML', css: 'CSS', sql: 'SQL',
+        java: 'Java', go: 'Go', rs: 'Rust', cpp: 'C++', c: 'C',
+      }
+      const display = langMap[lower] || (lang.charAt(0).toUpperCase() + lang.slice(1))
+      return `<div class="code-block-wrapper"><div class="code-block-header"><div class="code-block-dots"><span class="code-dot code-dot-red">&#8203;</span><span class="code-dot code-dot-yellow">&#8203;</span><span class="code-dot code-dot-green">&#8203;</span></div><span class="code-block-lang">${display}</span><button class="code-block-copy-btn" title="复制代码">复制</button></div><pre class="hljs" data-language="${lang}">${codeContent}</pre></div>`
+    }
+  )
+  return wrapped
 }
 
 export { md }

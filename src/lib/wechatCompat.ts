@@ -809,6 +809,77 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     }
   })
 
+  // ⭐ 代码块标题栏：给 wrapper/header/圆点/语言名加内联样式（复制到公众号需要）
+  const previewWrappers = previewEl.querySelectorAll('.code-block-wrapper')
+  const docWrappers = doc.querySelectorAll('.code-block-wrapper')
+
+  previewWrappers.forEach((previewWrapper, index) => {
+    const docWrapper = docWrappers[index]
+    if (!docWrapper) return
+
+    // wrapper 样式
+    const wrapperComputed = window.getComputedStyle(previewWrapper)
+    const wrapperBg = wrapperComputed.getPropertyValue('background-color')
+    docWrapper.setAttribute('style', [
+      'margin: 20px 0',
+      'border-radius: 12px',
+      'overflow: hidden',
+      `background: ${wrapperBg}`,
+    ].join('; '))
+
+    // header 样式
+    const previewHeader = previewWrapper.querySelector('.code-block-header')
+    const docHeader = docWrapper.querySelector('.code-block-header')
+    if (previewHeader && docHeader) {
+      const headerComputed = window.getComputedStyle(previewHeader)
+      const headerBg = headerComputed.getPropertyValue('background-color')
+      const headerColor = headerComputed.getPropertyValue('color')
+      docHeader.setAttribute('style', [
+        'padding: 8px 12px',
+        `background: ${headerBg}`,
+        `color: ${headerColor}`,
+        'border-bottom: 1px solid rgba(128, 128, 128, 0.15)',
+        'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        'font-size: 12px',
+        'overflow: hidden',
+      ].join('; '))
+
+      // 三圆点：公众号不支持 span background-color，用 unicode 实心圆 ● + color
+      const dotColors = ['#FF5F57', '#FEBC2E', '#28C840']
+      docHeader.querySelectorAll('.code-dot').forEach((dot, i) => {
+        const dotEl = dot as HTMLElement
+        dotEl.innerHTML = '●'
+        dotEl.setAttribute('style', [
+          'font-size: 10px',
+          `color: ${dotColors[i]}`,
+          'margin-right: 6px',
+          'line-height: 1',
+        ].join('; '))
+      })
+
+      // 语言名内联样式（颜色跟随主题，模拟 opacity: 0.6 效果）
+      const langEl = docHeader.querySelector('.code-block-lang')
+      const previewLangEl = previewHeader.querySelector('.code-block-lang')
+      if (langEl && previewLangEl) {
+        // 从预览区读取语言名的计算颜色（已经包含 header color + opacity 的最终值）
+        const langComputed = window.getComputedStyle(previewLangEl)
+        const langColor = langComputed.getPropertyValue('color')
+        langEl.setAttribute('style', [
+          'font-size: 11px',
+          `color: ${langColor}`,
+          'letter-spacing: 0.5px',
+          'float: right',
+          'line-height: 20px',
+          'padding-right: 4px',
+        ].join('; '))
+      }
+
+      // 去掉复制按钮（公众号不需要）
+      const copyBtn = docHeader.querySelector('.code-block-copy-btn')
+      if (copyBtn) copyBtn.remove()
+    }
+  })
+
   // 代码高亮 span：从预览区域读取计算后的颜色（只取颜色，不加背景）
   const previewCodeSpans = previewEl.querySelectorAll('pre.hljs span')
   const docCodeSpans = doc.querySelectorAll('pre.hljs span')
@@ -1309,6 +1380,39 @@ export async function makeWeChatCompatible(html: string, theme: Theme): Promise<
       if (cleaned && !cleaned.endsWith(';')) cleaned += ';'
       cleaned += ' padding-top: 4px; padding-bottom: 4px; margin-bottom: 0;'
       return prefix + cleaned + suffix
+    }
+  )
+
+  // 代码块处理：区分"有标题栏"和"无标题栏"两种模式
+  // 1. no-title 模式：去掉 wrapper，只保留 pre（恢复圆角）
+  outputHtml = outputHtml.replace(
+    /<div class="code-block-wrapper no-title"[^>]*>([\s\S]*?)<pre([^>]*)>([\s\S]*?)<\/pre>[\s\S]*?<\/div>/gi,
+    (_match, _gap, preAttrs, codeContent) => {
+      // 恢复圆角
+      if (preAttrs.includes('border-radius')) {
+        return `<pre${preAttrs.replace(/border-radius:\s*0px;?/gi, 'border-radius: 12px;')}>${codeContent}</pre>`
+      }
+      return `<pre${preAttrs} style="border-radius: 12px;">${codeContent}</pre>`
+    }
+  )
+
+  // 2. 有标题栏模式：保留 wrapper+header，转为公众号友好的结构
+  outputHtml = outputHtml.replace(
+    /<div class="code-block-wrapper"([^>]*)>([\s\S]*?)<div class="code-block-header"([^>]*)>([\s\S]*?)<div class="code-block-dots"[^>]*>([\s\S]*?)<\/div>([\s\S]*?)<\/div>([\s\S]*?)<pre([^>]*)>([\s\S]*?)<\/pre>[\s\S]*?<\/div>/gi,
+    (_match, wrapperAttrs, _gap1, headerAttrs, _gap2, dotsContent, gap3, _gap4, preAttrs, codeContent) => {
+      // dotsContent: 三个 code-dot span（已用 unicode ● + color）
+      // gap3: 语言名 span（复制按钮已被 applyInlineStyles 删除）
+      const headerContent = dotsContent.trim() + gap3.trim()
+      return [
+        `<section${wrapperAttrs}>`,
+        `<section${headerAttrs}>`,
+        headerContent,
+        '</section>',
+        `<pre${preAttrs}>`,
+        codeContent,
+        '</pre>',
+        '</section>'
+      ].join('')
     }
   )
 
