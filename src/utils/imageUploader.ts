@@ -227,7 +227,8 @@ async function uploadToFreeImage(
     formData.append('action', 'upload')
     formData.append('type', 'file')
 
-    const resp = await fetch('https://freeimage.host/json', { method: 'POST', body: formData })
+    // 通过 nginx 反向代理绕过 CORS（FreeImage 不支持 CORS）
+    const resp = await fetch('/api/freeimage/json', { method: 'POST', body: formData })
     const data = await resp.json()
 
     if (data.status_code === 200 && data.image?.url) {
@@ -266,6 +267,76 @@ async function uploadToKappa(
     return { success: false, error: data.message || '上传失败' }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'Kappa 上传失败' }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Lewd.pics 轻量级图床上传（通过 nginx 代理绕过 CORS）
+// ═══════════════════════════════════════════════════════════════
+
+async function uploadToLewd(
+  file: File,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到 Lewd...' })
+
+  try {
+    const formData = new FormData()
+    formData.append('fileToUpload', file)
+    formData.append('curl2', '1')
+
+    // 通过 nginx 反向代理绕过 CORS
+    const resp = await fetch('/api/lewd/p/', { method: 'POST', body: formData })
+    const text = await resp.text()
+
+    // 返回格式: https://lewd.pics/p/?i=xxx.png
+    if (text.startsWith('https://')) {
+      // 转换为直接图片 URL: https://lewd.pics/p/xxx.png
+      const match = text.match(/i=([^&\s]+)/)
+      const directUrl = match ? `https://lewd.pics/p/${match[1]}` : text.trim()
+      onProgress?.({ isUploading: false, progress: 100, statusText: '上传成功' })
+      return { success: true, url: directUrl }
+    }
+
+    return { success: false, error: text || '上传失败' }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Lewd 上传失败' }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// S.EE（原 SM.MS）图床上传
+// ═══════════════════════════════════════════════════════════════
+
+async function uploadToSmms(
+  file: File,
+  token: string,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到 S.EE...' })
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const resp = await fetch('https://s.ee/api/v1/file/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': token,
+      },
+      body: formData,
+    })
+
+    const data = await resp.json()
+
+    if (data.code === 200 && data.data?.url) {
+      onProgress?.({ isUploading: false, progress: 100, statusText: '上传成功' })
+      return { success: true, url: data.data.url }
+    }
+
+    return { success: false, error: data.message || '上传失败' }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'S.EE 上传失败' }
   }
 }
 
@@ -673,6 +744,14 @@ export async function uploadImage(
 
     case 'kappa':
       return uploadToKappa(file, onProgress)
+
+    case 'lewd':
+      return uploadToLewd(file, onProgress)
+
+    case 'smms': {
+      const smmsToken = (config as { token?: string }).token || ''
+      return uploadToSmms(file, smmsToken, onProgress)
+    }
 
     case 'aliyun':
       return uploadToAliyunOSS(file, config, onProgress)

@@ -13,6 +13,8 @@ import {
   Server,
   ShoppingBag,
   ImageIcon,
+  ImagePlus,
+  Paperclip,
 } from 'lucide-react'
 // 品牌图标
 import { SiAlibabacloud, SiTencentqq, SiHuawei, SiNeteasecloudmusic } from 'react-icons/si'
@@ -30,6 +32,7 @@ import {
   JD_REGIONS,
   NETEASE_REGIONS,
 } from '../types/imageHost'
+import { HOST_ORDER } from '../hooks/useImageHost'
 import { uploadImage } from '../utils/imageUploader'
 import { Icon } from '@iconify/react'
 
@@ -44,6 +47,8 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   'lucide:server': Server,
   'lucide:shopping-bag': ShoppingBag,
   'lucide:image': ImageIcon,
+  'lucide:image-plus': ImagePlus,
+  'lucide:paperclip': Paperclip,
   // 品牌图标
   'brand:aliyun': SiAlibabacloud,
   'brand:tencent': SiTencentqq,
@@ -189,16 +194,54 @@ export function ImageHostConfigModal({
   onSetDefault,
   onClearConfig,
 }: ImageHostConfigModalProps) {
+  // 检测当前环境是否有 nginx 代理（Docker 环境）
+  const [hasProxy, setHasProxy] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    fetch('/api/proxy-status', { method: 'GET' })
+      .then(r => r.ok ? setHasProxy(true) : setHasProxy(false))
+      .catch(() => setHasProxy(false))
+  }, [])
+
+  // 获取图床列表（按分类，根据代理状态过滤）
+  const hostList = useMemo(() => {
+    const canProxy = hasProxy !== false  // null（检测中）时不过滤，false 时过滤
+    // 按 HOST_ORDER 顺序排列，确保 UI 显示顺序一致
+    const sortedEntries = HOST_ORDER
+      .filter(type => IMAGE_HOSTS[type])
+      .map(type => [type, IMAGE_HOSTS[type]] as [string, typeof IMAGE_HOSTS[ImageHostType]])
+    const traditional = sortedEntries
+      .filter(([, info]) => info.category === 'traditional')
+      .filter(([, info]) => !info.requiresProxy || canProxy)
+    const paid = sortedEntries
+      .filter(([, info]) => info.category === 'paid')
+      .filter(([, info]) => !info.requiresProxy || canProxy)
+    const ossDomestic = sortedEntries.filter(([, info]) => info.category === 'oss-domestic')
+    const ossInternational = sortedEntries.filter(([, info]) => info.category === 'oss-international')
+    return { traditional, paid, ossDomestic, ossInternational }
+  }, [hasProxy])
+
+  // 获取第一个可见的图床类型
+  const getFirstVisibleHost = useCallback(() => {
+    const allHosts = [...hostList.traditional, ...hostList.paid, ...hostList.ossDomestic, ...hostList.ossInternational]
+    return (allHosts[0]?.[0] || 'imgbb') as ImageHostType
+  }, [hostList])
+
   const [activeTab, setActiveTab] = useState<ImageHostType>(
     () => settings.defaultHost || Object.keys(IMAGE_HOSTS)[0] as ImageHostType
   )
 
-  // 打开弹窗时切换到默认图床（或第一个）
+  // 打开弹窗时切换到默认图床（或第一个可见的）
   useEffect(() => {
     if (isOpen) {
-      setActiveTab(settings.defaultHost || Object.keys(IMAGE_HOSTS)[0] as ImageHostType)
+      const defaultHost = settings.defaultHost
+      const isDefaultVisible = hostList.traditional.some(([k]) => k === defaultHost)
+        || hostList.paid.some(([k]) => k === defaultHost)
+        || hostList.ossDomestic.some(([k]) => k === defaultHost)
+        || hostList.ossInternational.some(([k]) => k === defaultHost)
+      setActiveTab(isDefaultVisible ? defaultHost! : getFirstVisibleHost())
     }
-  }, [isOpen, settings.defaultHost])
+  }, [isOpen, settings.defaultHost, hostList, getFirstVisibleHost])
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>('idle')
   const [validationError, setValidationError] = useState('')
   const [riskAccepted, setRiskAccepted] = useState(false)
@@ -209,14 +252,6 @@ export function ImageHostConfigModal({
 
   // 传统图床 token
   const [token, setToken] = useState('')
-
-  // 获取图床列表（按分类）
-  const hostList = useMemo(() => {
-    const traditional = Object.entries(IMAGE_HOSTS).filter(([, info]) => info.category === 'traditional')
-    const ossDomestic = Object.entries(IMAGE_HOSTS).filter(([, info]) => info.category === 'oss-domestic')
-    const ossInternational = Object.entries(IMAGE_HOSTS).filter(([, info]) => info.category === 'oss-international')
-    return { traditional, ossDomestic, ossInternational }
-  }, [])
 
   // 同步表单状态
   useEffect(() => {
@@ -239,7 +274,7 @@ export function ImageHostConfigModal({
   // 获取当前配置
   const getCurrentConfig = useCallback(() => {
     const hostInfo = IMAGE_HOSTS[activeTab]
-    if (hostInfo.category === 'traditional') {
+    if (hostInfo.category === 'traditional' || hostInfo.category === 'paid') {
       return { token: token.trim() || undefined }
     }
     return ossConfig
@@ -251,7 +286,7 @@ export function ImageHostConfigModal({
     const config = getCurrentConfig()
 
     // 检查必填字段
-    if (hostInfo.category === 'traditional') {
+    if (hostInfo.category === 'traditional' || hostInfo.category === 'paid') {
       if (hostInfo.requiresToken && !token.trim()) {
         setValidationError('请输入 API Token')
         setValidationStatus('error')
@@ -363,7 +398,7 @@ export function ImageHostConfigModal({
 
   // 渲染配置表单
   const renderConfigForm = () => {
-    if (hostInfo.category === 'traditional') {
+    if (hostInfo.category === 'traditional' || hostInfo.category === 'paid') {
       if (!hostInfo.requiresToken) {
         return (
           <div
@@ -386,14 +421,26 @@ export function ImageHostConfigModal({
       }
 
       return (
-        <ConfigField
-          label="API Token"
-          value={token}
-          onChange={setToken}
-          type="password"
-          placeholder="请输入图床 API Token"
-          required
-        />
+        <div>
+          <ConfigField
+            label="API Token"
+            value={token}
+            onChange={setToken}
+            type="password"
+            placeholder="请输入图床 API Token"
+            required
+          />
+          <div style={{ marginTop: '8px', textAlign: 'right' }}>
+            <a
+              href={hostInfo.links.official}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: '13px', color: 'var(--accent)', textDecoration: 'none' }}
+            >
+              申请 Token →
+            </a>
+          </div>
+        </div>
       )
     }
 
@@ -900,6 +947,25 @@ export function ImageHostConfigModal({
               {hostList.traditional.map(([type, info]) => renderSidebarItem(type as ImageHostType, info))}
             </div>
 
+            {/* 付费图床 */}
+            {hostList.paid.length > 0 && (
+            <div style={{ marginBottom: '8px' }}>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  color: 'var(--text-muted)',
+                  padding: '8px 12px 4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                付费图床
+              </div>
+              {hostList.paid.map(([type, info]) => renderSidebarItem(type as ImageHostType, info))}
+            </div>
+            )}
+
             {/* 国内 OSS */}
             <div style={{ marginBottom: '8px' }}>
               <div
@@ -1030,6 +1096,7 @@ export function ImageHostConfigModal({
                 控制台
               </a>
             )}
+            {hostInfo.links.docs && (
             <a
               href={hostInfo.links.docs}
               target="_blank"
@@ -1049,6 +1116,7 @@ export function ImageHostConfigModal({
               <Icon icon="lucide:book-open" style={{ fontSize: '14px' }} />
               API 文档
             </a>
+            )}
           </div>
 
           {/* 表单区域 */}
@@ -1148,26 +1216,32 @@ export function ImageHostConfigModal({
           {/* 底部操作栏 */}
           <div
             style={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'space-between',
-              gap: '16px',
               padding: '16px 20px',
               borderTop: '1px solid var(--border-default)',
               background: 'var(--bg-secondary)',
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+            {/* 风险提示区 */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '12px',
+              padding: '0',
+              borderRadius: '6px',
+              background: 'transparent',
+            }}>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                color: '#ef4444',
+                color: riskAccepted ? 'var(--text-secondary)' : '#ef4444',
                 fontSize: '12px',
                 fontWeight: 500,
+                flexShrink: 0,
               }}>
                 <Icon icon="lucide:alert-triangle" width={14} height={14} />
-                图片将上传到第三方平台，请注意隐私保护
+                <span>隐私提醒</span>
               </div>
               <label
                 onClick={() => setRiskAccepted(!riskAccepted)}
@@ -1179,40 +1253,42 @@ export function ImageHostConfigModal({
                   color: riskAccepted ? 'var(--text-primary)' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   userSelect: 'none',
-                  marginTop: '8px',
                 }}
               >
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid #F97316',
-                  borderRadius: '3px',
-                  background: '#fff',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                }}
-              >
-                {riskAccepted && (
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M2 5L4.5 7.5L8 3" stroke="#F97316" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </span>
-              <span>已知晓风险并同意上传到第三方图床</span>
-            </label>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '16px',
+                    height: '16px',
+                    border: `2px solid ${riskAccepted ? '#22c55e' : '#F97316'}`,
+                    borderRadius: '3px',
+                    background: riskAccepted ? '#22c55e' : '#fff',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {riskAccepted && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M2 5L4.5 7.5L8 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </span>
+                <span>{riskAccepted ? '已同意上传到第三方图床' : '已知晓风险并同意上传到第三方图床'}</span>
+              </label>
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
+
+            {/* 按钮组 */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '12px' }}>
               {isConfigured && (
                 <button
                   onClick={handleClear}
                   className="btn btn-danger"
-                  style={{ padding: '8px 16px' }}
+                  style={{ padding: '6px 12px', fontSize: '13px' }}
                 >
-                  <Icon icon="lucide:trash-2" width={14} height={14} />
+                  <Icon icon="lucide:trash-2" width={13} height={13} />
                   清除
                 </button>
               )}
@@ -1220,9 +1296,9 @@ export function ImageHostConfigModal({
                 <button
                   onClick={handleSetDefault}
                   className="btn btn-secondary"
-                  style={{ padding: '8px 16px' }}
+                  style={{ padding: '6px 12px', fontSize: '13px' }}
                 >
-                  <Icon icon="lucide:star" width={14} height={14} />
+                  <Icon icon="lucide:star" width={13} height={13} />
                   设为默认
                 </button>
               )}
@@ -1230,16 +1306,16 @@ export function ImageHostConfigModal({
                 onClick={handleSave}
                 className="btn btn-primary"
                 disabled={validationStatus === 'validating' || !riskAccepted}
-                style={{ padding: '8px 20px', opacity: !riskAccepted ? 0.5 : 1, cursor: !riskAccepted ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '6px 20px', fontSize: '13px', opacity: !riskAccepted ? 0.5 : 1, cursor: !riskAccepted ? 'not-allowed' : 'pointer' }}
               >
                 {validationStatus === 'validating' ? (
                   <>
-                    <Icon icon="lucide:loader-2" width={14} height={14} style={{ animation: 'spin 1s linear infinite' }} />
+                    <Icon icon="lucide:loader-2" width={13} height={13} style={{ animation: 'spin 1s linear infinite' }} />
                     验证中...
                   </>
                 ) : (
                   <>
-                    <Icon icon="lucide:save" width={14} height={14} />
+                    <Icon icon="lucide:save" width={13} height={13} />
                     验证并保存
                   </>
                 )}

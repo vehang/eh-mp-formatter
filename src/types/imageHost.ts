@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // 传统图床
-type TraditionalHostType = 'dk' | 'bolt' | 'imgbb' | 'freeimage' | 'kappa'
+type TraditionalHostType = 'dk' | 'bolt' | 'imgbb' | 'freeimage' | 'kappa' | 'lewd' | 'smms'
 
 // OSS 云存储平台
 type OSSHostType = 'aliyun' | 'tencent' | 'qiniu' | 'aws' | 'upyun' | 'huawei' | 'netease' | 'jd'
@@ -143,6 +143,8 @@ export interface ImageHostSettings {
   imgbb: { isConfigured: boolean }
   freeimage: { isConfigured: boolean }
   kappa: { isConfigured: boolean }
+  lewd: { isConfigured: boolean }
+  smms: { token: string; isConfigured: boolean }
 
   // OSS 云存储
   aliyun: { config: Partial<AliyunOSSConfig>; isConfigured: boolean }
@@ -171,19 +173,54 @@ export interface ImageHostInfo {
   name: string
   description: string
   icon: string
-  category: 'traditional' | 'oss-domestic' | 'oss-international'
+  category: 'traditional' | 'paid' | 'oss-domestic' | 'oss-international'
   links: {
     official: string
     console?: string
-    docs: string
+    docs?: string
   }
   requiresToken: boolean
   requiredFields: string[]
+  requiresProxy?: boolean  // 需要 nginx 代理绕过 CORS，仅 Docker 环境可用
 }
 
 // 图床元信息
 export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
-  // 传统图床
+  // 传统图床（免费无需 Token 的排前面）
+  imgbb: {
+    name: 'ImgBB',
+    description: '免费图床，最大 32MB，支持 70+ 格式，永久存储',
+    icon: 'lucide:image',
+    category: 'traditional',
+    links: {
+      official: 'https://imgbb.com',
+    },
+    requiresToken: false,
+    requiredFields: [],
+  },
+  freeimage: {
+    name: 'FreeImage',
+    description: '免费图床，最大 64MB，国内可达，永久存储',
+    icon: 'lucide:image-plus',
+    category: 'traditional',
+    links: {
+      official: 'https://freeimage.host',
+    },
+    requiresToken: false,
+    requiredFields: [],
+    requiresProxy: true,
+  },
+  kappa: {
+    name: 'Kappa',
+    description: '免费图床，最大 100MB，支持图片/视频/音频，国内可达，永久存储',
+    icon: 'lucide:paperclip',
+    category: 'traditional',
+    links: {
+      official: 'https://kappa.lol',
+    },
+    requiresToken: false,
+    requiredFields: [],
+  },
   dk: {
     name: 'DK图床',
     description: '免费图片托管服务',
@@ -208,41 +245,29 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
     requiresToken: true,
     requiredFields: ['token'],
   },
-  imgbb: {
-    name: 'ImgBB',
-    description: '免费图床，32MB限制，永久存储',
-    icon: 'lucide:image',
+  lewd: {
+    name: 'Lewd',
+    description: '免费图床，轻量级，国内可达',
+    icon: 'lucide:upload-cloud',
     category: 'traditional',
     links: {
-      official: 'https://imgbb.com',
-      docs: 'https://imgbb.com',
+      official: 'https://lewd.pics',
     },
     requiresToken: false,
     requiredFields: [],
+    requiresProxy: true,
   },
-  freeimage: {
-    name: 'FreeImage',
-    description: '免费图床，直链域名 iili.io，国内可达，永久存储',
-    icon: 'lucide:image-plus',
-    category: 'traditional',
+  smms: {
+    name: 'S.EE',
+    description: '原 SM.MS，需注册获取 API Token，支持 CORS',
+    icon: 'lucide:server',
+    category: 'paid',
     links: {
-      official: 'https://freeimage.host',
-      docs: 'https://freeimage.host/page/api',
+      official: 'https://s.ee',
+      docs: 'https://s.ee/docs/api',
     },
-    requiresToken: false,
-    requiredFields: [],
-  },
-  kappa: {
-    name: 'Kappa',
-    description: '轻量级图床，直链返回，国内可达，永久存储',
-    icon: 'lucide:paperclip',
-    category: 'traditional',
-    links: {
-      official: 'https://kappa.lol',
-      docs: 'https://kappa.lol',
-    },
-    requiresToken: false,
-    requiredFields: [],
+    requiresToken: true,
+    requiredFields: ['token'],
   },
 
   // 国内 OSS
@@ -361,6 +386,8 @@ export const HOST_REQUIRES_TOKEN: Record<ImageHostType, boolean> = {
   imgbb: false,
   freeimage: false,
   kappa: false,
+  lewd: false,
+  smms: true,
   aliyun: true,
   tencent: true,
   qiniu: true,

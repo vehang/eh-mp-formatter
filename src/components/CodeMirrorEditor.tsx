@@ -295,6 +295,8 @@ export const CodeMirrorEditor = forwardRef<EditorHandle, CodeMirrorEditorProps>(
   function CodeMirrorEditor({ value, onChange, placeholder, onImagePaste, compactMode = false }, ref) {
     const editorRef = useRef<HTMLDivElement>(null)
     const viewRef = useRef<EditorView | null>(null)
+    const onImagePasteRef = useRef(onImagePaste)
+    onImagePasteRef.current = onImagePaste
 
     // 暴露方法给父组件
     useImperativeHandle(ref, () => ({
@@ -459,9 +461,9 @@ export const CodeMirrorEditor = forwardRef<EditorHandle, CodeMirrorEditorProps>(
                 const item = items[i]
                 if (item.type.startsWith('image/')) {
                   const file = item.getAsFile()
-                  if (file && onImagePaste) {
+                  if (file && onImagePasteRef.current) {
                     event.preventDefault()
-                    onImagePaste(file)
+                    onImagePasteRef.current(file)
                     return
                   }
                 }
