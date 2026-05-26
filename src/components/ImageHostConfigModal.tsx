@@ -52,8 +52,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   'brand:aws': FaAws,
 }
 
-// 1x1 透明像素 PNG（用于验证）
-const TEST_PIXEL_PNG_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+// 2x2 蓝色 PNG（用于验证）
+// 注意：不使用常见的 1x1 透明追踪像素，ImgBB 会拒绝该特定文件（error code 103）
+const TEST_PIXEL_PNG_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGklEQVR4AWP4z8BQz4AFBQUYEgYqjolJMQA5vAkBXf3JhgAAAABJRU5ErkJggg=='
 
 interface ImageHostConfigModalProps {
   isOpen: boolean
