@@ -196,15 +196,15 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
   },
   bolt: {
     name: '闪电图床',
-    description: '无需配置，即用即传',
+    description: '注册后创建 API Token 使用',
     icon: 'lucide:zap',
     category: 'traditional',
     links: {
       official: 'https://www.boltp.com',
       docs: 'https://www.boltp.com/pages/api-docs',
     },
-    requiresToken: false,
-    requiredFields: [],
+    requiresToken: true,
+    requiredFields: ['token'],
   },
   imgbb: {
     name: 'ImgBB',
@@ -331,7 +331,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
 // 图床是否需要 token
 export const HOST_REQUIRES_TOKEN: Record<ImageHostType, boolean> = {
   dk: true,
-  bolt: false,
+  bolt: true,
   imgbb: false,
   aliyun: true,
   tencent: true,

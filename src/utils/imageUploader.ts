@@ -148,6 +148,36 @@ async function uploadToTraditionalHost(
 }
 
 // ═══════════════════════════════════════════════════════════════
+// 闪电图床 v2 API 上传（需 Bearer Token + storage_id）
+// ═══════════════════════════════════════════════════════════════
+async function uploadToBolt(
+  file: File,
+  token?: string,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  if (!token) return { success: false, error: '请先配置闪电图床 API Token' }
+
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传...' })
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('storage_id', '2') // 免费用户=2
+
+  return xhrUpload({
+    method: 'POST',
+    url: 'https://www.boltp.com/api/v2/upload',
+    formData,
+    headers: { Authorization: `Bearer ${token}` },
+    extractUrl: (text) => {
+      const r = JSON.parse(text)
+      return r.data?.public_url || r.data?.url || r.data?.pathname
+    },
+    onProgress,
+    timeout: 60000,
+  })
+}
+
+// ═══════════════════════════════════════════════════════════════
 // ImgBB 免费图床上传
 // ═══════════════════════════════════════════════════════════════
 
@@ -573,8 +603,9 @@ export async function uploadImage(
   // 根据图床类型调用对应的上传函数
   switch (hostType) {
     case 'dk':
-    case 'bolt':
       return uploadToTraditionalHost(file, hostType, config?.token, onProgress)
+    case 'bolt':
+      return uploadToBolt(file, config?.token, onProgress)
 
     case 'imgbb':
       return uploadToImgBB(file, onProgress)
