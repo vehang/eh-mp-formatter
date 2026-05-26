@@ -1149,37 +1149,39 @@ export function ImageHostConfigModal({
           <div
             style={{
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-end',
               justifyContent: 'space-between',
+              gap: '16px',
               padding: '16px 20px',
               borderTop: '1px solid var(--border-default)',
               background: 'var(--bg-secondary)',
             }}
           >
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: '#ef4444',
-              fontSize: '12px',
-              fontWeight: 500,
-            }}>
-              <Icon icon="lucide:alert-triangle" width={14} height={14} />
-              图片将上传到第三方平台，请注意隐私保护
-            </div>
-            <label
-              onClick={() => setRiskAccepted(!riskAccepted)}
-              style={{
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+              <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                fontSize: '13px',
-                color: riskAccepted ? 'var(--text-primary)' : 'var(--text-secondary)',
-                cursor: 'pointer',
-                userSelect: 'none',
-                marginTop: '8px',
-              }}
-            >
+                gap: '6px',
+                color: '#ef4444',
+                fontSize: '12px',
+                fontWeight: 500,
+              }}>
+                <Icon icon="lucide:alert-triangle" width={14} height={14} />
+                图片将上传到第三方平台，请注意隐私保护
+              </div>
+              <label
+                onClick={() => setRiskAccepted(!riskAccepted)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '13px',
+                  color: riskAccepted ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  marginTop: '8px',
+                }}
+              >
               <span
                 style={{
                   display: 'inline-flex',
@@ -1202,7 +1204,8 @@ export function ImageHostConfigModal({
               </span>
               <span>已知晓风险并同意上传到第三方图床</span>
             </label>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
               {isConfigured && (
                 <button
                   onClick={handleClear}
