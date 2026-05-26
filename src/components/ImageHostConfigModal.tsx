@@ -1156,19 +1156,23 @@ export function ImageHostConfigModal({
               background: 'var(--bg-secondary)',
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                color: 'var(--text-muted)',
-                fontSize: '12px',
-              }}
-            >
-              <Icon icon="lucide:alert-triangle" style={{ color: 'var(--amber-500)' }} />
+            <div style={{
+              padding: '10px 12px',
+              background: 'rgba(239, 68, 68, 0.08)',
+              borderRadius: '6px',
+              marginBottom: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: '#ef4444',
+              fontSize: '12px',
+              fontWeight: 500,
+            }}>
+              <Icon icon="lucide:alert-triangle" width={14} height={14} />
               图片将上传到第三方平台，请注意隐私保护
             </div>
             <label
+              onClick={() => setRiskAccepted(!riskAccepted)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1177,18 +1181,32 @@ export function ImageHostConfigModal({
                 color: riskAccepted ? 'var(--text-primary)' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 userSelect: 'none',
-                marginTop: '8px',
               }}
             >
-              <input
-                type="checkbox"
-                checked={riskAccepted}
-                onChange={(e) => setRiskAccepted(e.target.checked)}
-                style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--orange-500)' }}
-              />
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '16px',
+                  height: '16px',
+                  border: `2px solid ${riskAccepted ? '#F97316' : '#d1d5db'}`,
+                  borderRadius: '3px',
+                  background: riskAccepted ? '#F97316' : '#fff',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {riskAccepted && (
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 5L4.5 7.5L8 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </span>
               <span>已知晓风险并同意上传到第三方图床</span>
             </label>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
               {isConfigured && (
                 <button
                   onClick={handleClear}
