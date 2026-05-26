@@ -201,6 +201,7 @@ export function ImageHostConfigModal({
   }, [isOpen, settings.defaultHost])
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>('idle')
   const [validationError, setValidationError] = useState('')
+  const [riskAccepted, setRiskAccepted] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
 
   // OSS 配置状态
@@ -229,6 +230,9 @@ export function ImageHostConfigModal({
       }
       setValidationStatus('idle')
       setValidationError('')
+      // 已配置的图床自动接受风险，未配置的重置
+      const isCurrentConfigured = currentConfig && typeof currentConfig === 'object' && 'isConfigured' in currentConfig && currentConfig.isConfigured
+      setRiskAccepted(!!isCurrentConfigured)
     }
   }, [activeTab, isOpen, settings])
 
@@ -1164,7 +1168,27 @@ export function ImageHostConfigModal({
               <Icon icon="lucide:alert-triangle" style={{ color: 'var(--amber-500)' }} />
               图片将上传到第三方平台，请注意隐私保护
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '13px',
+                color: riskAccepted ? 'var(--text-primary)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                userSelect: 'none',
+                marginTop: '8px',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={riskAccepted}
+                onChange={(e) => setRiskAccepted(e.target.checked)}
+                style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--orange-500)' }}
+              />
+              <span>已知晓风险并同意上传到第三方图床</span>
+            </label>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
               {isConfigured && (
                 <button
                   onClick={handleClear}
@@ -1188,8 +1212,8 @@ export function ImageHostConfigModal({
               <button
                 onClick={handleSave}
                 className="btn btn-primary"
-                disabled={validationStatus === 'validating'}
-                style={{ padding: '8px 20px' }}
+                disabled={validationStatus === 'validating' || !riskAccepted}
+                style={{ padding: '8px 20px', opacity: !riskAccepted ? 0.5 : 1, cursor: !riskAccepted ? 'not-allowed' : 'pointer' }}
               >
                 {validationStatus === 'validating' ? (
                   <>

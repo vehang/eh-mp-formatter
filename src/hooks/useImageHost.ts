@@ -23,7 +23,7 @@ const defaultSettings: ImageHostSettings = {
   // 传统图床
   dk: { token: '', isConfigured: false },
   bolt: { token: '', isConfigured: false },
-  imgbb: { isConfigured: true },
+  imgbb: { isConfigured: false },
 
   // OSS 云存储
   aliyun: { config: {}, isConfigured: false },
