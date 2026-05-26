@@ -207,7 +207,7 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
     requiredFields: [],
   },
   imgbb: {
-    name: 'ImgBB（免费图床）',
+    name: 'ImgBB',
     description: '免费图床，32MB限制，永久存储',
     icon: 'lucide:image',
     category: 'traditional',

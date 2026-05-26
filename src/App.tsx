@@ -702,7 +702,7 @@ function App() {
 
     if (result.success && result.url) {
       const imageMarkdown = `![image](${result.url})`
-      setMarkdown(markdown + '\n' + imageMarkdown)
+      editorRef.current?.insertText(imageMarkdown)
       toast.showToast('图片上传成功', 'success')
     } else {
       toast.showToast(result.error || '上传失败', 'error')
@@ -725,7 +725,7 @@ function App() {
       const result = await handleUpload(file)
       if (result.success && result.url) {
         const imageMarkdown = `![${file.name}](${result.url})`
-        setMarkdown(markdown + '\n' + imageMarkdown)
+        editorRef.current?.insertText(imageMarkdown)
         toast.showToast('图片上传成功', 'success')
       } else {
         toast.showToast(result.error || '上传失败', 'error')
@@ -736,7 +736,7 @@ function App() {
         const base64 = e.target?.result as string
         if (base64) {
           const imageMarkdown = `![${file.name}](${base64})`
-          setMarkdown(markdown + '\n' + imageMarkdown)
+          editorRef.current?.insertText(imageMarkdown)
           toast.showToast('图片已插入（Base64）', 'success')
         }
       }

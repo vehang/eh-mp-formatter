@@ -189,7 +189,16 @@ export function ImageHostConfigModal({
   onSetDefault,
   onClearConfig,
 }: ImageHostConfigModalProps) {
-  const [activeTab, setActiveTab] = useState<ImageHostType>('bolt')
+  const [activeTab, setActiveTab] = useState<ImageHostType>(
+    () => settings.defaultHost || Object.keys(IMAGE_HOSTS)[0] as ImageHostType
+  )
+
+  // 打开弹窗时切换到默认图床（或第一个）
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(settings.defaultHost || Object.keys(IMAGE_HOSTS)[0] as ImageHostType)
+    }
+  }, [isOpen, settings.defaultHost])
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>('idle')
   const [validationError, setValidationError] = useState('')
   const modalRef = useRef<HTMLDivElement>(null)

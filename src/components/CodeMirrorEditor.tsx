@@ -324,10 +324,29 @@ export const CodeMirrorEditor = forwardRef<EditorHandle, CodeMirrorEditorProps>(
       },
       insertText: (text: string) => {
         if (viewRef.current) {
-          const { from, to } = viewRef.current.state.selection.main
-          viewRef.current.dispatch({
-            changes: { from, to, insert: text },
-            selection: { anchor: from + text.length },
+          const view = viewRef.current
+          const { from, to } = view.state.selection.main
+          const doc = view.state.doc
+          const line = doc.lineAt(from)
+
+          // 判断光标是否在独立行（整行为空或只有空白）
+          const lineText = line.text
+          const isLineEmpty = lineText.trim() === ''
+          const isAtLineStart = from === line.from
+
+          // 如果不在空行开头，需要先换行
+          let prefix = ''
+          if (!isLineEmpty) {
+            prefix = '\n'
+          } else if (!isAtLineStart) {
+            // 在空行但不在开头
+            prefix = ''
+          }
+
+          const insertText = prefix + text
+          view.dispatch({
+            changes: { from, to, insert: insertText },
+            selection: { anchor: from + insertText.length },
           })
         }
       },
