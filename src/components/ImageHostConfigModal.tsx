@@ -1157,10 +1157,6 @@ export function ImageHostConfigModal({
             }}
           >
             <div style={{
-              padding: '10px 12px',
-              background: 'rgba(239, 68, 68, 0.08)',
-              borderRadius: '6px',
-              marginBottom: '10px',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
@@ -1181,6 +1177,7 @@ export function ImageHostConfigModal({
                 color: riskAccepted ? 'var(--text-primary)' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 userSelect: 'none',
+                marginTop: '8px',
               }}
             >
               <span
@@ -1190,17 +1187,16 @@ export function ImageHostConfigModal({
                   justifyContent: 'center',
                   width: '16px',
                   height: '16px',
-                  border: `2px solid ${riskAccepted ? '#F97316' : '#d1d5db'}`,
+                  border: '2px solid #F97316',
                   borderRadius: '3px',
-                  background: riskAccepted ? '#F97316' : '#fff',
+                  background: '#fff',
                   cursor: 'pointer',
                   flexShrink: 0,
-                  transition: 'all 0.15s ease',
                 }}
               >
                 {riskAccepted && (
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M2 5L4.5 7.5L8 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 5L4.5 7.5L8 3" stroke="#F97316" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 )}
               </span>
