@@ -48,75 +48,39 @@ function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
   })
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 传统图床上传
-// ═══════════════════════════════════════════════════════════════
-
 /**
- * 上传到传统图床 (DK/Bolt)
+ * 通用 XHR 上传
+ * 消除各图床函数中 XHR + progress + 错误处理的重复代码
  */
-async function uploadToTraditionalHost(
-  file: File,
-  hostType: 'dk' | 'bolt',
-  token?: string,
+function xhrUpload(options: {
+  method: 'PUT' | 'POST'
+  url: string
+  headers?: Record<string, string>
+  body?: ArrayBuffer
+  formData?: FormData
+  /** 从响应中提取图片 URL */
+  extractUrl: (responseText: string, xhr: XMLHttpRequest) => string | undefined
   onProgress?: (progress: UploadProgress) => void
-): Promise<UploadResult> {
-  const hostInfo = IMAGE_HOSTS[hostType]
-
-  if (!hostInfo) {
-    return { success: false, error: '不支持的图床类型' }
-  }
-
-  if (HOST_REQUIRES_TOKEN[hostType] && !token) {
-    return { success: false, error: '请先配置图床 Token' }
-  }
-
-  onProgress?.({
-    isUploading: true,
-    progress: 0,
-    statusText: '正在上传...',
-  })
+  timeout?: number
+}): Promise<UploadResult> {
+  const { method, url, headers, body, formData, extractUrl, onProgress, timeout = 120000 } = options
 
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest()
-    const formData = new FormData()
-
-    if (HOST_REQUIRES_TOKEN[hostType] && token) {
-      formData.append('token', token)
-    }
-    formData.append('file', file)
 
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable) {
         const progress = Math.round((e.loaded / e.total) * 100)
-        onProgress?.({
-          isUploading: true,
-          progress,
-          statusText: `上传中 ${progress}%`,
-        })
+        onProgress?.({ isUploading: true, progress, statusText: `上传中 ${progress}%` })
       }
     })
 
     xhr.addEventListener('load', () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
-          const response = JSON.parse(xhr.responseText)
-          let imageUrl: string | undefined
-
-          if (response.url) {
-            imageUrl = response.url
-          } else if (response.data?.url) {
-            imageUrl = response.data.url
-          } else if (response.links?.original) {
-            imageUrl = response.links.original
-          }
-
+          const imageUrl = extractUrl(xhr.responseText, xhr)
           if (imageUrl) {
-            onProgress?.({
-              isUploading: false,
-              progress: 100,
-              statusText: '上传成功',
-            })
+            onProgress?.({ isUploading: false, progress: 100, statusText: '上传成功' })
             resolve({ success: true, url: imageUrl })
           } else {
             resolve({ success: false, error: '响应格式错误，未获取到图片链接' })
@@ -133,9 +97,53 @@ async function uploadToTraditionalHost(
       resolve({ success: false, error: '网络错误，请检查网络连接' })
     })
 
-    xhr.timeout = 60000
-    xhr.open('POST', hostInfo.links.official + '/api/v1/upload')
-    xhr.send(formData)
+    xhr.timeout = timeout
+    xhr.open(method, url)
+
+    if (headers) {
+      for (const [key, value] of Object.entries(headers)) {
+        xhr.setRequestHeader(key, value)
+      }
+    }
+
+    xhr.send(body || formData || null)
+  })
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 传统图床上传 (DK/Bolt)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 上传到传统图床 (DK/Bolt)
+ * 共用 /api/v1/upload 接口，FormData 提交
+ */
+async function uploadToTraditionalHost(
+  file: File,
+  hostType: 'dk' | 'bolt',
+  token?: string,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  const hostInfo = IMAGE_HOSTS[hostType]
+  if (!hostInfo) return { success: false, error: '不支持的图床类型' }
+  if (HOST_REQUIRES_TOKEN[hostType] && !token) return { success: false, error: '请先配置图床 Token' }
+
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传...' })
+
+  const formData = new FormData()
+  if (HOST_REQUIRES_TOKEN[hostType] && token) formData.append('token', token)
+  formData.append('file', file)
+
+  return xhrUpload({
+    method: 'POST',
+    url: hostInfo.links.official + '/api/v1/upload',
+    formData,
+    extractUrl: (text) => {
+      const r = JSON.parse(text)
+      return r.url || r.data?.url || r.links?.original
+    },
+    onProgress,
+    timeout: 60000,
   })
 }
 
@@ -144,18 +152,14 @@ async function uploadToTraditionalHost(
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * 上传到 ImgBB 免费图床
- * 无需 API Key，无需注册，直接 POST 上传
+ * 上传到 ImgBB
+ * 使用 imgbb.com/json 端点，无需 API Key
  */
 async function uploadToImgBB(
   file: File,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
-  onProgress?.({
-    isUploading: true,
-    progress: 0,
-    statusText: '正在上传到 ImgBB...',
-  })
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到 ImgBB...' })
 
   try {
     const formData = new FormData()
@@ -163,19 +167,11 @@ async function uploadToImgBB(
     formData.append('action', 'upload')
     formData.append('type', 'file')
 
-    const resp = await fetch('https://imgbb.com/json', {
-      method: 'POST',
-      body: formData,
-    })
-
+    const resp = await fetch('https://imgbb.com/json', { method: 'POST', body: formData })
     const data = await resp.json()
 
     if (data.status_code === 200 && data.image?.url) {
-      onProgress?.({
-        isUploading: false,
-        progress: 100,
-        statusText: '上传成功',
-      })
+      onProgress?.({ isUploading: false, progress: 100, statusText: '上传成功' })
       return { success: true, url: data.image.url }
     }
 
@@ -186,690 +182,367 @@ async function uploadToImgBB(
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 阿里云 OSS 上传
+// S3 兼容图床 — 签名工具函数
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * 上传到阿里云 OSS
- * 使用 POST 签名方式上传
+ * 简单 PUT 签名（阿里云 OSS / 华为云 OBS / 网易云 NOS / 京东云 OSS 共用）
+ * StringToSign = `PUT\n\n{contentType}\n{date}\n/{bucket}/{objectKey}`
  */
+function signSimplePut(params: {
+  bucket: string
+  objectKey: string
+  contentType: string
+  date: string
+  secretKey: string
+  hmacMethod: 'sha1' | 'sha256'
+  authPrefix: string
+  accessKey: string
+}): string {
+  const { bucket, objectKey, contentType, date, secretKey, hmacMethod, authPrefix, accessKey } = params
+  const stringToSign = `PUT\n\n${contentType}\n${date}\n/${bucket}/${objectKey}`
+  const signature = hmacMethod === 'sha256'
+    ? CryptoJS.HmacSHA256(stringToSign, secretKey).toString(CryptoJS.enc.Base64)
+    : CryptoJS.HmacSHA1(stringToSign, secretKey).toString(CryptoJS.enc.Base64)
+  return `${authPrefix} ${accessKey}:${signature}`
+}
+
+/**
+ * 腾讯云 COS 签名（独特签名链）
+ */
+function signTencentCOS(params: {
+  secretId: string
+  secretKey: string
+  host: string
+  objectKey: string
+}): string {
+  const { secretId, secretKey, host, objectKey } = params
+  const keyTime = `${Math.floor(Date.now() / 1000)};${Math.floor(Date.now() / 1000) + 3600}`
+  const signKey = CryptoJS.HmacSHA1(keyTime, secretKey).toString()
+  const httpString = `put\n/${objectKey}\n\nhost=${host}\n`
+  const stringToSign = `sha1\n${keyTime}\n${CryptoJS.SHA1(httpString).toString()}\n`
+  const signature = CryptoJS.HmacSHA1(stringToSign, signKey).toString()
+
+  return [
+    `q-sign-algorithm=sha1`,
+    `q-ak=${secretId}`,
+    `q-sign-time=${keyTime}`,
+    `q-key-time=${keyTime}`,
+    `q-header-list=host`,
+    `q-url-param-list=`,
+    `q-signature=${signature}`,
+  ].join('&')
+}
+
+/**
+ * AWS S3 Signature Version 4
+ */
+function signAWSS3(params: {
+  accessKeyId: string
+  secretAccessKey: string
+  region: string
+  host: string
+  objectKey: string
+}): { authorization: string; amzDate: string; extraHeaders: Record<string, string> } {
+  const { accessKeyId, secretAccessKey, region, host, objectKey } = params
+  const amzDate = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '')
+  const dateStamp = amzDate.substring(0, 8)
+
+  const canonicalRequest = `PUT\n/${objectKey}\n\nhost:${host}\nx-amz-content-sha256:UNSIGNED-PAYLOAD\nx-amz-date:${amzDate}\n\nhost;x-amz-content-sha256;x-amz-date\nUNSIGNED-PAYLOAD`
+  const stringToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${dateStamp}/${region}/s3/aws4_request\n${CryptoJS.SHA256(canonicalRequest).toString()}`
+
+  const kDate = CryptoJS.HmacSHA256(dateStamp, `AWS4${secretAccessKey}`)
+  const kRegion = CryptoJS.HmacSHA256(region, kDate)
+  const kService = CryptoJS.HmacSHA256('s3', kRegion)
+  const kSigning = CryptoJS.HmacSHA256('aws4_request', kService)
+  const signature = CryptoJS.HmacSHA256(stringToSign, kSigning).toString()
+
+  return {
+    authorization: `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${dateStamp}/${region}/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=${signature}`,
+    amzDate,
+    extraHeaders: {
+      'x-amz-date': amzDate,
+      'x-amz-content-sha256': 'UNSIGNED-PAYLOAD',
+    },
+  }
+}
+
+/**
+ * 七牛云上传凭证
+ */
+function generateQiniuToken(params: {
+  accessKey: string
+  secretKey: string
+  bucket: string
+}): string {
+  const { accessKey, secretKey, bucket } = params
+  const deadline = Math.floor(Date.now() / 1000) + 3600
+  const putPolicy = JSON.stringify({ scope: bucket, deadline })
+  const encodedPutPolicy = CryptoJS.enc.Base64.stringify(
+    CryptoJS.enc.Utf8.parse(putPolicy)
+  ).replace(/\+/g, '-').replace(/\//g, '_')
+  const sign = CryptoJS.HmacSHA1(encodedPutPolicy, secretKey).toString(CryptoJS.enc.Base64)
+    .replace(/\+/g, '-').replace(/\//g, '_')
+  return `${accessKey}:${sign}:${encodedPutPolicy}`
+}
+
+// ═══════════════════════════════════════════════════════════════
+// S3 兼容图床 — 各图床上传函数
+// ═══════════════════════════════════════════════════════════════
+
+// --- 阿里云 OSS ---
+// 签名：HmacSHA1，Auth 前缀 OSS
 async function uploadToAliyunOSS(
   file: File,
   config: AliyunOSSConfig,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   const { accessKeyId, accessKeySecret, bucket, region, customDomain, pathPrefix } = config
-
-  if (!accessKeyId || !accessKeySecret || !bucket || !region) {
+  if (!accessKeyId || !accessKeySecret || !bucket || !region)
     return { success: false, error: '请完善阿里云 OSS 配置' }
-  }
 
-  onProgress?.({
-    isUploading: true,
-    progress: 0,
-    statusText: '正在上传到阿里云 OSS...',
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到阿里云 OSS...' })
+
+  const objectKey = generateUniqueFilename(file.name, pathPrefix)
+  const host = `${bucket}.${region}.aliyuncs.com`
+  const date = new Date().toUTCString()
+  const contentType = file.type || 'application/octet-stream'
+  const authorization = signSimplePut({
+    bucket, objectKey, contentType, date, secretKey: accessKeySecret,
+    hmacMethod: 'sha1', authPrefix: 'OSS', accessKey: accessKeyId,
   })
+  const url = customDomain ? `https://${customDomain}/${objectKey}` : `https://${host}/${objectKey}`
 
-  try {
-    const objectKey = generateUniqueFilename(file.name, pathPrefix)
-    const endpoint = `https://${bucket}.${region}.aliyuncs.com`
-    const date = new Date().toUTCString()
-    const contentType = file.type || 'application/octet-stream'
-
-    // 计算 PUT 签名
-    const stringToSign = `PUT\n\n${contentType}\n${date}\n/${bucket}/${objectKey}`
-    const signature = CryptoJS.HmacSHA1(stringToSign, accessKeySecret).toString(CryptoJS.enc.Base64)
-    const authorization = `OSS ${accessKeyId}:${signature}`
-
-    const arrayBuffer = await fileToArrayBuffer(file)
-
-    return new Promise((resolve) => {
-      const xhr = new XMLHttpRequest()
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100)
-          onProgress?.({
-            isUploading: true,
-            progress,
-            statusText: `上传中 ${progress}%`,
-          })
-        }
-      })
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const url = customDomain
-            ? `https://${customDomain}/${objectKey}`
-            : `https://${bucket}.${region}.aliyuncs.com/${objectKey}`
-          onProgress?.({
-            isUploading: false,
-            progress: 100,
-            statusText: '上传成功',
-          })
-          resolve({ success: true, url })
-        } else {
-          resolve({ success: false, error: `上传失败: ${xhr.status}` })
-        }
-      })
-
-      xhr.addEventListener('error', () => {
-        resolve({ success: false, error: '网络错误' })
-      })
-
-      xhr.timeout = 120000
-      xhr.open('PUT', `${endpoint}/${objectKey}`)
-      xhr.setRequestHeader('Content-Type', contentType)
-      xhr.setRequestHeader('Date', date)
-      xhr.setRequestHeader('Authorization', authorization)
-      xhr.send(arrayBuffer)
-    })
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : '上传失败' }
-  }
+  return xhrUpload({
+    method: 'PUT',
+    url: `https://${host}/${objectKey}`,
+    headers: { 'Content-Type': contentType, Date: date, Authorization: authorization },
+    body: await fileToArrayBuffer(file),
+    extractUrl: () => url,
+    onProgress,
+  })
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 腾讯云 COS 上传
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * 上传到腾讯云 COS
- */
+// --- 腾讯云 COS ---
+// 签名：独特签名链，authorization 放 query string
 async function uploadToTencentCOS(
   file: File,
   config: TencentCOSConfig,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   const { secretId, secretKey, bucket, region, customDomain, pathPrefix } = config
-
-  if (!secretId || !secretKey || !bucket || !region) {
+  if (!secretId || !secretKey || !bucket || !region)
     return { success: false, error: '请完善腾讯云 COS 配置' }
-  }
 
-  onProgress?.({
-    isUploading: true,
-    progress: 0,
-    statusText: '正在上传到腾讯云 COS...',
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到腾讯云 COS...' })
+
+  const objectKey = generateUniqueFilename(file.name, pathPrefix)
+  const host = `${bucket}.cos.${region}.myqcloud.com`
+  const contentType = file.type || 'application/octet-stream'
+  const authorization = signTencentCOS({ secretId, secretKey, host, objectKey })
+  const url = customDomain ? `https://${customDomain}/${objectKey}` : `https://${host}/${objectKey}`
+
+  return xhrUpload({
+    method: 'PUT',
+    url: `https://${host}/${objectKey}?${authorization}`,
+    headers: { Host: host, 'Content-Type': contentType },
+    body: await fileToArrayBuffer(file),
+    extractUrl: () => url,
+    onProgress,
   })
-
-  try {
-    const objectKey = generateUniqueFilename(file.name, pathPrefix)
-    const host = `${bucket}.cos.${region}.myqcloud.com`
-    const date = new Date()
-    const contentType = file.type || 'application/octet-stream'
-
-    // 计算签名
-    const keyTime = `${Math.floor(date.getTime() / 1000)};${Math.floor(date.getTime() / 1000) + 3600}`
-    const signKey = CryptoJS.HmacSHA1(keyTime, secretKey).toString()
-    const httpString = `put\n/${objectKey}\n\nhost=${host}\n`
-    const stringToSign = `sha1\n${keyTime}\n${CryptoJS.SHA1(httpString).toString()}\n`
-    const signature = CryptoJS.HmacSHA1(stringToSign, signKey).toString()
-
-    const authorization = [
-      `q-sign-algorithm=sha1`,
-      `q-ak=${secretId}`,
-      `q-sign-time=${keyTime}`,
-      `q-key-time=${keyTime}`,
-      `q-header-list=host`,
-      `q-url-param-list=`,
-      `q-signature=${signature}`,
-    ].join('&')
-
-    const arrayBuffer = await fileToArrayBuffer(file)
-
-    return new Promise((resolve) => {
-      const xhr = new XMLHttpRequest()
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100)
-          onProgress?.({
-            isUploading: true,
-            progress,
-            statusText: `上传中 ${progress}%`,
-          })
-        }
-      })
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const url = customDomain
-            ? `https://${customDomain}/${objectKey}`
-            : `https://${host}/${objectKey}`
-          onProgress?.({
-            isUploading: false,
-            progress: 100,
-            statusText: '上传成功',
-          })
-          resolve({ success: true, url })
-        } else {
-          resolve({ success: false, error: `上传失败: ${xhr.status}` })
-        }
-      })
-
-      xhr.addEventListener('error', () => {
-        resolve({ success: false, error: '网络错误' })
-      })
-
-      xhr.timeout = 120000
-      xhr.open('PUT', `https://${host}/${objectKey}?${authorization}`)
-      xhr.setRequestHeader('Host', host)
-      xhr.setRequestHeader('Content-Type', contentType)
-      xhr.send(arrayBuffer)
-    })
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : '上传失败' }
-  }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 七牛云上传
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * 上传到七牛云
- */
+// --- 七牛云 ---
+// 签名：上传凭证，POST FormData
 async function uploadToQiniu(
   file: File,
   config: QiniuConfig,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   const { accessKey, secretKey, bucket, domain, pathPrefix } = config
-
-  if (!accessKey || !secretKey || !bucket || !domain) {
+  if (!accessKey || !secretKey || !bucket || !domain)
     return { success: false, error: '请完善七牛云配置' }
-  }
 
-  onProgress?.({
-    isUploading: true,
-    progress: 0,
-    statusText: '正在上传到七牛云...',
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到七牛云...' })
+
+  const key = generateUniqueFilename(file.name, pathPrefix)
+  const uploadToken = generateQiniuToken({ accessKey, secretKey, bucket })
+  const formData = new FormData()
+  formData.append('token', uploadToken)
+  formData.append('key', key)
+  formData.append('file', file)
+
+  return xhrUpload({
+    method: 'POST',
+    url: 'https://upload.qiniup.com',
+    formData,
+    extractUrl: (text) => {
+      const r = JSON.parse(text)
+      return domain.startsWith('http') ? `${domain}/${r.key}` : `https://${domain}/${r.key}`
+    },
+    onProgress,
   })
-
-  try {
-    const key = generateUniqueFilename(file.name, pathPrefix)
-    const deadline = Math.floor(Date.now() / 1000) + 3600
-
-    // 生成上传凭证
-    const putPolicy = JSON.stringify({ scope: bucket, deadline })
-    const encodedPutPolicy = CryptoJS.enc.Base64.stringify(
-      CryptoJS.enc.Utf8.parse(putPolicy)
-    ).replace(/\+/g, '-').replace(/\//g, '_')
-    const sign = CryptoJS.HmacSHA1(encodedPutPolicy, secretKey).toString(CryptoJS.enc.Base64)
-      .replace(/\+/g, '-').replace(/\//g, '_')
-    const uploadToken = `${accessKey}:${sign}:${encodedPutPolicy}`
-
-    return new Promise((resolve) => {
-      const xhr = new XMLHttpRequest()
-      const formData = new FormData()
-      formData.append('token', uploadToken)
-      formData.append('key', key)
-      formData.append('file', file)
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100)
-          onProgress?.({
-            isUploading: true,
-            progress,
-            statusText: `上传中 ${progress}%`,
-          })
-        }
-      })
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const response = JSON.parse(xhr.responseText)
-            const url = domain.startsWith('http') ? `${domain}/${response.key}` : `https://${domain}/${response.key}`
-            onProgress?.({
-              isUploading: false,
-              progress: 100,
-              statusText: '上传成功',
-            })
-            resolve({ success: true, url })
-          } catch {
-            resolve({ success: false, error: '解析响应失败' })
-          }
-        } else {
-          resolve({ success: false, error: `上传失败: ${xhr.status}` })
-        }
-      })
-
-      xhr.addEventListener('error', () => {
-        resolve({ success: false, error: '网络错误' })
-      })
-
-      xhr.timeout = 120000
-      xhr.open('POST', 'https://upload.qiniup.com')
-      xhr.send(formData)
-    })
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : '上传失败' }
-  }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// AWS S3 上传
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * 上传到 AWS S3
- */
+// --- AWS S3 ---
+// 签名：AWS Signature Version 4
 async function uploadToAWSS3(
   file: File,
   config: AWSS3Config,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   const { accessKeyId, secretAccessKey, bucket, region, customDomain, pathPrefix } = config
-
-  if (!accessKeyId || !secretAccessKey || !bucket || !region) {
+  if (!accessKeyId || !secretAccessKey || !bucket || !region)
     return { success: false, error: '请完善 AWS S3 配置' }
-  }
 
-  onProgress?.({
-    isUploading: true,
-    progress: 0,
-    statusText: '正在上传到 AWS S3...',
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到 AWS S3...' })
+
+  const objectKey = generateUniqueFilename(file.name, pathPrefix)
+  const host = `${bucket}.s3.${region}.amazonaws.com`
+  const contentType = file.type || 'application/octet-stream'
+  const { authorization, extraHeaders } = signAWSS3({ accessKeyId, secretAccessKey, region, host, objectKey })
+  const url = customDomain ? `https://${customDomain}/${objectKey}` : `https://${host}/${objectKey}`
+
+  return xhrUpload({
+    method: 'PUT',
+    url: `https://${host}/${objectKey}`,
+    headers: { Host: host, 'Content-Type': contentType, Authorization: authorization, ...extraHeaders },
+    body: await fileToArrayBuffer(file),
+    extractUrl: () => url,
+    onProgress,
   })
-
-  try {
-    const objectKey = generateUniqueFilename(file.name, pathPrefix)
-    const host = `${bucket}.s3.${region}.amazonaws.com`
-    const contentType = file.type || 'application/octet-stream'
-
-    // 计算 AWS Signature Version 4
-    const amzDate = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '')
-    const dateStamp = amzDate.substring(0, 8)
-
-    const canonicalRequest = `PUT\n/${objectKey}\n\nhost:${host}\nx-amz-content-sha256:UNSIGNED-PAYLOAD\nx-amz-date:${amzDate}\n\nhost;x-amz-content-sha256;x-amz-date\nUNSIGNED-PAYLOAD`
-    const stringToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${dateStamp}/${region}/s3/aws4_request\n${CryptoJS.SHA256(canonicalRequest).toString()}`
-
-    const kDate = CryptoJS.HmacSHA256(dateStamp, `AWS4${secretAccessKey}`)
-    const kRegion = CryptoJS.HmacSHA256(region, kDate)
-    const kService = CryptoJS.HmacSHA256('s3', kRegion)
-    const kSigning = CryptoJS.HmacSHA256('aws4_request', kService)
-    const signature = CryptoJS.HmacSHA256(stringToSign, kSigning).toString()
-
-    const authorization = `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${dateStamp}/${region}/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=${signature}`
-
-    const arrayBuffer = await fileToArrayBuffer(file)
-
-    return new Promise((resolve) => {
-      const xhr = new XMLHttpRequest()
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100)
-          onProgress?.({
-            isUploading: true,
-            progress,
-            statusText: `上传中 ${progress}%`,
-          })
-        }
-      })
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const url = customDomain
-            ? `https://${customDomain}/${objectKey}`
-            : `https://${host}/${objectKey}`
-          onProgress?.({
-            isUploading: false,
-            progress: 100,
-            statusText: '上传成功',
-          })
-          resolve({ success: true, url })
-        } else {
-          resolve({ success: false, error: `上传失败: ${xhr.status}` })
-        }
-      })
-
-      xhr.addEventListener('error', () => {
-        resolve({ success: false, error: '网络错误' })
-      })
-
-      xhr.timeout = 120000
-      xhr.open('PUT', `https://${host}/${objectKey}`)
-      xhr.setRequestHeader('Host', host)
-      xhr.setRequestHeader('Content-Type', contentType)
-      xhr.setRequestHeader('x-amz-date', amzDate)
-      xhr.setRequestHeader('x-amz-content-sha256', 'UNSIGNED-PAYLOAD')
-      xhr.setRequestHeader('Authorization', authorization)
-      xhr.send(arrayBuffer)
-    })
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : '上传失败' }
-  }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 又拍云上传
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * 上传到又拍云
- */
+// --- 又拍云 ---
+// 签名：MD5(operator&password)，固定签名
 async function uploadToUpyun(
   file: File,
   config: UpyunConfig,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   const { operator, password, bucket, domain, pathPrefix } = config
-
-  if (!operator || !password || !bucket || !domain) {
+  if (!operator || !password || !bucket || !domain)
     return { success: false, error: '请完善又拍云配置' }
-  }
 
-  onProgress?.({
-    isUploading: true,
-    progress: 0,
-    statusText: '正在上传到又拍云...',
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到又拍云...' })
+
+  const objectKey = generateUniqueFilename(file.name, pathPrefix)
+  const date = new Date().toUTCString()
+  const signature = CryptoJS.MD5(`${operator}&${password}`).toString()
+  const authorization = `UPYUN ${operator}:${signature}`
+  const url = domain.startsWith('http') ? `${domain}/${objectKey}` : `https://${domain}/${objectKey}`
+
+  return xhrUpload({
+    method: 'PUT',
+    url: `https://v0.api.upyun.com/${bucket}/${objectKey}`,
+    headers: { Date: date, Authorization: authorization },
+    body: await fileToArrayBuffer(file),
+    extractUrl: () => url,
+    onProgress,
   })
-
-  try {
-    const objectKey = generateUniqueFilename(file.name, pathPrefix)
-    const date = new Date().toUTCString()
-    const signature = CryptoJS.MD5(`${operator}&${password}`).toString()
-    const authorization = `UPYUN ${operator}:${signature}`
-
-    const arrayBuffer = await fileToArrayBuffer(file)
-
-    return new Promise((resolve) => {
-      const xhr = new XMLHttpRequest()
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100)
-          onProgress?.({
-            isUploading: true,
-            progress,
-            statusText: `上传中 ${progress}%`,
-          })
-        }
-      })
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const url = domain.startsWith('http') ? `${domain}/${objectKey}` : `https://${domain}/${objectKey}`
-          onProgress?.({
-            isUploading: false,
-            progress: 100,
-            statusText: '上传成功',
-          })
-          resolve({ success: true, url })
-        } else {
-          resolve({ success: false, error: `上传失败: ${xhr.status}` })
-        }
-      })
-
-      xhr.addEventListener('error', () => {
-        resolve({ success: false, error: '网络错误' })
-      })
-
-      xhr.timeout = 120000
-      xhr.open('PUT', `https://v0.api.upyun.com/${bucket}/${objectKey}`)
-      xhr.setRequestHeader('Authorization', authorization)
-      xhr.setRequestHeader('Date', date)
-      xhr.send(arrayBuffer)
-    })
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : '上传失败' }
-  }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 华为云 OBS 上传
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * 上传到华为云 OBS
- */
+// --- 华为云 OBS ---
+// 签名：HmacSHA1，Auth 前缀 OBS（与阿里云签名逻辑相同，host 不同）
 async function uploadToHuaweiOBS(
   file: File,
   config: HuaweiOBSConfig,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   const { accessKeyId, accessKeySecret, bucket, region, customDomain, pathPrefix } = config
-
-  if (!accessKeyId || !accessKeySecret || !bucket || !region) {
+  if (!accessKeyId || !accessKeySecret || !bucket || !region)
     return { success: false, error: '请完善华为云 OBS 配置' }
-  }
 
-  onProgress?.({
-    isUploading: true,
-    progress: 0,
-    statusText: '正在上传到华为云 OBS...',
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到华为云 OBS...' })
+
+  const objectKey = generateUniqueFilename(file.name, pathPrefix)
+  const host = `${bucket}.obs.${region}.myhuaweicloud.com`
+  const date = new Date().toUTCString()
+  const contentType = file.type || 'application/octet-stream'
+  const authorization = signSimplePut({
+    bucket, objectKey, contentType, date, secretKey: accessKeySecret,
+    hmacMethod: 'sha1', authPrefix: 'OBS', accessKey: accessKeyId,
   })
+  const url = customDomain ? `https://${customDomain}/${objectKey}` : `https://${host}/${objectKey}`
 
-  try {
-    const objectKey = generateUniqueFilename(file.name, pathPrefix)
-    const host = `${bucket}.obs.${region}.myhuaweicloud.com`
-    const date = new Date().toUTCString()
-    const contentType = file.type || 'application/octet-stream'
-
-    // 计算签名
-    const stringToSign = `PUT\n\n${contentType}\n${date}\n/${bucket}/${objectKey}`
-    const signature = CryptoJS.HmacSHA1(stringToSign, accessKeySecret).toString(CryptoJS.enc.Base64)
-    const authorization = `OBS ${accessKeyId}:${signature}`
-
-    const arrayBuffer = await fileToArrayBuffer(file)
-
-    return new Promise((resolve) => {
-      const xhr = new XMLHttpRequest()
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100)
-          onProgress?.({
-            isUploading: true,
-            progress,
-            statusText: `上传中 ${progress}%`,
-          })
-        }
-      })
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const url = customDomain
-            ? `https://${customDomain}/${objectKey}`
-            : `https://${host}/${objectKey}`
-          onProgress?.({
-            isUploading: false,
-            progress: 100,
-            statusText: '上传成功',
-          })
-          resolve({ success: true, url })
-        } else {
-          resolve({ success: false, error: `上传失败: ${xhr.status}` })
-        }
-      })
-
-      xhr.addEventListener('error', () => {
-        resolve({ success: false, error: '网络错误' })
-      })
-
-      xhr.timeout = 120000
-      xhr.open('PUT', `https://${host}/${objectKey}`)
-      xhr.setRequestHeader('Content-Type', contentType)
-      xhr.setRequestHeader('Date', date)
-      xhr.setRequestHeader('Authorization', authorization)
-      xhr.send(arrayBuffer)
-    })
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : '上传失败' }
-  }
+  return xhrUpload({
+    method: 'PUT',
+    url: `https://${host}/${objectKey}`,
+    headers: { 'Content-Type': contentType, Date: date, Authorization: authorization },
+    body: await fileToArrayBuffer(file),
+    extractUrl: () => url,
+    onProgress,
+  })
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 网易云 NOS 上传
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * 上传到网易云 NOS
- */
+// --- 网易云 NOS ---
+// 签名：HmacSHA256，Auth 前缀 NOS
 async function uploadToNeteaseNOS(
   file: File,
   config: NeteaseNOSConfig,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   const { accessKeyId, accessKeySecret, bucket, region, customDomain, pathPrefix } = config
-
-  if (!accessKeyId || !accessKeySecret || !bucket || !region) {
+  if (!accessKeyId || !accessKeySecret || !bucket || !region)
     return { success: false, error: '请完善网易云 NOS 配置' }
-  }
 
-  onProgress?.({
-    isUploading: true,
-    progress: 0,
-    statusText: '正在上传到网易云 NOS...',
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到网易云 NOS...' })
+
+  const objectKey = generateUniqueFilename(file.name, pathPrefix)
+  const host = `${bucket}.nos-${region}.126.net`
+  const date = new Date().toUTCString()
+  const contentType = file.type || 'application/octet-stream'
+  const authorization = signSimplePut({
+    bucket, objectKey, contentType, date, secretKey: accessKeySecret,
+    hmacMethod: 'sha256', authPrefix: 'NOS', accessKey: accessKeyId,
   })
+  const url = customDomain ? `https://${customDomain}/${objectKey}` : `https://${host}/${objectKey}`
 
-  try {
-    const objectKey = generateUniqueFilename(file.name, pathPrefix)
-    const host = `${bucket}.nos-${region}.126.net`
-    const date = new Date().toUTCString()
-    const contentType = file.type || 'application/octet-stream'
-
-    // 计算签名
-    const stringToSign = `PUT\n\n${contentType}\n${date}\n/${bucket}/${objectKey}`
-    const signature = CryptoJS.HmacSHA256(stringToSign, accessKeySecret).toString(CryptoJS.enc.Base64)
-    const authorization = `NOS ${accessKeyId}:${signature}`
-
-    const arrayBuffer = await fileToArrayBuffer(file)
-
-    return new Promise((resolve) => {
-      const xhr = new XMLHttpRequest()
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100)
-          onProgress?.({
-            isUploading: true,
-            progress,
-            statusText: `上传中 ${progress}%`,
-          })
-        }
-      })
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const url = customDomain
-            ? `https://${customDomain}/${objectKey}`
-            : `https://${host}/${objectKey}`
-          onProgress?.({
-            isUploading: false,
-            progress: 100,
-            statusText: '上传成功',
-          })
-          resolve({ success: true, url })
-        } else {
-          resolve({ success: false, error: `上传失败: ${xhr.status}` })
-        }
-      })
-
-      xhr.addEventListener('error', () => {
-        resolve({ success: false, error: '网络错误' })
-      })
-
-      xhr.timeout = 120000
-      xhr.open('PUT', `https://${host}/${objectKey}`)
-      xhr.setRequestHeader('Content-Type', contentType)
-      xhr.setRequestHeader('Date', date)
-      xhr.setRequestHeader('Authorization', authorization)
-      xhr.send(arrayBuffer)
-    })
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : '上传失败' }
-  }
+  return xhrUpload({
+    method: 'PUT',
+    url: `https://${host}/${objectKey}`,
+    headers: { 'Content-Type': contentType, Date: date, Authorization: authorization },
+    body: await fileToArrayBuffer(file),
+    extractUrl: () => url,
+    onProgress,
+  })
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 京东云 OSS 上传
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * 上传到京东云 OSS
- */
+// --- 京东云 OSS ---
+// 签名：HmacSHA1，Auth 前缀 AWS
 async function uploadToJDOSS(
   file: File,
   config: JDOSSConfig,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   const { accessKeyId, accessKeySecret, bucket, region, customDomain, pathPrefix } = config
-
-  if (!accessKeyId || !accessKeySecret || !bucket || !region) {
+  if (!accessKeyId || !accessKeySecret || !bucket || !region)
     return { success: false, error: '请完善京东云 OSS 配置' }
-  }
 
-  onProgress?.({
-    isUploading: true,
-    progress: 0,
-    statusText: '正在上传到京东云 OSS...',
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到京东云 OSS...' })
+
+  const objectKey = generateUniqueFilename(file.name, pathPrefix)
+  const host = `${bucket}.oss.${region}.jdcloud-oss.com`
+  const date = new Date().toUTCString()
+  const contentType = file.type || 'application/octet-stream'
+  const authorization = signSimplePut({
+    bucket, objectKey, contentType, date, secretKey: accessKeySecret,
+    hmacMethod: 'sha1', authPrefix: 'AWS', accessKey: accessKeyId,
   })
+  const url = customDomain ? `https://${customDomain}/${objectKey}` : `https://${host}/${objectKey}`
 
-  try {
-    const objectKey = generateUniqueFilename(file.name, pathPrefix)
-    const host = `${bucket}.oss.${region}.jdcloud-oss.com`
-    const date = new Date().toUTCString()
-    const contentType = file.type || 'application/octet-stream'
-
-    // 计算签名
-    const stringToSign = `PUT\n\n${contentType}\n${date}\n/${bucket}/${objectKey}`
-    const signature = CryptoJS.HmacSHA1(stringToSign, accessKeySecret).toString(CryptoJS.enc.Base64)
-    const authorization = `AWS ${accessKeyId}:${signature}`
-
-    const arrayBuffer = await fileToArrayBuffer(file)
-
-    return new Promise((resolve) => {
-      const xhr = new XMLHttpRequest()
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100)
-          onProgress?.({
-            isUploading: true,
-            progress,
-            statusText: `上传中 ${progress}%`,
-          })
-        }
-      })
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const url = customDomain
-            ? `https://${customDomain}/${objectKey}`
-            : `https://${host}/${objectKey}`
-          onProgress?.({
-            isUploading: false,
-            progress: 100,
-            statusText: '上传成功',
-          })
-          resolve({ success: true, url })
-        } else {
-          resolve({ success: false, error: `上传失败: ${xhr.status}` })
-        }
-      })
-
-      xhr.addEventListener('error', () => {
-        resolve({ success: false, error: '网络错误' })
-      })
-
-      xhr.timeout = 120000
-      xhr.open('PUT', `https://${host}/${objectKey}`)
-      xhr.setRequestHeader('Content-Type', contentType)
-      xhr.setRequestHeader('Date', date)
-      xhr.setRequestHeader('Authorization', authorization)
-      xhr.send(arrayBuffer)
-    })
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : '上传失败' }
-  }
+  return xhrUpload({
+    method: 'PUT',
+    url: `https://${host}/${objectKey}`,
+    headers: { 'Content-Type': contentType, Date: date, Authorization: authorization },
+    body: await fileToArrayBuffer(file),
+    extractUrl: () => url,
+    onProgress,
+  })
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 统一上传接口
+// 入口函数
 // ═══════════════════════════════════════════════════════════════
 
 /**
