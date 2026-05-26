@@ -325,28 +325,32 @@ export const CodeMirrorEditor = forwardRef<EditorHandle, CodeMirrorEditorProps>(
       insertText: (text: string) => {
         if (viewRef.current) {
           const view = viewRef.current
-          const { from, to } = view.state.selection.main
+          const { from } = view.state.selection.main
           const doc = view.state.doc
           const line = doc.lineAt(from)
+          const lineCount = doc.lines
 
-          // 判断光标是否在独立行（整行为空或只有空白）
-          const lineText = line.text
-          const isLineEmpty = lineText.trim() === ''
-          const isAtLineStart = from === line.from
+          // 判断当前行和下一行是否为空行
+          const currentLineEmpty = line.text.trim() === ''
+          const nextLine = line.number < lineCount ? doc.line(line.number + 1) : null
+          const nextLineEmpty = nextLine ? nextLine.text.trim() === '' : true
 
-          // 如果不在空行开头，需要先换行
+          // 前缀：确保图片前至少有一个空行
           let prefix = ''
-          if (!isLineEmpty) {
+          if (!currentLineEmpty) {
+            prefix = '\n\n' // 当前行有内容，先结束当前行再加一个空行
+          } else if (from > line.from) {
+            // 空行但光标不在开头
             prefix = '\n'
-          } else if (!isAtLineStart) {
-            // 在空行但不在开头
-            prefix = ''
           }
 
-          const insertText = prefix + text
+          // 后缀：确保图片后至少有一个空行
+          const suffix = nextLineEmpty ? '\n' : '\n\n'
+
+          const fullText = prefix + text + suffix
           view.dispatch({
-            changes: { from, to, insert: insertText },
-            selection: { anchor: from + insertText.length },
+            changes: { from, to: from, insert: fullText },
+            selection: { anchor: from + fullText.length },
           })
         }
       },

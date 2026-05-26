@@ -159,7 +159,7 @@ export function Toolbar({
             gap: '6px',
             padding: isNarrow ? '6px' : '4px 10px',
             fontSize: '12px',
-            color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-secondary)',
+            color: 'var(--text-secondary)',
             border: '1px solid var(--border-default)',
           }}
         >
@@ -328,7 +328,7 @@ export function Toolbar({
             onChange={onImageUpload}
             style={{ display: 'none' }}
           />
-          <Icon icon="lucide:upload" width={14} height={14} style={{ color: hasConfiguredHost ? 'var(--green-500)' : 'var(--text-muted)' }} />
+          <Icon icon="lucide:upload" width={14} height={14} style={{ color: 'var(--text-secondary)' }} />
         </label>
       </div>
     </>
