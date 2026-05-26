@@ -212,6 +212,64 @@ async function uploadToImgBB(
 }
 
 // ═══════════════════════════════════════════════════════════════
+// FreeImage.host 上传（Chevereto 系统，和 ImgBB API 格式一致）
+// ═══════════════════════════════════════════════════════════════
+
+async function uploadToFreeImage(
+  file: File,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到 FreeImage...' })
+
+  try {
+    const formData = new FormData()
+    formData.append('source', file)
+    formData.append('action', 'upload')
+    formData.append('type', 'file')
+
+    const resp = await fetch('https://freeimage.host/json', { method: 'POST', body: formData })
+    const data = await resp.json()
+
+    if (data.status_code === 200 && data.image?.url) {
+      onProgress?.({ isUploading: false, progress: 100, statusText: '上传成功' })
+      return { success: true, url: data.image.url }
+    }
+
+    return { success: false, error: data.error?.message || '上传失败' }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'FreeImage 上传失败' }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Kappa.lol 轻量级图床上传
+// ═══════════════════════════════════════════════════════════════
+
+async function uploadToKappa(
+  file: File,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  onProgress?.({ isUploading: true, progress: 0, statusText: '正在上传到 Kappa...' })
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const resp = await fetch('https://kappa.lol/api/upload', { method: 'POST', body: formData })
+    const data = await resp.json()
+
+    if (data.link) {
+      onProgress?.({ isUploading: false, progress: 100, statusText: '上传成功' })
+      return { success: true, url: data.link }
+    }
+
+    return { success: false, error: data.message || '上传失败' }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Kappa 上传失败' }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // S3 兼容图床 — 签名工具函数
 // ═══════════════════════════════════════════════════════════════
 
@@ -609,6 +667,12 @@ export async function uploadImage(
 
     case 'imgbb':
       return uploadToImgBB(file, onProgress)
+
+    case 'freeimage':
+      return uploadToFreeImage(file, onProgress)
+
+    case 'kappa':
+      return uploadToKappa(file, onProgress)
 
     case 'aliyun':
       return uploadToAliyunOSS(file, config, onProgress)

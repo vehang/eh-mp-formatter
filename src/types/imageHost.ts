@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // 传统图床
-type TraditionalHostType = 'dk' | 'bolt' | 'imgbb'
+type TraditionalHostType = 'dk' | 'bolt' | 'imgbb' | 'freeimage' | 'kappa'
 
 // OSS 云存储平台
 type OSSHostType = 'aliyun' | 'tencent' | 'qiniu' | 'aws' | 'upyun' | 'huawei' | 'netease' | 'jd'
@@ -141,6 +141,8 @@ export interface ImageHostSettings {
   dk: { token: string; isConfigured: boolean }
   bolt: { token?: string; isConfigured: boolean }
   imgbb: { isConfigured: boolean }
+  freeimage: { isConfigured: boolean }
+  kappa: { isConfigured: boolean }
 
   // OSS 云存储
   aliyun: { config: Partial<AliyunOSSConfig>; isConfigured: boolean }
@@ -214,6 +216,30 @@ export const IMAGE_HOSTS: Record<ImageHostType, ImageHostInfo> = {
     links: {
       official: 'https://imgbb.com',
       docs: 'https://imgbb.com',
+    },
+    requiresToken: false,
+    requiredFields: [],
+  },
+  freeimage: {
+    name: 'FreeImage',
+    description: '免费图床，直链域名 iili.io，国内可达，永久存储',
+    icon: 'lucide:image-plus',
+    category: 'traditional',
+    links: {
+      official: 'https://freeimage.host',
+      docs: 'https://freeimage.host/page/api',
+    },
+    requiresToken: false,
+    requiredFields: [],
+  },
+  kappa: {
+    name: 'Kappa',
+    description: '轻量级图床，直链返回，国内可达，永久存储',
+    icon: 'lucide:paperclip',
+    category: 'traditional',
+    links: {
+      official: 'https://kappa.lol',
+      docs: 'https://kappa.lol',
     },
     requiresToken: false,
     requiredFields: [],
@@ -333,6 +359,8 @@ export const HOST_REQUIRES_TOKEN: Record<ImageHostType, boolean> = {
   dk: true,
   bolt: true,
   imgbb: false,
+  freeimage: false,
+  kappa: false,
   aliyun: true,
   tencent: true,
   qiniu: true,

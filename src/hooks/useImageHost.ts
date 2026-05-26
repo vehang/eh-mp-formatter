@@ -24,6 +24,8 @@ const defaultSettings: ImageHostSettings = {
   dk: { token: '', isConfigured: false },
   bolt: { token: '', isConfigured: false },
   imgbb: { isConfigured: false },
+  freeimage: { isConfigured: false },
+  kappa: { isConfigured: false },
 
   // OSS 云存储
   aliyun: { config: {}, isConfigured: false },
@@ -40,12 +42,12 @@ const defaultSettings: ImageHostSettings = {
 
 // 图床顺序（用于失败时的备选顺序）
 const HOST_ORDER: ImageHostType[] = [
-  'imgbb', 'dk', 'bolt',
+  'imgbb', 'freeimage', 'kappa', 'dk', 'bolt',
   'aliyun', 'tencent', 'qiniu', 'aws', 'upyun', 'huawei', 'netease', 'jd'
 ]
 
 // 传统图床列表
-const TRADITIONAL_HOSTS: ImageHostType[] = ['dk', 'bolt', 'imgbb']
+const TRADITIONAL_HOSTS: ImageHostType[] = ['dk', 'bolt', 'imgbb', 'freeimage', 'kappa']
 
 // 从 localStorage 读取设置
 function loadSettings(): ImageHostSettings {
