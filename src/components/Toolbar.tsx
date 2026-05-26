@@ -29,6 +29,10 @@ interface ToolbarProps {
   onOpenShortcutsModal: () => void
   onOpenUrlModal: () => void
 
+  // Article management
+  onOpenDrawer: () => void
+  onCreateArticle: () => void
+
   // Status
   markdownLength: number
 
@@ -56,6 +60,8 @@ export function Toolbar({
   onToggleSyncScroll,
   onOpenShortcutsModal,
   onOpenUrlModal,
+  onOpenDrawer,
+  onCreateArticle,
   markdownLength,
   isMobile,
   isNarrow,
@@ -73,7 +79,16 @@ export function Toolbar({
       >
         {!isMobile && (
           <>
-            <Icon icon="lucide:file-text" width={14} height={14} style={{ marginRight: '4px', color: 'var(--text-muted)' }} />
+            <button
+              onClick={onOpenDrawer}
+              className="btn btn-ghost btn-icon"
+              title="文章列表"
+              style={{ marginRight: '2px', color: 'var(--text-secondary)', transition: 'color 0.15s' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--orange-500, #f97316)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
+            >
+              <Icon icon="lucide:file-text" width={14} height={14} />
+            </button>
             <span className="panel-title">Markdown</span>
             <div className="toolbar-divider" style={{ margin: '0 4px' }} />
           </>
@@ -104,7 +119,15 @@ export function Toolbar({
               title="清空内容"
               style={{ color: 'var(--red-500)' }}
             >
-              <Icon icon="lucide:trash-2" width={14} height={14} />
+              <Icon icon="lucide:eraser" width={14} height={14} />
+            </button>
+            <button
+              onClick={onCreateArticle}
+              className="btn btn-ghost btn-icon"
+              title="新建文章"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <Icon icon="lucide:file-plus" width={14} height={14} />
             </button>
             <div className="toolbar-divider" style={{ margin: '0 4px' }} />
           </>

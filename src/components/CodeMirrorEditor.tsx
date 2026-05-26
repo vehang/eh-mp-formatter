@@ -456,6 +456,7 @@ export const CodeMirrorEditor = forwardRef<EditorHandle, CodeMirrorEditorProps>(
               const clipboardData = event.clipboardData
               if (!clipboardData) return
 
+              // 图片粘贴
               const items = clipboardData.items
               for (let i = 0; i < items.length; i++) {
                 const item = items[i]
@@ -470,16 +471,65 @@ export const CodeMirrorEditor = forwardRef<EditorHandle, CodeMirrorEditorProps>(
               }
 
               const html = clipboardData.getData('text/html')
-              if (html && html.trim()) {
-                event.preventDefault()
+              const plainText = clipboardData.getData('text/plain')
 
+              // 反转义Markdown转义符：\# → #, \* → *, \\ → \ 等
+              // Turndown库会给特殊字符加\转义，需要循环处理直到干净
+              const unescapeMarkdown = (text: string): string => {
+                if (!text || !text.includes('\\')) return text
+                let result = text
+                let prev = ''
+                while (prev !== result) {
+                  prev = result
+                  result = result.replace(/\\([!#$%&'()*+,\-./:;<=>?@\[\]^_`{|}~\\])/g, '$1')
+                }
+                return result
+              }
+
+              // 标题和代码块前后自动补空行，保证粘贴后排版正确
+              const normalizeSpacing = (text: string): string => {
+                if (!text) return text
+                const lines = text.split('\n')
+                const result: string[] = []
+                for (let i = 0; i < lines.length; i++) {
+                  const line = lines[i]
+                  const trimmed = line.trim()
+                  const isHeading = /^#{1,6}\s/.test(trimmed)
+                  const isCodeFence = /^```/.test(trimmed)
+                  const prevResult = result[result.length - 1]
+
+                  if (isHeading || isCodeFence) {
+                    // 当前是标题或代码块，前面不是空行则补一个
+                    if (result.length > 0 && prevResult !== '') {
+                      result.push('')
+                    }
+                  } else if (prevResult !== undefined && trimmed !== '') {
+                    const prevTrimmed = prevResult.trim()
+                    const prevWasHeading = /^#{1,6}\s/.test(prevTrimmed)
+                    // 代码块结束标记（```）后面补空行，但代码块开始标记后面不补（代码内容紧接）
+                    const prevWasCodeClose = /^```\s*$/.test(prevTrimmed)
+                    const prevWasCodeOpen = /^```\w/.test(prevTrimmed)
+                    if ((prevWasHeading || prevWasCodeClose) && !prevWasCodeOpen) {
+                      result.push('')
+                    }
+                  }
+
+                  result.push(line)
+                }
+                return result.join('\n')
+              }
+
+              if (html && html.trim()) {
+                // HTML粘贴 → 尝试转Markdown
+                event.preventDefault()
                 try {
                   const markdownText = htmlToMarkdown(html)
                   if (markdownText) {
+                    const unescaped = normalizeSpacing(unescapeMarkdown(markdownText))
                     const { from, to } = view.state.selection.main
                     view.dispatch({
-                      changes: { from, to, insert: markdownText },
-                      selection: { anchor: from + markdownText.length },
+                      changes: { from, to, insert: unescaped },
+                      selection: { anchor: from + unescaped.length },
                     })
                     return
                   }
@@ -487,7 +537,8 @@ export const CodeMirrorEditor = forwardRef<EditorHandle, CodeMirrorEditorProps>(
                   console.error('Failed to convert HTML to Markdown:', error)
                 }
 
-                const text = clipboardData.getData('text/plain')
+                // HTML转Markdown失败，用纯文本
+                const text = normalizeSpacing(unescapeMarkdown(plainText))
                 if (text) {
                   const { from, to } = view.state.selection.main
                   view.dispatch({
@@ -495,6 +546,15 @@ export const CodeMirrorEditor = forwardRef<EditorHandle, CodeMirrorEditorProps>(
                     selection: { anchor: from + text.length },
                   })
                 }
+              } else if (plainText) {
+                // 纯文本粘贴 → 反转义 + 排版
+                event.preventDefault()
+                const text = normalizeSpacing(unescapeMarkdown(plainText))
+                const { from, to } = view.state.selection.main
+                view.dispatch({
+                  changes: { from, to, insert: text },
+                  selection: { anchor: from + text.length },
+                })
               }
             },
           }),

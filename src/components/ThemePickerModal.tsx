@@ -155,10 +155,17 @@ export function ThemePickerModal({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
-  // 打开时聚焦到弹窗
+  // 打开时聚焦到弹窗 + 滚动到当前选中主题
   useEffect(() => {
     if (isOpen && modalRef.current) {
       modalRef.current.focus()
+      // 延迟一帧确保DOM渲染完毕
+      requestAnimationFrame(() => {
+        const selected = modalRef.current?.querySelector('.theme-card.selected')
+        if (selected) {
+          selected.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior })
+        }
+      })
     }
   }, [isOpen])
 

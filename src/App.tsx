@@ -6,7 +6,7 @@ import { Preview } from './components/Preview'
 import { useToast } from './components/Toast'
 import { useHistory } from './hooks/useHistory'
 import { useKeyboard } from './hooks/useKeyboard'
-import { useAutoSave } from './hooks/useAutoSave'
+import { useArticles } from './hooks/useArticles'
 import { useUITheme } from './hooks/useUITheme'
 import { useSyncScroll } from './hooks/useSyncScroll'
 import { useSettings } from './hooks/useSettings'
@@ -130,216 +130,57 @@ const ThemePickerModal = lazy(() => import('./components/ThemePickerModal').then
 const CodeStylePickerModal = lazy(() => import('./components/CodeStylePickerModal').then(m => ({ default: m.CodeStylePickerModal })))
 const ImageHostConfigModal = lazy(() => import('./components/ImageHostConfigModal').then(m => ({ default: m.ImageHostConfigModal })))
 const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcutsModal').then(m => ({ default: m.KeyboardShortcutsModal })))
+import ArticleDrawer from './components/ArticleDrawer'
 
 // Suspense 加载占位
 const ModalLoadingFallback = () => null
 
-const defaultMarkdown = `![Unsplash 示例图片](https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80)
-
-*图片来源：Unsplash - 代码与编程*
-
-> 💡 **提示**：支持直接粘贴富文本（Word、Notion、网页等），会自动转换为 Markdown 格式
-
-# 一级标题示例
-
-这是一段普通文字，用于测试**加粗**、*斜体*、~~删除线~~和\`行内代码\`的效果。还可以包含[链接](https://github.com)和脚注[^1]。
-
-## 二级标题：文本样式
-
-### 强调与修饰
-
-- **这是加粗文字**
-- *这是斜体文字*
-- ***加粗且斜体***
-- ~~这是删除线~~
-- \`这是行内代码\`
-- ==这是高亮文字==
-
-### 任务列表
-
-- [x] 已完成的任务
-- [x] 另一个已完成
-- [ ] 待办事项
-- [ ] 还没做的事
-
-## 列表示例
-
-### 无序列表
-
-- 第一项
-- 第二项
-  - 嵌套项 A
-  - 嵌套项 B
-    - 更深层级
-- 第三项
-
-### 有序列表
-
-1. 第一步：准备工作
-2. 第二步：执行操作
-3. 第三步：验证结果
-
-## 代码块示例
-
-### Java
-
-\`\`\`java
-// 服务类示例
-public class UserService {
-    private final UserRepository repository;
-
-    public UserService(UserRepository repository) {
-        this.repository = repository;
-    }
-
-    public User findById(Long id) throws UserNotFoundException {
-        return repository.findById(id)
-            .orElseThrow(() -> new UserNotFoundException("User not found: " + id));
-    }
-
-    public List<User> findActiveUsers() {
-        return repository.findAll().stream()
-            .filter(User::isActive)
-            .collect(Collectors.toList());
-    }
-}
-\`\`\`
-
-### JavaScript
-
-\`\`\`javascript
-// 异步函数示例
-async function fetchUserData(userId) {
-  const response = await fetch(\`/api/users/\${userId}\`)
-  const data = await response.json()
-
-  return {
-    id: data.id,
-    name: data.name,
-    email: data.email,
-    createdAt: new Date(data.timestamp)
-  }
-}
-
-// 使用示例
-const user = await fetchUserData(123)
-console.log(\`用户: \${user.name}\`)
-\`\`\`
-
-### Python
-
-\`\`\`python
-# 类定义示例
-class DataProcessor:
-    def __init__(self, config):
-        self.config = config
-        self.data = []
-
-    def process(self, items):
-        """处理数据列表"""
-        return [self._transform(item) for item in items]
-
-    def _transform(self, item):
-        return item.strip().lower()
-
-# 使用
-processor = DataProcessor({"mode": "strict"})
-result = processor.process(["Hello", "WORLD"])
-\`\`\`
-
-### CSS
-
-\`\`\`css
-/* 现代化卡片样式 */
-.card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
-  transition: transform 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-4px);
-}
-\`\`\`
-
-### TypeScript
-
-\`\`\`typescript
-interface User {
-  id: number
-  name: string
-  email: string
-  role: 'admin' | 'user' | 'guest'
-}
-
-function validateUser(user: unknown): user is User {
-  return (
-    typeof user === 'object' &&
-    user !== null &&
-    'id' in user &&
-    'name' in user
-  )
-}
-\`\`\`
-
-## 引用块
-
-> 💡 **提示**：这是一段引用文字，可以用于展示重要信息。
->
-> 引用块可以包含多行内容，用于展示重要信息或引述他人观点。支持**加粗**和*斜体*。
-
-## 表格示例
-
-| 功能 | 状态 | 说明 |
-|------|:----:|------|
-| Markdown 解析 | ✅ | 支持完整语法 |
-| 主题切换 | ✅ | 5 套专业主题 |
-| 代码高亮 | ✅ | 多语言支持 |
-| 实时预览 | ✅ | 即时渲染 |
-| 导出功能 | 🚧 | 开发中 |
-
-### 复杂表格
-
-| 模块 | 技术 | 版本 | 描述 |
-|------|------|:----:|------|
-| 前端框架 | React | 18.2 | 用户界面构建 |
-| 状态管理 | Zustand | 4.4 | 轻量状态方案 |
-| 样式方案 | Tailwind | 3.4 | 原子化 CSS |
-| 构建工具 | Vite | 5.0 | 极速开发体验 |
-
-## 数学公式
-
-行内公式：$E = mc^2$
-
-块级公式：
-
-$$
-\\sum_{i=1}^{n} x_i = x_1 + x_2 + \\cdots + x_n
-$$
-
-## 分隔线
-
-上面的内容与下面的内容之间有分隔。
-
----
-
-这是分隔线下方的文字。
-
-## 脚注
-
-[^1]: 这是一个脚注示例，用于添加额外说明或引用来源。
-
----
-
-*感谢使用排版助手！由 ❤️ 驱动开发*
-`
-
 function App() {
-  const { value: markdown, setValue: setMarkdown, undo, redo, canUndo, canRedo } = useHistory(defaultMarkdown)
+  // ─── 文章管理 ──────────────────────────────────────────────────
+  const {
+    articles,
+    currentArticle,
+    loadArticle,
+    createArticle,
+    renameArticle,
+    deleteArticle,
+    sortOrder,
+    setSortOrder,
+    triggerAutoSave,
+    immediateSave,
+  } = useArticles()
+
+  // useHistory 初始值用当前文章内容
+  const { value: markdown, setValue: setMarkdownRaw, undo, redo, canUndo, canRedo } = useHistory(currentArticle?.content ?? '')
+
+  // 保存状态跟踪
+  const [isSaving, setIsSaving] = useState(false)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // 包装 setMarkdown：同时触发自动保存 + 显示保存状态
+  const setMarkdown = (value: string) => {
+    setMarkdownRaw(value)
+    setIsSaving(true)
+    triggerAutoSave(value)
+    // debounce 结束后标记为已保存
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => setIsSaving(false), 1200)
+  }
+
+  // 文章切换时同步编辑器内容（不触发自动保存）
+  useEffect(() => {
+    if (currentArticle) {
+      setMarkdownRaw(currentArticle.content)
+    }
+  }, [currentArticle?.id])  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSelectArticle = (id: string) => {
+    loadArticle(id)
+  }
+
+  // 文章抽屉开关
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+
   const uiTheme = useUITheme()
   const settings = useSettings()
 
@@ -359,6 +200,7 @@ function App() {
   const [isCodeStylePickerOpen, setIsCodeStylePickerOpen] = useState(false)
   const [isImageHostModalOpen, setIsImageHostModalOpen] = useState(false)
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<EditorHandle>(null)
@@ -399,7 +241,6 @@ function App() {
   })
 
   const toast = useToast()
-  const { isSaving } = useAutoSave('markdown-content', markdown, 2000)
 
   // 防抖 Markdown 内容（300ms）
   const debouncedMarkdown = useDebounce(markdown, 300)
@@ -433,8 +274,13 @@ function App() {
 
   const handleClear = () => {
     if (markdown.length > 0) {
-      setMarkdown('')
+      setShowClearConfirm(true)
     }
+  }
+
+  const confirmClear = () => {
+    setMarkdown('')
+    setShowClearConfirm(false)
   }
 
   const handleFetchUrl = async (url: string) => {
@@ -752,7 +598,16 @@ function App() {
     { key: 'z', ctrlKey: true, handler: undo },
     { key: 'z', ctrlKey: true, shiftKey: true, handler: redo },
     { key: 'y', ctrlKey: true, handler: redo },
-    { key: 's', ctrlKey: true, handler: () => toast.showToast('已自动保存', 'success') },
+    { key: 's', ctrlKey: true, handler: () => {
+      const result = immediateSave(markdown)
+      if (result.success) {
+        toast.showToast('已保存', 'success')
+      } else if (result.error === 'storage_full') {
+        toast.showToast('存储空间已满，无法保存', 'error')
+      } else if (result.error === 'content_too_large') {
+        toast.showToast('文章内容超过500KB上限', 'error')
+      }
+    } },
     { key: 'c', ctrlKey: true, shiftKey: true, handler: handleCopyHTML },
   ])
 
@@ -858,6 +713,10 @@ function App() {
             onToggleSyncScroll={() => setSyncScroll(!syncScroll)}
             onOpenShortcutsModal={() => setIsShortcutsModalOpen(true)}
             onOpenUrlModal={() => setIsUrlModalOpen(true)}
+            onOpenDrawer={() => setIsDrawerOpen(true)}
+            onCreateArticle={() => {
+              createArticle()
+            }}
             markdownLength={markdown.length}
             isMobile={isMobile}
             isNarrow={isNarrow}
@@ -997,6 +856,22 @@ function App() {
         </div>
       )}
 
+      {/* 文章抽屉 */}
+      <ArticleDrawer
+        isOpen={isDrawerOpen}
+        onToggle={() => setIsDrawerOpen(!isDrawerOpen)}
+        articles={articles}
+        currentArticleId={currentArticle?.id ?? null}
+        onSelectArticle={handleSelectArticle}
+        onCreateArticle={() => {
+          createArticle()
+        }}
+        onRenameArticle={renameArticle}
+        onDeleteArticle={deleteArticle}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
+      />
+
       {/* 弹窗组件 - 使用 React.lazy 懒加载 */}
       <Suspense fallback={<ModalLoadingFallback />}>
         <UrlFetchModal
@@ -1046,6 +921,33 @@ function App() {
           onClose={() => setIsShortcutsModalOpen(false)}
         />
       </Suspense>
+
+      {/* Clear Confirm Dialog */}
+      {showClearConfirm && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setShowClearConfirm(false)}
+        >
+          <div
+            style={{ background: 'var(--bg-surface, #fff)', border: '1px solid var(--border-default, #e5e7eb)', borderRadius: 12, padding: 24, minWidth: 320, maxWidth: 400, boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--red-500, #ef4444)' }}>
+                <Icon icon="lucide:eraser" width={16} height={16} />
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>清空内容</span>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24 }}>
+              确定清空当前编辑器的所有内容吗？此操作不可撤销。
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button onClick={() => setShowClearConfirm(false)} style={{ padding: '8px 16px', borderRadius: 6, background: 'transparent', border: '1px solid var(--border-default)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>取消</button>
+              <button onClick={confirmClear} style={{ padding: '8px 16px', borderRadius: 6, background: 'var(--red-500, #ef4444)', border: 'none', color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>确认清空</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

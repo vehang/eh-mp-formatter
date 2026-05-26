@@ -798,6 +798,7 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
       background: ${bgColor};
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      white-space: pre;
       font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', Consolas, 'Liberation Mono', monospace;
       text-align: left;
     `.trim().replace(/\s+/g, ' ')
@@ -826,35 +827,8 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
 
       docCode.setAttribute('style', codeStyle)
 
-      // ⭐ 关键修复：将 code 内的普通空格替换为 &nbsp;，换行符替换为 <br>
-      // 这样即使公众号不支持 white-space: pre，代码格式也能正确显示
-      const processNode = (node: Node, parent: Element): void => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          const text = node.textContent || ''
-          if (text.includes(' ') || text.includes('\n')) {
-            // 将空格和换行符分开处理
-            const parts = text.split(/(\n)/)
-            const fragment = doc.createDocumentFragment()
-
-            parts.forEach(part => {
-              if (part === '\n') {
-                // 换行符替换为 <br>
-                fragment.appendChild(doc.createElement('br'))
-              } else if (part) {
-                // 普通文本中的空格替换为不间断空格
-                const textNode = doc.createTextNode(part.replace(/ /g, '\u00A0'))
-                fragment.appendChild(textNode)
-              }
-            })
-
-            parent.replaceChild(fragment, node)
-          }
-        } else if (node.nodeType === Node.ELEMENT_NODE) {
-          // 递归处理子节点（需要复制数组，因为处理过程中会修改 childNodes）
-          Array.from(node.childNodes).forEach(child => processNode(child, node as Element))
-        }
-      }
-      Array.from(docCode.childNodes).forEach(child => processNode(child, docCode))
+      // white-space: pre 已在 pre 上设置，空格和换行符会自然保留
+      // 无需将空格替换为 \u00A0 或将 \n 替换为 <br>
     }
   })
 
@@ -872,7 +846,7 @@ export function applyInlineStyles(previewEl: HTMLElement, theme: Theme): string 
     docWrapper.setAttribute('style', [
       'margin: 20px 0',
       'border-radius: 12px',
-      'overflow: hidden',
+      'overflow: visible',
       `background: ${wrapperBg}`,
     ].join('; '))
 
