@@ -486,31 +486,57 @@ export const CodeMirrorEditor = forwardRef<EditorHandle, CodeMirrorEditorProps>(
                 return result
               }
 
-              // 标题和代码块前后自动补空行，保证粘贴后排版正确
+              // 块级元素前后自动补空行，保证粘贴后排版正确
+              // 识别块类型：标题/代码块/列表/引用/分割线/表格/段落，类型变化时补空行
+              const getBlockType = (line: string): string => {
+                const t = line.trim()
+                if (t === '') return 'blank'
+                if (/^#{1,6}\s/.test(t)) return 'heading'
+                if (/^```/.test(t)) return 'codefence'
+                if (/^>\s?/.test(t)) return 'blockquote'
+                if (/^[-*+]\s/.test(t)) return 'ul'
+                if (/^\d+[.)]\s/.test(t)) return 'ol'
+                if (/^(---+|\*\*\*+|___+)\s*$/.test(t)) return 'hr'
+                if (/^\|.*\|$/.test(t)) return 'table'
+                return 'paragraph'
+              }
+
               const normalizeSpacing = (text: string): string => {
                 if (!text) return text
                 const lines = text.split('\n')
                 const result: string[] = []
+                let inCodeBlock = false
+
                 for (let i = 0; i < lines.length; i++) {
                   const line = lines[i]
                   const trimmed = line.trim()
-                  const isHeading = /^#{1,6}\s/.test(trimmed)
-                  const isCodeFence = /^```/.test(trimmed)
-                  const prevResult = result[result.length - 1]
+                  const blockType = getBlockType(line)
 
-                  if (isHeading || isCodeFence) {
-                    // 当前是标题或代码块，前面不是空行则补一个
-                    if (result.length > 0 && prevResult !== '') {
+                  // 代码块内部不做任何处理
+                  if (inCodeBlock) {
+                    if (blockType === 'codefence') inCodeBlock = false
+                    result.push(line)
+                    continue
+                  }
+                  if (blockType === 'codefence' && /^```/.test(trimmed)) {
+                    inCodeBlock = true
+                    // 代码块开始前补空行
+                    if (result.length > 0 && result[result.length - 1] !== '') {
                       result.push('')
                     }
-                  } else if (prevResult !== undefined && trimmed !== '') {
-                    const prevTrimmed = prevResult.trim()
-                    const prevWasHeading = /^#{1,6}\s/.test(prevTrimmed)
-                    // 代码块结束标记（```）后面补空行，但代码块开始标记后面不补（代码内容紧接）
-                    const prevWasCodeClose = /^```\s*$/.test(prevTrimmed)
-                    const prevWasCodeOpen = /^```\w/.test(prevTrimmed)
-                    if ((prevWasHeading || prevWasCodeClose) && !prevWasCodeOpen) {
-                      result.push('')
+                    result.push(line)
+                    continue
+                  }
+
+                  // 非空行前面不是空行，且与前一行类型不同，则补空行
+                  if (blockType !== 'blank' && result.length > 0) {
+                    const prev = result[result.length - 1]
+                    if (prev !== '') {
+                      // 前一行非空，需要判断是否补空行
+                      const prevType = getBlockType(prev)
+                      if (prevType !== blockType) {
+                        result.push('')
+                      }
                     }
                   }
 
