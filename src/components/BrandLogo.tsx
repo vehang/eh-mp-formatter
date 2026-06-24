@@ -33,7 +33,7 @@ export function BrandLogo() {
             marginTop: '2px'
           }}
         >
-          公众号 Markdown 排版
+          多主题排版 · 代码高亮 · 一键粘贴公众号
         </span>
       </div>
     </div>

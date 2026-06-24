@@ -15,6 +15,7 @@ import { useDebounce } from './hooks/useDebounce'
 import { parseMarkdown } from './utils/markdown'
 import { makeWeChatCompatible, applyInlineStyles } from './lib/wechatCompat'
 import { fetchUrlContent } from './utils/urlFetcher'
+import { BAOBOXS_HOME_URL } from './lib/oauthConfig'
 import { themes, applyTheme, getThemeById } from './themes'
 import type { Theme } from './themes/types'
 import './App.css'
@@ -131,6 +132,7 @@ const CodeStylePickerModal = lazy(() => import('./components/CodeStylePickerModa
 const ImageHostConfigModal = lazy(() => import('./components/ImageHostConfigModal').then(m => ({ default: m.ImageHostConfigModal })))
 const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcutsModal').then(m => ({ default: m.KeyboardShortcutsModal })))
 import ArticleDrawer from './components/ArticleDrawer'
+import { UserMenu } from './components/UserMenu'
 
 // Suspense 加载占位
 const ModalLoadingFallback = () => null
@@ -648,7 +650,7 @@ function App() {
                 排版助手
               </span>
               <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                公众号 Markdown 排版
+                多主题 · 一键粘贴公众号
               </span>
             </div>
           ) : (
@@ -657,27 +659,45 @@ function App() {
                 排版助手
               </span>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                公众号 Markdown 排版
+                多主题排版 · 代码高亮 · 一键粘贴公众号
               </span>
             </div>
           )}
         </div>
 
-        {/* 右侧主题切换 */}
-        <button
-          onClick={uiTheme.toggleTheme}
-          className="theme-toggle-btn"
-          title={uiTheme.isDark ? '切换到浅色模式' : '切换到深色模式'}
-        >
-          <div className="theme-icon-wrapper">
-            <span className="theme-icon-sun">
-              <Icon icon="lucide:sun" style={{ fontSize: isMobile ? '20px' : '18px' }} />
-            </span>
-            <span className="theme-icon-moon">
-              <Icon icon="lucide:moon" style={{ fontSize: isMobile ? '20px' : '18px' }} />
-            </span>
-          </div>
-        </button>
+        {/* 右侧：用户菜单 + 主题切换 + 宝盒入口 */}
+        <div className="flex items-center gap-2">
+          <UserMenu isMobile={isMobile} />
+          <button
+            onClick={uiTheme.toggleTheme}
+            className="theme-toggle-btn"
+            title={uiTheme.isDark ? '切换到浅色模式' : '切换到深色模式'}
+          >
+            <div className="theme-icon-wrapper">
+              <span className="theme-icon-sun">
+                <Icon icon="lucide:sun" style={{ fontSize: isMobile ? '20px' : '18px' }} />
+              </span>
+              <span className="theme-icon-moon">
+                <Icon icon="lucide:moon" style={{ fontSize: isMobile ? '20px' : '18px' }} />
+              </span>
+            </div>
+          </button>
+          <a
+            href={BAOBOXS_HOME_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="back-to-baoboxs-btn"
+            title="访问宝盒 - 程序员工具箱"
+            aria-label="访问宝盒"
+          >
+            <img
+              src="/baoboxs-logo.png"
+              alt="宝盒"
+              draggable={false}
+              className="back-to-baoboxs-logo"
+            />
+          </a>
+        </div>
       </header>
 
       {/* ═══════════════════════════════════════════════

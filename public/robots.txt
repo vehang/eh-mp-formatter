@@ -1,0 +1,9 @@
+# 排版助手 (md.baoboxs.com) 爬虫引导
+User-agent: *
+Allow: /
+
+# 隐藏 OAuth 回调路径，避免被索引成无意义页面
+Disallow: /auth/callback
+
+# 站点地图
+Sitemap: https://md.baoboxs.com/sitemap.xml

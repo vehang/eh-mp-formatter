@@ -630,7 +630,8 @@ body {
 }
 
 /* 浅色主题下的主题切换按钮 */
-[data-theme="light"] .theme-toggle-btn:hover {
+[data-theme="light"] .theme-toggle-btn:hover,
+[data-theme="light"] .back-to-baoboxs-btn:hover {
   background: var(--zinc-100);
   border-color: var(--zinc-300);
 }
@@ -691,6 +692,43 @@ body {
 
 .theme-toggle-btn:active {
   transform: scale(0.95);
+}
+
+/* 回到宝盒按钮：与主题切换按钮（.theme-toggle-btn）的 hover / active 行为完全一致 */
+.back-to-baoboxs-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.back-to-baoboxs-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--zinc-600);
+}
+
+.back-to-baoboxs-btn:active {
+  transform: scale(0.95);
+}
+
+/* 按钮内宝盒图标：尺寸对齐主题切换图标，保留品牌色不跟随 hover */
+.back-to-baoboxs-logo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* 图标容器 */
